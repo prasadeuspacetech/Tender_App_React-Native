@@ -1,0 +1,20 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@/assets/*": [
+        "./assets/*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+, "src/screens/AddWork/AddWorkScreen.jsx", "src/screens/Dashboard/DashboardScreen.jsx", "src/screens/Reports/ReportsScreen.jsx", "src/screens/Settings/SettingsScreen.jsx", "src/screens/Works/WorksScreen.jsx"  ]
+}
