@@ -16,6 +16,7 @@ import useDocumentUpload from '../../../hooks/useDocumentUpload';
 import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
 
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
+import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -49,34 +50,50 @@ const CompletionClosureScreen = ({ navigation }) => {
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [isHydrated, setIsHydrated] = useState(false);
+  const { bindForm, scheduleDebouncedSave, saveImmediately } = useWorkflowAutoSave('completionClosure');
 
-  // ── Field updater ──────────────────────────────────────────────────────────
-  const updateField = useCallback((key, value) => {
-    setForm((prev) => {
-      const updated = { ...prev, [key]: value };
-      queueMicrotask(() => setDraft('completionClosure', updated));
-      return updated;
-    });
-  }, [setDraft]);
+  useEffect(() => {
+    bindForm(form);
+  }, [form, bindForm]);
 
-  // ── Hydration ──────────────────────────────────────────────────────────────
+  const updateField = useCallback(
+    (key, value, { immediate = false } = {}) => {
+      setForm((prev) => {
+        const updated = { ...prev, [key]: value };
+        queueMicrotask(() => {
+          setDraft('completionClosure', updated);
+          bindForm(updated);
+          if (immediate) saveImmediately();
+          else scheduleDebouncedSave();
+        });
+        return updated;
+      });
+    },
+    [setDraft, bindForm, scheduleDebouncedSave, saveImmediately],
+  );
+
   useEffect(() => {
     const hydrate = () => {
-      const draft = getDraft('completionClosure');
-      if (draft && Object.keys(draft).length > 0) {
-        setForm((prev) => ({ ...prev, ...draft }));
-        setIsHydrated(true);
-        return;
-      }
       if (currentWorkId) {
         const saved = getCompletionClosureByWorkId(currentWorkId);
         if (saved) {
-          setForm({
-            work_completed:              saved.work_completed              ?? 'Pending',
+          const hydrated = {
+            work_completed: saved.work_completed ?? 'Pending',
             completion_certificate_path: saved.completion_certificate_path ?? null,
-            site_photos_path:            saved.site_photos_path            ?? null,
-          });
+            site_photos_path: saved.site_photos_path ?? null,
+          };
+          setForm(hydrated);
+          bindForm(hydrated);
+          setIsHydrated(true);
+          return;
         }
+      }
+
+      const draft = getDraft('completionClosure');
+      if (draft && Object.keys(draft).length > 0) {
+        const merged = { ...EMPTY_FORM, ...draft };
+        setForm(merged);
+        bindForm(merged);
       }
       setIsHydrated(true);
     };
@@ -100,14 +117,14 @@ const CompletionClosureScreen = ({ navigation }) => {
     useDocumentUpload(
       currentWorkId,
       DOCUMENT_TYPES.COMPLETION_CERTIFICATE,
-      (filePath) => updateField('completion_certificate_path', filePath),
+      (filePath) => updateField('completion_certificate_path', filePath, { immediate: true }),
     );
 
   const { pickDocument: pickSitePhotos, uploading: uploadingSitePhotos } =
     useDocumentUpload(
       currentWorkId,
       DOCUMENT_TYPES.SITE_PHOTOS,
-      (filePath) => updateField('site_photos_path', filePath),
+      (filePath) => updateField('site_photos_path', filePath, { immediate: true }),
     );
 
   const handleSubmit = () => {
@@ -146,7 +163,7 @@ const CompletionClosureScreen = ({ navigation }) => {
           placeholder="Select status"
           data={WORK_COMPLETED_OPTIONS}
           value={form.work_completed || null}
-          onChange={(item) => updateField('work_completed', item.value)}
+          onChange={(item) => updateField('work_completed', item.value, { immediate: true })}
         />
 
         <UploadDocument

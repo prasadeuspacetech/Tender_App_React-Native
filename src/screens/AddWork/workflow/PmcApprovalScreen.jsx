@@ -2,7 +2,7 @@
 // Step 2 of 10: PMC Approval
 
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import Inputboxfield from '../../../components/Inputboxfield';
@@ -23,6 +23,7 @@ import {
   upsertApprovalDetails,
 } from '../../../db/repositories/approvalsRepository';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
+import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -48,32 +49,40 @@ const PmcApprovalScreen = ({ navigation }) => {
   const { currentWorkId } = useWorkStore();
 
   const [form, setForm] = useState(EMPTY_FORM);
+  const { bindForm, scheduleDebouncedSave, saveImmediately } = useWorkflowAutoSave('pmcApproval');
+
+  useEffect(() => {
+    bindForm(form);
+  }, [form, bindForm]);
 
   const loadPmcForm = useCallback(() => {
+    if (currentWorkId) {
+      try {
+        const row = getApprovalByWorkId(currentWorkId);
+        const hydrated = mapApprovalRowToForm(row);
+        if (hydrated) {
+          setForm(hydrated);
+          bindForm(hydrated);
+          queueMicrotask(() => setDraft('pmcApproval', hydrated));
+          return;
+        }
+      } catch (e) {
+        console.warn('[PmcApprovalScreen] hydration failed:', e);
+      }
+    }
+
     const draft = getDraft('pmcApproval');
     if (draft && Object.keys(draft).length > 0) {
-      setForm({
+      const merged = {
         ...EMPTY_FORM,
         ...draft,
         letter_date: formatDateForStorage(draft.letter_date),
         approval_date: formatDateForStorage(draft.approval_date),
-      });
-      return;
+      };
+      setForm(merged);
+      bindForm(merged);
     }
-
-    if (!currentWorkId) return;
-
-    try {
-      const row = getApprovalByWorkId(currentWorkId);
-      const hydrated = mapApprovalRowToForm(row);
-      if (!hydrated) return;
-
-      setForm(hydrated);
-      queueMicrotask(() => setDraft('pmcApproval', hydrated));
-    } catch (e) {
-      console.warn('[PmcApprovalScreen] hydration failed:', e);
-    }
-  }, [currentWorkId, getDraft, setDraft]);
+  }, [currentWorkId, getDraft, setDraft, bindForm]);
 
   useFocusEffect(
     useCallback(() => {
@@ -81,13 +90,21 @@ const PmcApprovalScreen = ({ navigation }) => {
     }, [loadPmcForm]),
   );
 
-  const updateField = useCallback((key, val) => {
-    setForm((prev) => {
-      const updated = { ...prev, [key]: val };
-      queueMicrotask(() => setDraft('pmcApproval', updated));
-      return updated;
-    });
-  }, [setDraft]);
+  const updateField = useCallback(
+    (key, val, { immediate = false } = {}) => {
+      setForm((prev) => {
+        const updated = { ...prev, [key]: val };
+        queueMicrotask(() => {
+          setDraft('pmcApproval', updated);
+          bindForm(updated);
+          if (immediate) saveImmediately();
+          else scheduleDebouncedSave();
+        });
+        return updated;
+      });
+    },
+    [setDraft, bindForm, scheduleDebouncedSave, saveImmediately],
+  );
 
   const { saveAndContinue, isSaving } = useSaveAndContinue(
     'pmcApproval',
@@ -106,7 +123,7 @@ const PmcApprovalScreen = ({ navigation }) => {
   const { pickDocument: pickPmcLetter, uploading: uploadingPmcLetter } = useDocumentUpload(
     currentWorkId,
     DOCUMENT_TYPES.PMC_LETTER,
-    (filePath) => updateField('pmc_letter_path', filePath),
+    (filePath) => updateField('pmc_letter_path', filePath, { immediate: true }),
   );
 
   const handleSave = () => {
@@ -148,22 +165,29 @@ const PmcApprovalScreen = ({ navigation }) => {
           <NativeDateField
             label="Letter Date"
             value={form.letter_date}
-            onDateChange={(date) => updateField('letter_date', formatDateForStorage(date))}
+            onDateChange={(date) =>
+              updateField('letter_date', formatDateForStorage(date), { immediate: true })
+            }
             placeholder="dd/mm/yyyy"
           />
 
           <NativeDateField
             label="Approval Date"
             value={form.approval_date}
-            onDateChange={(date) => updateField('approval_date', formatDateForStorage(date))}
+            onDateChange={(date) =>
+              updateField('approval_date', formatDateForStorage(date), { immediate: true })
+            }
             placeholder="dd/mm/yyyy"
           />
 
           <FormToggleField
             label="Finance Committee"
-            rowLabel="Finance committee required"
+            rowLabelOn="Finance committee required"
+            rowLabelOff="Finance committee not required"
             value={form.finance_committee}
-            onToggle={() => updateField('finance_committee', !form.finance_committee)}
+            onToggle={() =>
+              updateField('finance_committee', !form.finance_committee, { immediate: true })
+            }
           />
 
           {form.finance_committee ? (

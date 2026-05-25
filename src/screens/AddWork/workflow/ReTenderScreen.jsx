@@ -5,7 +5,7 @@
 // Toggle ON   → fields shown, persisted in `retenders` per work_id.
 
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import ProgressSlot from '../../../components/layouts/Progressslot';
@@ -18,6 +18,7 @@ import NativeDateField from '../../../components/NativeDateField';
 import PrimaryButton from '../../../components/PrimaryButton';
 
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
+import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -52,20 +53,16 @@ const ReTenderScreen = ({ navigation }) => {
   const { currentWorkId } = useWorkStore();
 
   const [form, setForm] = useState(EMPTY_FORM);
+  const { bindForm, scheduleDebouncedSave, saveImmediately } = useWorkflowAutoSave('reTender');
+
+  useEffect(() => {
+    bindForm(form);
+  }, [form, bindForm]);
 
   const loadReTenderForm = useCallback(() => {
     if (!currentWorkId) {
       setForm(EMPTY_FORM);
-      return;
-    }
-
-    const draft = getDraft('reTender', currentWorkId);
-    if (draft && Object.keys(draft).length > 0) {
-      setForm({
-        ...EMPTY_FORM,
-        ...draft,
-        new_tender_date: formatDateForStorage(draft.new_tender_date),
-      });
+      bindForm(EMPTY_FORM);
       return;
     }
 
@@ -74,15 +71,29 @@ const ReTenderScreen = ({ navigation }) => {
       const hydrated = mapReTenderRowToForm(row);
       if (hydrated) {
         setForm(hydrated);
+        bindForm(hydrated);
         queueMicrotask(() => setDraft('reTender', hydrated, currentWorkId));
-      } else {
-        setForm(EMPTY_FORM);
+        return;
       }
     } catch (e) {
       console.warn('[ReTenderScreen] hydration failed:', e);
-      setForm(EMPTY_FORM);
     }
-  }, [currentWorkId, getDraft, setDraft]);
+
+    const draft = getDraft('reTender', currentWorkId);
+    if (draft && Object.keys(draft).length > 0) {
+      const merged = {
+        ...EMPTY_FORM,
+        ...draft,
+        new_tender_date: formatDateForStorage(draft.new_tender_date),
+      };
+      setForm(merged);
+      bindForm(merged);
+      return;
+    }
+
+    setForm(EMPTY_FORM);
+    bindForm(EMPTY_FORM);
+  }, [currentWorkId, getDraft, setDraft, bindForm]);
 
   useFocusEffect(
     useCallback(() => {
@@ -91,15 +102,20 @@ const ReTenderScreen = ({ navigation }) => {
   );
 
   const updateField = useCallback(
-    (key, value) => {
+    (key, value, { immediate = false } = {}) => {
       if (!currentWorkId) return;
       setForm((prev) => {
         const updated = { ...prev, [key]: value };
-        queueMicrotask(() => setDraft('reTender', updated, currentWorkId));
+        queueMicrotask(() => {
+          setDraft('reTender', updated, currentWorkId);
+          bindForm(updated);
+          if (immediate) saveImmediately();
+          else scheduleDebouncedSave();
+        });
         return updated;
       });
     },
-    [currentWorkId, setDraft],
+    [currentWorkId, setDraft, bindForm, scheduleDebouncedSave, saveImmediately],
   );
 
   const handleToggle = useCallback(() => {
@@ -109,10 +125,14 @@ const ReTenderScreen = ({ navigation }) => {
       const next = turningOff
         ? { ...EMPTY_FORM, enable_retender: false }
         : { ...prev, enable_retender: true };
-      queueMicrotask(() => setDraft('reTender', next, currentWorkId));
+      queueMicrotask(() => {
+        setDraft('reTender', next, currentWorkId);
+        bindForm(next);
+        saveImmediately();
+      });
       return next;
     });
-  }, [currentWorkId, setDraft]);
+  }, [currentWorkId, setDraft, bindForm, saveImmediately]);
 
   const { saveAndContinue, isSaving } = useSaveAndContinue(
     'reTender',
@@ -163,7 +183,8 @@ const ReTenderScreen = ({ navigation }) => {
 
       <View style={styles.form}>
         <FormToggleField
-          rowLabel="Enable re-tender?"
+          rowLabelOn="Re-tender enabled"
+          rowLabelOff="Re-tender not enabled"
           value={form.enable_retender}
           onToggle={handleToggle}
         />
@@ -184,7 +205,7 @@ const ReTenderScreen = ({ navigation }) => {
               placeholder="dd/mm/yyyy"
               value={form.new_tender_date}
               onDateChange={(date) =>
-                updateField('new_tender_date', formatDateForStorage(date))
+                updateField('new_tender_date', formatDateForStorage(date), { immediate: true })
               }
             />
 

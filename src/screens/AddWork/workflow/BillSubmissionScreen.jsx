@@ -18,6 +18,7 @@ import { formatDateForStorage } from '../../../utils/dateFormat';
 import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
 
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
+import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -91,42 +92,56 @@ const BillSubmissionScreen = ({ navigation }) => {
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [summary, setSummary] = useState({ totalBill: 0, amountPaid: 0, pending: 0 });
+  const { bindForm, scheduleDebouncedSave, saveImmediately } = useWorkflowAutoSave('paymentStatus');
 
-  // ── Field updater ──────────────────────────────────────────────────────────
-  const updateField = useCallback((key, value) => {
-    setForm((prev) => {
-      const updated = { ...prev, [key]: value };
-      queueMicrotask(() => setDraft('paymentStatus', updated));
-      return updated;
-    });
-  }, [setDraft]);
+  useEffect(() => {
+    bindForm(form);
+  }, [form, bindForm]);
 
-  // ── Toggle — boolean only, no event object ─────────────────────────────────
+  const updateField = useCallback(
+    (key, value, { immediate = false } = {}) => {
+      setForm((prev) => {
+        const updated = { ...prev, [key]: value };
+        queueMicrotask(() => {
+          setDraft('paymentStatus', updated);
+          bindForm(updated);
+          if (immediate) saveImmediately();
+          else scheduleDebouncedSave();
+        });
+        return updated;
+      });
+    },
+    [setDraft, bindForm, scheduleDebouncedSave, saveImmediately],
+  );
+
   const handleToggle = useCallback(() => {
-    updateField('payment_released', !form.payment_released);
+    updateField('payment_released', !form.payment_released, { immediate: true });
   }, [form.payment_released, updateField]);
 
-  // ── Hydration ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const hydrate = () => {
-      // 1. In-session Zustand draft (user navigated back mid-flow)
-      const draft = getDraft('paymentStatus');
-      if (draft && Object.keys(draft).length > 0) {
-        setForm((prev) => ({ ...prev, ...draft }));
-      } else if (currentWorkId) {
+      if (currentWorkId) {
         const saved = getPaymentByWorkId(currentWorkId);
         if (saved) {
-          setForm({
+          const hydrated = {
             payment_released: saved.paid === 1,
             amount_paid: saved.amount_paid != null ? String(saved.amount_paid) : '',
             payment_date: saved.payment_date ?? '',
             payment_pdf_path: saved.payment_receipt_path ?? '',
-          });
+          };
+          setForm(hydrated);
+          bindForm(hydrated);
+          setSummary(getPaymentSummaryForWork(currentWorkId));
+          return;
         }
+        setSummary(getPaymentSummaryForWork(currentWorkId));
       }
 
-      if (currentWorkId) {
-        setSummary(getPaymentSummaryForWork(currentWorkId));
+      const draft = getDraft('paymentStatus');
+      if (draft && Object.keys(draft).length > 0) {
+        const merged = { ...EMPTY_FORM, ...draft };
+        setForm(merged);
+        bindForm(merged);
       }
     };
 
@@ -159,7 +174,7 @@ const BillSubmissionScreen = ({ navigation }) => {
     useDocumentUpload(
       currentWorkId,
       DOCUMENT_TYPES.PAYMENT_RECEIPT,
-      (filePath) => updateField('payment_pdf_path', filePath),
+      (filePath) => updateField('payment_pdf_path', filePath, { immediate: true }),
     );
 
   const handleSave = () => {
@@ -210,7 +225,8 @@ const BillSubmissionScreen = ({ navigation }) => {
       </View>
 
       <FormToggleField
-        rowLabel="Payment released?"
+        rowLabelOn="Payment released"
+        rowLabelOff="Payment not released"
         value={form.payment_released}
         onToggle={handleToggle}
       />
@@ -230,7 +246,9 @@ const BillSubmissionScreen = ({ navigation }) => {
             label="Payment date"
             placeholder="dd/mm/yy"
             value={form.payment_date}
-            onDateChange={(date) => updateField('payment_date', formatDateForStorage(date))}
+            onDateChange={(date) =>
+              updateField('payment_date', formatDateForStorage(date), { immediate: true })
+            }
           />
 
           <UploadDocument

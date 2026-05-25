@@ -19,6 +19,7 @@ import {
     upsertWorkProgress,
 } from '../../../db/repositories/workProgressRepository';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
+import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -39,29 +40,37 @@ const WorkProgressTrackingScreen = ({ navigation }) => {
   const replaceDraft = useDraftStore((s) => s.replaceDraft);
   const { currentWorkId } = useWorkStore();
   const [form, setForm] = useState(EMPTY_FORM);
+  const { bindForm, scheduleDebouncedSave, saveImmediately } = useWorkflowAutoSave('workProgress');
+
+  useEffect(() => {
+    bindForm(form);
+  }, [form, bindForm]);
 
   useEffect(() => {
     const hydrate = () => {
-      const draft = getDraft('workProgress', currentWorkId);
-      if (draft && (draft.site_notes != null || draft.site_photos?.length)) {
-        setForm({
-          site_notes: draft.site_notes ?? '',
-          site_photos: Array.isArray(draft.site_photos) ? draft.site_photos : [],
-        });
-        return;
+      if (currentWorkId) {
+        try {
+          const row = getWorkProgressByWorkId(currentWorkId);
+          const hydrated = mapWorkProgressRowToForm(row);
+          if (hydrated) {
+            setForm(hydrated);
+            bindForm(hydrated);
+            queueMicrotask(() => replaceDraft('workProgress', hydrated, currentWorkId));
+            return;
+          }
+        } catch (e) {
+          console.warn('[WorkProgress] hydration error:', e);
+        }
       }
 
-      if (!currentWorkId) return;
-
-      try {
-        const row = getWorkProgressByWorkId(currentWorkId);
-        const hydrated = mapWorkProgressRowToForm(row);
-        if (!hydrated) return;
-
-        setForm(hydrated);
-        queueMicrotask(() => replaceDraft('workProgress', hydrated, currentWorkId));
-      } catch (e) {
-        console.warn('[WorkProgress] hydration error:', e);
+      const draft = getDraft('workProgress', currentWorkId);
+      if (draft && (draft.site_notes != null || draft.site_photos?.length)) {
+        const merged = {
+          site_notes: draft.site_notes ?? '',
+          site_photos: Array.isArray(draft.site_photos) ? draft.site_photos : [],
+        };
+        setForm(merged);
+        bindForm(merged);
       }
     };
 
@@ -69,15 +78,20 @@ const WorkProgressTrackingScreen = ({ navigation }) => {
   }, [currentWorkId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateField = useCallback(
-    (key, value) => {
+    (key, value, { immediate = false } = {}) => {
       setForm((prev) => {
         const updated = { ...prev, [key]: value };
         const workId = currentWorkId;
-        queueMicrotask(() => setDraft('workProgress', updated, workId ?? undefined));
+        queueMicrotask(() => {
+          setDraft('workProgress', updated, workId ?? undefined);
+          bindForm(updated);
+          if (immediate) saveImmediately();
+          else scheduleDebouncedSave();
+        });
         return updated;
       });
     },
-    [currentWorkId, setDraft],
+    [currentWorkId, setDraft, bindForm, scheduleDebouncedSave, saveImmediately],
   );
 
   const { saveAndContinue, isSaving } = useSaveAndContinue(
@@ -126,7 +140,7 @@ const WorkProgressTrackingScreen = ({ navigation }) => {
         <SitePhotosUpload
           workId={currentWorkId}
           photos={form.site_photos}
-          onChange={(photos) => updateField('site_photos', photos)}
+          onChange={(photos) => updateField('site_photos', photos, { immediate: true })}
         />
       </View>
 

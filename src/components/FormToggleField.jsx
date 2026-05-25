@@ -6,14 +6,17 @@ import {
   FORM_FIELD_PLACEHOLDER_COLOR,
 } from '../theme/formFieldStyles';
 import { dismissKeyboardBeforeOverlay } from '../utils/keyboardDismiss';
+import { resolveToggleRowLabel } from '../utils/toggleRowLabels';
 
 /**
  * Toggle row styled as a standard form field (matches Inputboxfield).
- * Switch is vertically centered on the right for all workflow screens.
+ * Row text reflects toggle state: rowLabelOff when OFF, rowLabelOn when ON.
  */
 const FormToggleField = ({
   label,
   rowLabel,
+  rowLabelOn,
+  rowLabelOff,
   value = false,
   onToggle,
   disabled = false,
@@ -21,8 +24,15 @@ const FormToggleField = ({
   containerStyle,
   rowStyle,
 }) => {
-  const innerLabel = rowLabel ?? label;
-  const showHeaderLabel = label && rowLabel && label !== rowLabel;
+  const statusText = resolveToggleRowLabel(value, {
+    rowLabelOn,
+    rowLabelOff,
+    rowLabel,
+    label,
+  });
+  const showHeaderLabel = Boolean(
+    label && (rowLabelOn ?? rowLabel) && label !== (rowLabelOn ?? rowLabel),
+  );
 
   const handleToggle = useCallback(() => {
     if (disabled || !onToggle) return;
@@ -44,7 +54,7 @@ const FormToggleField = ({
         disabled={disabled}
         accessibilityRole="switch"
         accessibilityState={{ checked: value, disabled }}
-        accessibilityLabel={innerLabel}
+        accessibilityLabel={statusText}
         style={({ pressed }) => [
           formFieldStyles.control,
           formFieldStyles.toggleControl,
@@ -59,9 +69,8 @@ const FormToggleField = ({
             formFieldStyles.toggleLabel,
             { color: FORM_FIELD_PLACEHOLDER_COLOR, fontWeight: '400' },
           ]}
-          numberOfLines={1}
         >
-          {innerLabel}
+          {statusText}
           {!showHeaderLabel && required ? (
             <Text style={formFieldStyles.required}> *</Text>
           ) : null}

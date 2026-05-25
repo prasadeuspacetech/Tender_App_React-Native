@@ -17,6 +17,7 @@ import useDocumentUpload from '../../../hooks/useDocumentUpload';
 import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
 
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
+import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -47,40 +48,54 @@ const TenderCreationScreen = ({ navigation }) => {
 
   const [form, setForm]            = useState(EMPTY_FORM);
   const [isHydrated, setIsHydrated] = useState(false);
+  const { bindForm, scheduleDebouncedSave, saveImmediately } = useWorkflowAutoSave('tenderCreation');
 
-  // ── Field updater — sequential calls, NOT nested ──────────────────────────
-  const updateField = useCallback((key, value) => {
-    setForm((prev) => {
-      const updated = { ...prev, [key]: value };
-      queueMicrotask(() => setDraft('tenderCreation', updated));
-      return updated;
-    });
-  }, [setDraft]);
+  useEffect(() => {
+    bindForm(form);
+  }, [form, bindForm]);
 
-  // ── Hydration ─────────────────────────────────────────────────────────────
+  const updateField = useCallback(
+    (key, value, { immediate = false } = {}) => {
+      setForm((prev) => {
+        const updated = { ...prev, [key]: value };
+        queueMicrotask(() => {
+          setDraft('tenderCreation', updated);
+          bindForm(updated);
+          if (immediate) saveImmediately();
+          else scheduleDebouncedSave();
+        });
+        return updated;
+      });
+    },
+    [setDraft, bindForm, scheduleDebouncedSave, saveImmediately],
+  );
+
   useEffect(() => {
     const hydrate = () => {
-      // 1. In-session Zustand draft (user navigated back)
-      const draft = getDraft('tenderCreation');
-      if (draft && Object.keys(draft).length > 0) {
-        setForm((prev) => ({ ...prev, ...draft }));
-        setIsHydrated(true);
-        return;
-      }
-      // 2. SQLite (app was killed and reopened)
       if (currentWorkId) {
         const saved = getTenderByWorkId(currentWorkId);
         if (saved) {
-          setForm({
-            tender_name:        saved.tender_name        ?? '',
-            tender_number:      saved.tender_number      ?? '',
-            tender_date:        saved.tender_date        ?? '',
-            tender_amount:      saved.tender_amount != null ? String(saved.tender_amount) : '',
-            status:             saved.status             ?? 'closed',
+          const hydrated = {
+            tender_name: saved.tender_name ?? '',
+            tender_number: saved.tender_number ?? '',
+            tender_date: saved.tender_date ?? '',
+            tender_amount: saved.tender_amount != null ? String(saved.tender_amount) : '',
+            status: saved.status ?? 'closed',
             advertisement_path: saved.advertisement_path ?? null,
             tender_notice_path: saved.tender_notice_path ?? null,
-          });
+          };
+          setForm(hydrated);
+          bindForm(hydrated);
+          setIsHydrated(true);
+          return;
         }
+      }
+
+      const draft = getDraft('tenderCreation');
+      if (draft && Object.keys(draft).length > 0) {
+        const merged = { ...EMPTY_FORM, ...draft };
+        setForm(merged);
+        bindForm(merged);
       }
       setIsHydrated(true);
     };
@@ -88,9 +103,8 @@ const TenderCreationScreen = ({ navigation }) => {
     hydrate();
   }, [currentWorkId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Status toggle — ignores callback argument to avoid event-object bug ───
   const handleStatusToggle = useCallback(() => {
-    updateField('status', form.status === 'open' ? 'closed' : 'open');
+    updateField('status', form.status === 'open' ? 'closed' : 'open', { immediate: true });
   }, [form.status, updateField]);
 
   // ── Save & Continue ────────────────────────────────────────────────────────
@@ -105,14 +119,14 @@ const TenderCreationScreen = ({ navigation }) => {
     useDocumentUpload(
       currentWorkId,
       DOCUMENT_TYPES.TENDER_ADVERTISEMENT,
-      (filePath) => updateField('advertisement_path', filePath),
+      (filePath) => updateField('advertisement_path', filePath, { immediate: true }),
     );
 
   const { pickDocument: pickTenderNotice, uploading: uploadingTenderNotice } =
     useDocumentUpload(
       currentWorkId,
       DOCUMENT_TYPES.TENDER_NOTICE,
-      (filePath) => updateField('tender_notice_path', filePath),
+      (filePath) => updateField('tender_notice_path', filePath, { immediate: true }),
     );
 
   const handleSave = () => {
@@ -164,7 +178,9 @@ const TenderCreationScreen = ({ navigation }) => {
           label="Tender date"
           placeholder="dd/mm/yy"
           value={form.tender_date}
-          onDateChange={(date) => updateField('tender_date', formatDateForStorage(date))}
+          onDateChange={(date) =>
+            updateField('tender_date', formatDateForStorage(date), { immediate: true })
+          }
         />
 
         <Inputboxfield

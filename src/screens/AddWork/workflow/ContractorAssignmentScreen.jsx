@@ -27,6 +27,7 @@ import {
     upsertContractorAssignment,
 } from '../../../db/repositories/contractorRepository';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
+import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -60,51 +61,64 @@ const ContractorAssignmentScreen = ({ navigation }) => {
   const { currentWorkId } = useWorkStore();
 
   const [form, setForm] = useState(EMPTY_FORM);
+  const { bindForm, scheduleDebouncedSave, saveImmediately } = useWorkflowAutoSave('contractorAssignment');
 
-  // ─── Hydrate: draft → SQLite ───────────────────────────────────────────────
+  useEffect(() => {
+    bindForm(form);
+  }, [form, bindForm]);
+
   useEffect(() => {
     const hydrate = () => {
+      if (currentWorkId) {
+        try {
+          const row = getContractorByWorkId(currentWorkId);
+          const hydrated = mapContractorRowToForm(row, EMPTY_FORM);
+          if (hydrated) {
+            const merged = { ...EMPTY_FORM, ...hydrated };
+            setForm(merged);
+            bindForm(merged);
+            queueMicrotask(() => setDraft('contractorAssignment', merged));
+            return;
+          }
+        } catch (e) {
+          console.warn('[ContractorAssignment] hydration failed:', e);
+        }
+      }
+
       const draft = getDraft('contractorAssignment');
       if (draft && Object.keys(draft).length > 0) {
         const legacyDirection = draft.percentage_above_below
           ?? (typeof draft.percentage_direction === 'string'
             ? draft.percentage_direction
             : draft.percentage_direction?.value);
-        setForm({
+        const merged = {
           ...EMPTY_FORM,
           ...draft,
           percentage_above_below: normalizeEstimateType(legacyDirection),
-        });
-        return;
-      }
-
-      if (!currentWorkId) return;
-
-      try {
-        const row = getContractorByWorkId(currentWorkId);
-        const hydrated = mapContractorRowToForm(row, EMPTY_FORM);
-        if (!hydrated) return;
-
-        setForm((prev) => ({ ...prev, ...hydrated }));
-        queueMicrotask(() =>
-          setDraft('contractorAssignment', { ...EMPTY_FORM, ...hydrated }),
-        );
-      } catch (e) {
-        console.warn('[ContractorAssignment] hydration failed:', e);
+        };
+        setForm(merged);
+        bindForm(merged);
       }
     };
 
     hydrate();
   }, [currentWorkId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ─── Field updater ────────────────────────────────────────────────────────
-  const updateField = useCallback((key, value) => {
-    setForm((prev) => {
-      const updated = { ...prev, [key]: value };
-      queueMicrotask(() => setDraft('contractorAssignment', updated));
-      return updated;
-    });
-  }, [setDraft]);
+  const updateField = useCallback(
+    (key, value, { immediate = false } = {}) => {
+      setForm((prev) => {
+        const updated = { ...prev, [key]: value };
+        queueMicrotask(() => {
+          setDraft('contractorAssignment', updated);
+          bindForm(updated);
+          if (immediate) saveImmediately();
+          else scheduleDebouncedSave();
+        });
+        return updated;
+      });
+    },
+    [setDraft, bindForm, scheduleDebouncedSave, saveImmediately],
+  );
 
   // ─── Save & Continue ──────────────────────────────────────────────────────
   const { saveAndContinue, isSaving } = useSaveAndContinue(
@@ -125,7 +139,7 @@ const ContractorAssignmentScreen = ({ navigation }) => {
     useDocumentUpload(
       currentWorkId,
       DOCUMENT_TYPES.CONTRACTOR_DETAILS,
-      (filePath) => updateField('contractor_doc_path', filePath),
+      (filePath) => updateField('contractor_doc_path', filePath, { immediate: true }),
     );
 
   const handleSave = () => {
@@ -188,7 +202,9 @@ const ContractorAssignmentScreen = ({ navigation }) => {
               placeholder="Above"
               data={CONTRACTOR_ESTIMATE_OPTIONS}
               value={form.percentage_above_below || null}
-              onChange={(item) => updateField('percentage_above_below', item.value)}
+              onChange={(item) =>
+                updateField('percentage_above_below', item.value, { immediate: true })
+              }
               style={styles.noMargin}
               fieldStyle={styles.directionField}
             />

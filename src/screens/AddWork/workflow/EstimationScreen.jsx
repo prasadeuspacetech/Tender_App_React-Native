@@ -23,6 +23,7 @@ import {
     upsertEstimation,
 } from '../../../db/repositories/estimationsRepository';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
+import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -45,43 +46,59 @@ const EstimationScreen = ({ navigation }) => {
   const { currentWorkId } = useWorkStore();
 
   const [form, setForm] = useState(EMPTY_FORM);
+  const { bindForm, scheduleDebouncedSave, saveImmediately } = useWorkflowAutoSave('estimation');
+
+  useEffect(() => {
+    bindForm(form);
+  }, [form, bindForm]);
 
   useEffect(() => {
     const hydrate = () => {
-      const draft = getDraft('estimation');
-      if (draft && Object.keys(draft).length > 0) {
-        setForm((prev) => ({
-          ...prev,
-          ...draft,
-          estimation_date: formatDateForStorage(draft.estimation_date),
-        }));
-        return;
+      if (currentWorkId) {
+        try {
+          const row = getEstimationByWorkId(currentWorkId);
+          const hydrated = mapEstimationRowToForm(row);
+          if (hydrated) {
+            setForm(hydrated);
+            bindForm(hydrated);
+            setDraft('estimation', hydrated);
+            return;
+          }
+        } catch (e) {
+          console.warn('[EstimationScreen] hydration failed:', e);
+        }
       }
 
-      if (!currentWorkId) return;
-
-      try {
-        const row = getEstimationByWorkId(currentWorkId);
-        const hydrated = mapEstimationRowToForm(row);
-        if (!hydrated) return;
-
-        setForm(hydrated);
-        setDraft('estimation', hydrated);
-      } catch (e) {
-        console.warn('[EstimationScreen] hydration failed:', e);
+      const draft = getDraft('estimation');
+      if (draft && Object.keys(draft).length > 0) {
+        const merged = {
+          ...EMPTY_FORM,
+          ...draft,
+          estimation_date: formatDateForStorage(draft.estimation_date),
+        };
+        setForm(merged);
+        bindForm(merged);
       }
     };
 
     hydrate();
   }, [currentWorkId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const updateField = useCallback((key, val) => {
-    setForm((prev) => {
-      const updated = { ...prev, [key]: val };
-      queueMicrotask(() => setDraft('estimation', updated));
-      return updated;
-    });
-  }, [setDraft]);
+  const updateField = useCallback(
+    (key, val, { immediate = false } = {}) => {
+      setForm((prev) => {
+        const updated = { ...prev, [key]: val };
+        queueMicrotask(() => {
+          setDraft('estimation', updated);
+          bindForm(updated);
+          if (immediate) saveImmediately();
+          else scheduleDebouncedSave();
+        });
+        return updated;
+      });
+    },
+    [setDraft, bindForm, scheduleDebouncedSave, saveImmediately],
+  );
 
   const { saveAndContinue, isSaving } = useSaveAndContinue(
     'estimation',
@@ -105,7 +122,7 @@ const EstimationScreen = ({ navigation }) => {
     useDocumentUpload(
       currentWorkId,
       DOCUMENT_TYPES.ESTIMATION_FILE,
-      (filePath) => updateField('estimation_file_path', filePath),
+      (filePath) => updateField('estimation_file_path', filePath, { immediate: true }),
     );
 
   const handleSave = () => {
@@ -139,9 +156,12 @@ const EstimationScreen = ({ navigation }) => {
       <View style={styles.form}>
         <FormToggleField
           label="Estimation done?"
-          rowLabel="Estimation done"
+          rowLabelOn="Estimation done"
+          rowLabelOff="Estimation not done"
           value={form.estimate_done}
-          onToggle={() => updateField('estimate_done', !form.estimate_done)}
+          onToggle={() =>
+            updateField('estimate_done', !form.estimate_done, { immediate: true })
+          }
         />
 
         {form.estimate_done && (
@@ -149,7 +169,9 @@ const EstimationScreen = ({ navigation }) => {
             <NativeDateField
               label="Estimation Date"
               value={form.estimation_date}
-              onDateChange={(date) => updateField('estimation_date', formatDateForStorage(date))}
+              onDateChange={(date) =>
+                updateField('estimation_date', formatDateForStorage(date), { immediate: true })
+              }
               placeholder="dd/mm/yyyy"
             />
 

@@ -18,6 +18,7 @@ import {
     upsertBillSubmission,
 } from '../../../db/repositories/billSubmissionRepository';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
+import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -41,31 +42,39 @@ const BillSubmissionWorkflowScreen = ({ navigation }) => {
   const replaceDraft = useDraftStore((s) => s.replaceDraft);
   const { currentWorkId } = useWorkStore();
   const [form, setForm] = useState(EMPTY_FORM);
+  const { bindForm, scheduleDebouncedSave, saveImmediately } = useWorkflowAutoSave('billSubmission');
+
+  useEffect(() => {
+    bindForm(form);
+  }, [form, bindForm]);
 
   useEffect(() => {
     const hydrate = () => {
+      if (currentWorkId) {
+        try {
+          const row = getBillSubmissionByWorkId(currentWorkId);
+          const hydrated = mapBillSubmissionRowToForm(row);
+          if (hydrated) {
+            setForm(hydrated);
+            bindForm(hydrated);
+            queueMicrotask(() => replaceDraft('billSubmission', hydrated, currentWorkId));
+            return;
+          }
+        } catch (e) {
+          console.warn('[BillSubmission] hydration error:', e);
+        }
+      }
+
       const draft = getDraft('billSubmission', currentWorkId);
       if (draft && Object.keys(draft).length > 0) {
-        setForm({
+        const merged = {
           bill_submitted: Boolean(draft.bill_submitted),
           bill_number: draft.bill_number ?? '',
           bill_date: formatDateForStorage(draft.bill_date),
           bill_document: draft.bill_document ?? '',
-        });
-        return;
-      }
-
-      if (!currentWorkId) return;
-
-      try {
-        const row = getBillSubmissionByWorkId(currentWorkId);
-        const hydrated = mapBillSubmissionRowToForm(row);
-        if (!hydrated) return;
-
-        setForm(hydrated);
-        queueMicrotask(() => replaceDraft('billSubmission', hydrated, currentWorkId));
-      } catch (e) {
-        console.warn('[BillSubmission] hydration error:', e);
+        };
+        setForm(merged);
+        bindForm(merged);
       }
     };
 
@@ -73,19 +82,24 @@ const BillSubmissionWorkflowScreen = ({ navigation }) => {
   }, [currentWorkId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateField = useCallback(
-    (key, value) => {
+    (key, value, { immediate = false } = {}) => {
       setForm((prev) => {
         const updated = { ...prev, [key]: value };
         const workId = currentWorkId;
-        queueMicrotask(() => setDraft('billSubmission', updated, workId ?? undefined));
+        queueMicrotask(() => {
+          setDraft('billSubmission', updated, workId ?? undefined);
+          bindForm(updated);
+          if (immediate) saveImmediately();
+          else scheduleDebouncedSave();
+        });
         return updated;
       });
     },
-    [currentWorkId, setDraft],
+    [currentWorkId, setDraft, bindForm, scheduleDebouncedSave, saveImmediately],
   );
 
   const handleToggle = useCallback(() => {
-    updateField('bill_submitted', !form.bill_submitted);
+    updateField('bill_submitted', !form.bill_submitted, { immediate: true });
   }, [form.bill_submitted, updateField]);
 
   const { saveAndContinue, isSaving } = useSaveAndContinue(
@@ -139,7 +153,9 @@ const BillSubmissionWorkflowScreen = ({ navigation }) => {
               label="Bill date"
               placeholder="dd/mm/yy"
               value={form.bill_date}
-              onDateChange={(date) => updateField('bill_date', formatDateForStorage(date))}
+              onDateChange={(date) =>
+                updateField('bill_date', formatDateForStorage(date), { immediate: true })
+              }
             />
           </>
         ) : null}
@@ -147,7 +163,7 @@ const BillSubmissionWorkflowScreen = ({ navigation }) => {
         <BillDocumentUpload
           workId={currentWorkId}
           filePath={form.bill_document}
-          onChange={(path) => updateField('bill_document', path)}
+          onChange={(path) => updateField('bill_document', path, { immediate: true })}
         />
       </View>
 

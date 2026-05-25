@@ -1,6 +1,6 @@
 // Step 8: Work Order / Start
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import Inputboxfield from '../../../components/Inputboxfield';
@@ -19,6 +19,7 @@ import {
 } from '../../../db/repositories/workOrdersRepository';
 import useDocumentUpload from '../../../hooks/useDocumentUpload';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
+import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -42,44 +43,60 @@ const WorkOrderScreen = ({ navigation }) => {
   const setDraft = useDraftStore((s) => s.setDraft);
   const { currentWorkId } = useWorkStore();
   const [form, setForm] = useState(EMPTY_FORM);
+  const { bindForm, scheduleDebouncedSave, saveImmediately } = useWorkflowAutoSave('workOrder');
+
+  useEffect(() => {
+    bindForm(form);
+  }, [form, bindForm]);
 
   useEffect(() => {
     const hydrate = () => {
+      if (currentWorkId) {
+        try {
+          const row = getWorkOrderByWorkId(currentWorkId);
+          const hydrated = mapWorkOrderRowToForm(row);
+          if (hydrated) {
+            setForm(hydrated);
+            bindForm(hydrated);
+            queueMicrotask(() => setDraft('workOrder', hydrated));
+            return;
+          }
+        } catch (e) {
+          console.warn('[WorkOrder] hydration error:', e);
+        }
+      }
+
       const draft = getDraft('workOrder');
       if (draft && Object.keys(draft).length > 0) {
-        setForm((prev) => ({
-          ...prev,
+        const merged = {
+          ...EMPTY_FORM,
           ...draft,
           work_start_date: formatDateForStorage(draft.work_start_date),
           expected_completion_date: formatDateForStorage(draft.expected_completion_date),
-        }));
-        return;
-      }
-
-      if (!currentWorkId) return;
-
-      try {
-        const row = getWorkOrderByWorkId(currentWorkId);
-        const hydrated = mapWorkOrderRowToForm(row);
-        if (!hydrated) return;
-
-        setForm(hydrated);
-        queueMicrotask(() => setDraft('workOrder', hydrated));
-      } catch (e) {
-        console.warn('[WorkOrder] hydration error:', e);
+        };
+        setForm(merged);
+        bindForm(merged);
       }
     };
 
     hydrate();
   }, [currentWorkId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const updateField = (key, val) => {
-    setForm((prev) => {
-      const updated = { ...prev, [key]: val };
-      queueMicrotask(() => setDraft('workOrder', updated));
-      return updated;
-    });
-  };
+  const updateField = useCallback(
+    (key, val, { immediate = false } = {}) => {
+      setForm((prev) => {
+        const updated = { ...prev, [key]: val };
+        queueMicrotask(() => {
+          setDraft('workOrder', updated);
+          bindForm(updated);
+          if (immediate) saveImmediately();
+          else scheduleDebouncedSave();
+        });
+        return updated;
+      });
+    },
+    [setDraft, bindForm, scheduleDebouncedSave, saveImmediately],
+  );
 
   const { saveAndContinue, isSaving } = useSaveAndContinue(
     'workOrder',
@@ -92,7 +109,7 @@ const WorkOrderScreen = ({ navigation }) => {
     useDocumentUpload(
       currentWorkId,
       DOCUMENT_TYPES.WORK_ORDER_DOCUMENT,
-      (filePath) => updateField('work_order_document_path', filePath),
+      (filePath) => updateField('work_order_document_path', filePath, { immediate: true }),
     );
 
   const handleSave = () => {
@@ -135,7 +152,9 @@ const WorkOrderScreen = ({ navigation }) => {
           label="Work start date"
           placeholder="dd/mm/yyyy"
           value={form.work_start_date}
-          onDateChange={(v) => updateField('work_start_date', formatDateForStorage(v))}
+          onDateChange={(v) =>
+            updateField('work_start_date', formatDateForStorage(v), { immediate: true })
+          }
         />
 
         <NativeDateField
@@ -143,7 +162,7 @@ const WorkOrderScreen = ({ navigation }) => {
           placeholder="dd/mm/yyyy"
           value={form.expected_completion_date}
           onDateChange={(v) =>
-            updateField('expected_completion_date', formatDateForStorage(v))
+            updateField('expected_completion_date', formatDateForStorage(v), { immediate: true })
           }
         />
 

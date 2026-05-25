@@ -8,7 +8,8 @@ import FormToggleField from '../FormToggleField';
 const BillSubmissionToggle = ({ value = false, onToggle, disabled = false }) => (
   <FormToggleField
     label="Bill submitted?"
-    rowLabel="Bill submitted"
+    rowLabelOn="Bill submitted"
+    rowLabelOff="Bill not submitted"
     value={value}
     onToggle={onToggle}
     disabled={disabled}

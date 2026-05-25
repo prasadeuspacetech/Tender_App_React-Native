@@ -13,8 +13,9 @@ import {
   TOTAL_WORKFLOW_STEPS,
   WORKFLOW_ROUTES,
 } from '../../../constants/WorkflowSteps';
-import { upsertWorkDetails } from '../../../db/repositories/worksRepository';
+import { getWorkById, upsertWorkDetails } from '../../../db/repositories/worksRepository';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
+import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -36,18 +37,51 @@ const WorkDetailsScreen = ({ navigation }) => {
 
   const getDraft = useDraftStore((s) => s.getDraft);
   const setDraft = useDraftStore((s) => s.setDraft);
+  const currentWorkId = useWorkStore((s) => s.currentWorkId);
   const { currentWork } = useWorkStore();
 
   const [form, setForm] = useState(EMPTY_FORM);
+  const { bindForm, scheduleDebouncedSave, saveImmediately } = useWorkflowAutoSave('workDetails');
 
   useEffect(() => {
+    bindForm(form);
+  }, [form, bindForm]);
+
+  useEffect(() => {
+    if (currentWorkId) {
+      try {
+        const work = getWorkById(currentWorkId);
+        if (work) {
+          const hydrated = {
+            work_code: work.work_code ?? '',
+            financial_year: work.financial_year ?? '',
+            work_name: work.work_name ?? '',
+            ward: work.ward ?? '',
+            department: work.department ?? '',
+            sub_department: work.sub_department ?? '',
+            officer: work.officer ?? '',
+            budget: work.budget != null ? String(work.budget) : '',
+          };
+          setForm(hydrated);
+          bindForm(hydrated);
+          queueMicrotask(() => setDraft('workDetails', hydrated));
+          return;
+        }
+      } catch (e) {
+        console.warn('[WorkDetails] hydration error:', e);
+      }
+    }
+
     const draft = getDraft('workDetails');
     if (Object.keys(draft).length > 0) {
-      setForm((prev) => ({ ...prev, ...draft }));
+      const merged = { ...EMPTY_FORM, ...draft };
+      setForm(merged);
+      bindForm(merged);
       return;
     }
+
     if (currentWork) {
-      setForm({
+      const hydrated = {
         work_code: currentWork.work_code ?? '',
         financial_year: currentWork.financial_year ?? '',
         work_name: currentWork.work_name ?? '',
@@ -56,19 +90,26 @@ const WorkDetailsScreen = ({ navigation }) => {
         sub_department: currentWork.sub_department ?? '',
         officer: currentWork.officer ?? '',
         budget: currentWork.budget != null ? String(currentWork.budget) : '',
-      });
+      };
+      setForm(hydrated);
+      bindForm(hydrated);
     }
-  }, []);
+  }, [currentWorkId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateField = useCallback(
-    (key, value) => {
+    (key, value, { immediate = false } = {}) => {
       setForm((prev) => {
         const updated = { ...prev, [key]: value };
-        queueMicrotask(() => setDraft('workDetails', updated));
+        queueMicrotask(() => {
+          setDraft('workDetails', updated);
+          bindForm(updated);
+          if (immediate) saveImmediately();
+          else scheduleDebouncedSave();
+        });
         return updated;
       });
     },
-    [setDraft],
+    [setDraft, bindForm, scheduleDebouncedSave, saveImmediately],
   );
 
   const { saveAndContinue, isSaving } = useSaveAndContinue(

@@ -9,7 +9,7 @@
 //   + Real upsertSanction wired to useSaveAndContinue (stub removed)
 //   + Validation for required fields
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import Inputboxfield from '../../../components/Inputboxfield';
@@ -24,6 +24,7 @@ import useDocumentUpload from '../../../hooks/useDocumentUpload';
 import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
 
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
+import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -54,45 +55,59 @@ const SanctionApprovalScreen = ({ navigation }) => {
   const { currentWorkId }  = useWorkStore();
 
   const [form, setForm] = useState(EMPTY_FORM);
+  const { bindForm, scheduleDebouncedSave, saveImmediately } = useWorkflowAutoSave('sanctionApproval');
 
-  // ── Hydration: draft → SQLite ─────────────────────────────────────────────
+  useEffect(() => {
+    bindForm(form);
+  }, [form, bindForm]);
+
   useEffect(() => {
     const hydrate = () => {
-      const draft = getDraft('sanctionApproval');
-      if (draft && Object.keys(draft).length > 0) {
-        setForm((prev) => ({
-          ...prev,
-          ...draft,
-          sanction_date: formatDateForStorage(draft.sanction_date),
-        }));
-        return;
+      if (currentWorkId) {
+        try {
+          const row = getSanctionByWorkId(currentWorkId);
+          const hydrated = mapSanctionRowToForm(row);
+          if (hydrated) {
+            setForm(hydrated);
+            bindForm(hydrated);
+            queueMicrotask(() => setDraft('sanctionApproval', hydrated));
+            return;
+          }
+        } catch (e) {
+          console.warn('[SanctionApproval] hydration error:', e);
+        }
       }
 
-      if (!currentWorkId) return;
-
-      try {
-        const row = getSanctionByWorkId(currentWorkId);
-        const hydrated = mapSanctionRowToForm(row);
-        if (!hydrated) return;
-
-        setForm(hydrated);
-        queueMicrotask(() => setDraft('sanctionApproval', hydrated));
-      } catch (e) {
-        console.warn('[SanctionApproval] hydration error:', e);
+      const draft = getDraft('sanctionApproval');
+      if (draft && Object.keys(draft).length > 0) {
+        const merged = {
+          ...EMPTY_FORM,
+          ...draft,
+          sanction_date: formatDateForStorage(draft.sanction_date),
+        };
+        setForm(merged);
+        bindForm(merged);
       }
     };
 
     hydrate();
   }, [currentWorkId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Field update ───────────────────────────────────────────────────────────
-  const updateField = (key, val) => {
-    setForm((prev) => {
-      const updated = { ...prev, [key]: val };
-      queueMicrotask(() => setDraft('sanctionApproval', updated));
-      return updated;
-    });
-  };
+  const updateField = useCallback(
+    (key, val, { immediate = false } = {}) => {
+      setForm((prev) => {
+        const updated = { ...prev, [key]: val };
+        queueMicrotask(() => {
+          setDraft('sanctionApproval', updated);
+          bindForm(updated);
+          if (immediate) saveImmediately();
+          else scheduleDebouncedSave();
+        });
+        return updated;
+      });
+    },
+    [setDraft, bindForm, scheduleDebouncedSave, saveImmediately],
+  );
 
   // ── Save & Continue ────────────────────────────────────────────────────────
   const { saveAndContinue, isSaving } = useSaveAndContinue(
@@ -106,7 +121,7 @@ const SanctionApprovalScreen = ({ navigation }) => {
     useDocumentUpload(
       currentWorkId,
       DOCUMENT_TYPES.SANCTION_LETTER,
-      (filePath) => updateField('sanction_letter_path', filePath),
+      (filePath) => updateField('sanction_letter_path', filePath, { immediate: true }),
     );
 
   const handleSave = () => {
@@ -161,7 +176,9 @@ const SanctionApprovalScreen = ({ navigation }) => {
           label="Sanction date"
           placeholder="dd/mm/yy"
           value={form.sanction_date}
-          onDateChange={(v) => updateField('sanction_date', formatDateForStorage(v))}
+          onDateChange={(v) =>
+            updateField('sanction_date', formatDateForStorage(v), { immediate: true })
+          }
         />
 
         {/* ── Documents section ────────────────────────────────────────── */}
