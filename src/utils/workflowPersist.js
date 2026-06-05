@@ -5,7 +5,6 @@
 
 import { upsertApprovalDetails } from '../db/repositories/approvalsRepository';
 import { upsertBillSubmission } from '../db/repositories/billSubmissionRepository';
-import { upsertCompletionClosure } from '../db/repositories/completionClosureRepository';
 import { upsertContractorAssignment } from '../db/repositories/contractorRepository';
 import { upsertEstimation } from '../db/repositories/estimationsRepository';
 // paymentStatus is a ledger of installments — appended only on Save & Continue,
@@ -95,10 +94,6 @@ export const persistWorkflowStep = (screenKey, workId, formData) => {
     case 'billSubmission':
       if (!workId) return null;
       return upsertBillSubmission(workId, formData);
-
-    case 'completionClosure':
-      if (!workId) return null;
-      return upsertCompletionClosure(workId, formData);
 
     default:
       console.warn(`[workflowPersist] unknown screenKey: ${screenKey}`);

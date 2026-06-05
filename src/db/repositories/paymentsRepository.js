@@ -12,6 +12,8 @@
 // appendPaymentInstallment + getPaymentInstallmentsForWork.
 
 import { getDB } from '../database';
+import { getFinalTenderAmountForWork } from './contractorRepository';
+import { getTenderAmountByWorkId } from './tendersRepository';
 
 /** INSERT a new installment row. Returns the new row id. */
 export const appendPaymentInstallment = (workId, data = {}) => {
@@ -153,7 +155,7 @@ export const getPaymentByWorkId = (workId) => {
   return row ?? null;
 };
 
-// Best available total for Payment Status summary (sanction → tender → work budget).
+// Payment Status total bill = Final Tender Amount (then tender → work budget).
 // Amount Paid is the SUM across all installments.
 export const getPaymentSummaryForWork = (workId) => {
   if (!workId) {
@@ -166,14 +168,6 @@ export const getPaymentSummaryForWork = (workId) => {
     'SELECT budget FROM works WHERE id = ? LIMIT 1;',
     [workId],
   );
-  const tender = db.getFirstSync(
-    'SELECT tender_amount FROM tenders WHERE work_id = ? ORDER BY id DESC LIMIT 1;',
-    [workId],
-  );
-  const sanction = db.getFirstSync(
-    'SELECT sanction_amount FROM sanctions WHERE work_id = ? ORDER BY id DESC LIMIT 1;',
-    [workId],
-  );
   const paidRow = db.getFirstSync(
     `SELECT COALESCE(SUM(amount_paid), 0) AS total_paid
      FROM payments
@@ -181,9 +175,10 @@ export const getPaymentSummaryForWork = (workId) => {
     [workId],
   );
 
+  const finalTenderAmount = getFinalTenderAmountForWork(workId);
   const totalBill =
-    sanction?.sanction_amount ??
-    tender?.tender_amount ??
+    finalTenderAmount ??
+    getTenderAmountByWorkId(workId) ??
     work?.budget ??
     0;
 

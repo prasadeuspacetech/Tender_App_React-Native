@@ -1,36 +1,23 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import {
-  Animated,
-  StyleSheet,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native';
+import React, { useMemo } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-// Figma: large toggle track
-const TRACK_WIDTH = 90;
-const TRACK_HEIGHT = 23;
-const TRACK_BORDER_RADIUS = 30;
-const TRACK_BORDER_WIDTH = 0.5;
-const TRACK_PADDING = 4;
+import { FORM_FIELD_BORDER_COLOR } from '../theme/formFieldStyles';
 
-// Figma: white pill thumb
-const THUMB_WIDTH = 30;
-const THUMB_HEIGHT = 15;
-const THUMB_BORDER_RADIUS = 30;
+// Fits existing FormToggleField row slot (was 90×23 pill switch).
+const CONTROL_WIDTH = 90;
+const CONTROL_HEIGHT = 28;
+const SEGMENT_WIDTH = CONTROL_WIDTH / 2;
 
-const THUMB_TRAVEL = TRACK_WIDTH - TRACK_PADDING * 2 - THUMB_WIDTH;
-
-/** Figma ON track — shared with StatusToggle and other toggles */
+/** Primary active fill — shared with StatusToggle */
 export const TOGGLE_ACTIVE_COLOR = '#062E52';
 
 const DEFAULT_ACTIVE_COLOR = TOGGLE_ACTIVE_COLOR;
-const DEFAULT_INACTIVE_COLOR = 'rgba(102, 102, 102, 0.65)';
-const DEFAULT_ACTIVE_BORDER = '#558CBE';
-const DEFAULT_INACTIVE_BORDER = 'rgba(102, 102, 102, 0.85)';
+const SEGMENT_BORDER_COLOR = FORM_FIELD_BORDER_COLOR;
 
 /**
- * Large pill toggle — Figma 104×23 track, 35×15 thumb.
- * OFF: gray track, thumb left. ON: navy track, thumb right.
+ * Yes / No segmented control for workflow boolean fields.
+ * OFF (false) → No selected. ON (true) → Yes selected.
+ * Parent onToggle still flips boolean; segments call onToggle only when changing state.
  */
 const LargeToggleSwitch = ({
   value,
@@ -38,7 +25,8 @@ const LargeToggleSwitch = ({
   onToggle,
   disabled = false,
   activeColor = DEFAULT_ACTIVE_COLOR,
-  inactiveColor = DEFAULT_INACTIVE_COLOR,
+  leftLabel = 'No',
+  rightLabel = 'Yes',
   style,
 }) => {
   const enabled = useMemo(
@@ -46,89 +34,122 @@ const LargeToggleSwitch = ({
     [isEnabled, value],
   );
 
-  const thumbTranslate = useRef(
-    new Animated.Value(enabled ? THUMB_TRAVEL : 0),
-  ).current;
-  const trackAlpha = useRef(new Animated.Value(enabled ? 1 : 0)).current;
+  const handleSelectNo = () => {
+    if (disabled || !onToggle || !enabled) return;
+    onToggle();
+  };
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.spring(thumbTranslate, {
-        toValue: enabled ? THUMB_TRAVEL : 0,
-        useNativeDriver: true,
-        bounciness: 2,
-        speed: 18,
-      }),
-      Animated.timing(trackAlpha, {
-        toValue: enabled ? 1 : 0,
-        duration: 180,
-        useNativeDriver: false,
-      }),
-    ]).start();
-  }, [enabled, thumbTranslate, trackAlpha]);
-
-  const trackBg = trackAlpha.interpolate({
-    inputRange: [0, 1],
-    outputRange: [inactiveColor, activeColor],
-  });
-
-  const borderColor = trackAlpha.interpolate({
-    inputRange: [0, 1],
-    outputRange: [DEFAULT_INACTIVE_BORDER, DEFAULT_ACTIVE_BORDER],
-  });
+  const handleSelectYes = () => {
+    if (disabled || !onToggle || enabled) return;
+    onToggle();
+  };
 
   return (
-    <TouchableWithoutFeedback
-      onPress={disabled ? undefined : onToggle}
-      accessibilityRole="switch"
-      accessibilityState={{ checked: enabled, disabled }}
+    <View
+      style={[styles.root, style, disabled && styles.disabled]}
+      accessibilityRole="radiogroup"
+      accessibilityLabel={enabled ? rightLabel : leftLabel}
     >
-      <View style={[styles.root, style, disabled && styles.disabled]}>
-        <Animated.View
+      <View style={[styles.track, { borderColor: SEGMENT_BORDER_COLOR }]}>
+        <Pressable
           style={[
-            styles.track,
-            { backgroundColor: trackBg, borderColor },
+            styles.segment,
+            styles.segmentLeft,
+            !enabled && { backgroundColor: activeColor },
           ]}
+          onPress={handleSelectNo}
+          disabled={disabled}
+          accessibilityRole="radio"
+          accessibilityState={{ selected: !enabled, disabled }}
+          accessibilityLabel={leftLabel}
         >
-          <Animated.View
+          <Text
             style={[
-              styles.thumb,
-              { transform: [{ translateX: thumbTranslate }] },
+              styles.segmentText,
+              !enabled ? styles.segmentTextActive : styles.segmentTextInactive,
+              !enabled ? null : { color: activeColor },
             ]}
-          />
-        </Animated.View>
+          >
+            {leftLabel}
+          </Text>
+        </Pressable>
+
+        <View style={[styles.divider, { backgroundColor: SEGMENT_BORDER_COLOR }]} />
+
+        <Pressable
+          style={[
+            styles.segment,
+            styles.segmentRight,
+            enabled && { backgroundColor: activeColor },
+          ]}
+          onPress={handleSelectYes}
+          disabled={disabled}
+          accessibilityRole="radio"
+          accessibilityState={{ selected: enabled, disabled }}
+          accessibilityLabel={rightLabel}
+        >
+          <Text
+            style={[
+              styles.segmentText,
+              enabled ? styles.segmentTextActive : styles.segmentTextInactive,
+              enabled ? null : { color: activeColor },
+            ]}
+          >
+            {rightLabel}
+          </Text>
+        </Pressable>
       </View>
-    </TouchableWithoutFeedback>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   root: {
-    width: TRACK_WIDTH,
-    height: TRACK_HEIGHT,
+    width: CONTROL_WIDTH,
+    height: CONTROL_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
     flexShrink: 0,
   },
   track: {
-    width: TRACK_WIDTH,
-    height: TRACK_HEIGHT,
-    borderRadius: TRACK_BORDER_RADIUS,
-    borderWidth: TRACK_BORDER_WIDTH,
-    padding: TRACK_PADDING,
-    justifyContent: 'center',
+    width: CONTROL_WIDTH,
+    height: CONTROL_HEIGHT,
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    borderWidth: 1,
+    borderRadius: 8,
     overflow: 'hidden',
-  },
-  thumb: {
-    width: THUMB_WIDTH,
-    height: THUMB_HEIGHT,
-    borderRadius: THUMB_BORDER_RADIUS,
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.12,
-    shadowRadius: 2,
-    elevation: 2,
+  },
+  segment: {
+    width: SEGMENT_WIDTH,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  segmentLeft: {
+    borderTopLeftRadius: 7,
+    borderBottomLeftRadius: 7,
+  },
+  segmentRight: {
+    borderTopRightRadius: 7,
+    borderBottomRightRadius: 7,
+  },
+  segmentText: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+  },
+  segmentTextActive: {
+    color: '#FFFFFF',
+  },
+  segmentTextInactive: {
+    color: DEFAULT_ACTIVE_COLOR,
+  },
+  divider: {
+    width: 1,
+    alignSelf: 'stretch',
   },
   disabled: {
     opacity: 0.45,

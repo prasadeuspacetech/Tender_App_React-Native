@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
+import FormToggleField from '../../../components/FormToggleField';
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
 import WorkflowProgress from '../../../components/layouts/Workflowprogress';
@@ -10,8 +11,6 @@ import PrimaryButton from '../../../components/PrimaryButton';
 import ReportCategoryChipRow from '../../../components/reports/ReportCategoryChipRow';
 import SiteNotes from '../../../components/workflow/SiteNotes';
 import SitePhotosUpload from '../../../components/workflow/SitePhotosUpload';
-import WorkProgressCompletionCard from '../../../components/workflow/WorkProgressCompletionCard';
-import WorkProgressStatusSection from '../../../components/workflow/WorkProgressStatusSection';
 import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
 import {
     getWorkProgressByWorkId,
@@ -28,6 +27,7 @@ import theme from '../../../theme';
 const STEP = 9;
 
 const EMPTY_FORM = {
+  work_completion: false,
   site_notes: '',
   site_photos: [],
 };
@@ -64,9 +64,15 @@ const WorkProgressTrackingScreen = ({ navigation }) => {
       }
 
       const draft = getDraft('workProgress', currentWorkId);
-      if (draft && (draft.site_notes != null || draft.site_photos?.length)) {
+      if (
+        draft &&
+        (draft.work_completion != null ||
+          draft.site_notes != null ||
+          draft.site_photos?.length)
+      ) {
         const merged = {
-          site_notes: draft.site_notes ?? '',
+          ...EMPTY_FORM,
+          ...draft,
           site_photos: Array.isArray(draft.site_photos) ? draft.site_photos : [],
         };
         setForm(merged);
@@ -131,9 +137,18 @@ const WorkProgressTrackingScreen = ({ navigation }) => {
 
       <View style={styles.content}>
         <ReportCategoryChipRow style={styles.chips} />
-        <WorkProgressCompletionCard />
-        <WorkProgressStatusSection />
-        <SiteNotes
+
+        <FormToggleField
+          label="Work Completion"
+          rowLabelOn="Work completed"
+          rowLabelOff="Work in progress"
+          value={form.work_completion}
+          onToggle={() =>
+            updateField('work_completion', !form.work_completion, { immediate: true })
+          }
+        />
+
+        <SiteNotes style={styles.siteNotes}
           value={form.site_notes}
           onChangeText={(v) => updateField('site_notes', v)}
         />
@@ -168,6 +183,9 @@ const styles = StyleSheet.create({
     marginTop: theme.Spacing?.lg ?? 24,
     marginBottom: theme.Spacing?.xl ?? 32,
   },
+  siteNotes: {
+    marginTop: 10,
+  }
 });
 
 export default WorkProgressTrackingScreen;

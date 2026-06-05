@@ -185,7 +185,7 @@ const EstimationScreen = ({ navigation }) => {
             />
 
             <Inputboxfield
-              label="Notes"
+              label="Nature of Works"
               placeholder="Add notes (optional)"
               value={form.notes}
               onChangeText={(v) => updateField('notes', v)}
@@ -196,7 +196,7 @@ const EstimationScreen = ({ navigation }) => {
         )}
 
         <UploadDocument
-          sectionLabel="Documents"
+          sectionLabel="Estimated Pdf"
           documents={[
             buildUploadDocumentEntry({
               title: 'Estimation file',

@@ -1,4 +1,4 @@
-// Step 11: Bill Submission
+// Step 11: Bill Submission (final workflow step)
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
@@ -11,7 +11,11 @@ import NativeDateField from '../../../components/NativeDateField';
 import PrimaryButton from '../../../components/PrimaryButton';
 import BillDocumentUpload from '../../../components/workflow/BillDocumentUpload';
 import BillSubmissionToggle from '../../../components/workflow/BillSubmissionToggle';
-import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
+import {
+  getStepByRoute,
+  TOTAL_WORKFLOW_STEPS,
+  WORKFLOW_ROUTES,
+} from '../../../constants/WorkflowSteps';
 import {
     getBillSubmissionByWorkId,
     mapBillSubmissionRowToForm,
@@ -25,7 +29,7 @@ import useWorkStore from '../../../store/useWorkStore';
 import theme from '../../../theme';
 import { formatDateForStorage } from '../../../utils/dateFormat';
 
-const STEP = 11;
+const STEP = getStepByRoute(WORKFLOW_ROUTES.BILL_SUBMISSION)?.id ?? 11;
 
 const EMPTY_FORM = {
   bill_submitted: false,
@@ -40,7 +44,8 @@ const BillSubmissionWorkflowScreen = ({ navigation }) => {
   const getDraft = useDraftStore((s) => s.getDraft);
   const setDraft = useDraftStore((s) => s.setDraft);
   const replaceDraft = useDraftStore((s) => s.replaceDraft);
-  const { currentWorkId } = useWorkStore();
+  const clearAllDrafts = useDraftStore((s) => s.clearAllDrafts);
+  const { currentWorkId, clearCurrentWork } = useWorkStore();
   const [form, setForm] = useState(EMPTY_FORM);
   const { bindForm, scheduleDebouncedSave, saveImmediately } = useWorkflowAutoSave('billSubmission');
 
@@ -104,12 +109,17 @@ const BillSubmissionWorkflowScreen = ({ navigation }) => {
 
   const { saveAndContinue, isSaving } = useSaveAndContinue(
     'billSubmission',
-    (workId, data) => upsertBillSubmission(workId, data),
-    WORKFLOW_ROUTES.COMPLETION_CLOSURE,
+    async (workId, data) => {
+      upsertBillSubmission(workId, data);
+      clearAllDrafts();
+      clearCurrentWork();
+      return workId;
+    },
+    WORKFLOW_ROUTES.ADD_WORK,
     WORKFLOW_ROUTES.BILL_SUBMISSION,
   );
 
-  const handleSave = () => {
+  const handleSubmit = () => {
     saveAndContinue(form, navigation, {
       onValidationFail: (m) => Alert.alert('Save Failed', m),
     });
@@ -169,11 +179,11 @@ const BillSubmissionWorkflowScreen = ({ navigation }) => {
       </View>
 
       <PrimaryButton
-        title="Save & Continue"
+        title="Submit"
         loading={isSaving}
         fullWidth
         style={styles.cta}
-        onPress={handleSave}
+        onPress={handleSubmit}
       />
     </ScreenLayout>
   );

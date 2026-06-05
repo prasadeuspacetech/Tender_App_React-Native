@@ -8,5 +8,7 @@ build
 .cache
 .DS_Store
 *.log
-Trash
-.Trash 
+.Trash
+android/build
+ios/.xcode.env.local
+ios/Pods

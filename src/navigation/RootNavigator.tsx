@@ -29,6 +29,7 @@ import ActivationScreen from '../screens/splash/Activationscreen';
 import GradientSplashScreen from '../screens/splash/Gradientsplashscreen';
 import LoaderSplashScreen from '../screens/splash/Loadersplashscreen';
 import BottomTabNavigator from './BottomTabNavigator';
+import GeneralCorrespondenceScreen from '../screens/GeneralCorrespondence/GeneralCorrespondenceScreen';
 import { Colors } from '../theme';
 
 const Root = createNativeStackNavigator();
@@ -61,6 +62,12 @@ const RootNavigator = () => (
               }
             : undefined
         }
+      />
+
+      <Root.Screen
+        name="GeneralCorrespondence"
+        component={GeneralCorrespondenceScreen}
+        options={{ animation: 'slide_from_right' }}
       />
     </Root.Navigator>
   </SafeAreaProvider>

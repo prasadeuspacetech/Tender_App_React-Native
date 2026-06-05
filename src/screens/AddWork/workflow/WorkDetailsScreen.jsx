@@ -4,11 +4,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
+import FormDropdown from '../../../components/FormDropdown';
 import Inputboxfield from '../../../components/Inputboxfield';
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
 import WorkflowProgress from '../../../components/layouts/Workflowprogress';
 import PrimaryButton from '../../../components/PrimaryButton';
+import { FINANCIAL_YEAR_OPTIONS } from '../../../constants/dropdownOptions';
 import {
   TOTAL_WORKFLOW_STEPS,
   WORKFLOW_ROUTES,
@@ -163,7 +165,7 @@ const WorkDetailsScreen = ({ navigation }) => {
 
       <View style={styles.form}>
         <Inputboxfield
-          label="Work Code"
+          label="Budget Code"
           placeholder="eg. ERK-2025-0001"
           type="alphanumeric"
           value={form.work_code}
@@ -187,12 +189,14 @@ const WorkDetailsScreen = ({ navigation }) => {
           onChangeText={(v) => updateField('budget', v)}
         />
 
-        <Inputboxfield
+        <FormDropdown
           label="Financial Year"
-          placeholder="e.g. FY 2025-26"
-          type="alphanumeric"
-          value={form.financial_year}
-          onChangeText={(v) => updateField('financial_year', v)}
+          placeholder="Select financial year"
+          data={FINANCIAL_YEAR_OPTIONS}
+          value={form.financial_year || null}
+          onChange={(item) =>
+            updateField('financial_year', item.value, { immediate: true })
+          }
         />
 
         <Inputboxfield

@@ -35,6 +35,7 @@ export const upsertSanction = (workId, data) => {
     docket_number        = '',
     sanction_amount      = null,
     sanction_date        = '',
+    sanction_authority   = '',
     sanction_letter_path = null,
   } = data;
 
@@ -52,12 +53,14 @@ export const upsertSanction = (workId, data) => {
          docket_number        = ?,
          sanction_amount      = ?,
          sanction_date        = ?,
+         sanction_authority   = ?,
          sanction_letter_path = ?
        WHERE work_id = ?;`,
       [
         docket_number,
         amountValue,
         sanctionDateStored,
+        sanction_authority,
         sanction_letter_path,
         workId,
       ],
@@ -66,13 +69,15 @@ export const upsertSanction = (workId, data) => {
     // ── INSERT ────────────────────────────────────────────────────────────
     db.runSync(
       `INSERT INTO sanctions
-         (work_id, docket_number, sanction_amount, sanction_date, sanction_letter_path)
-       VALUES (?, ?, ?, ?, ?);`,
+         (work_id, docket_number, sanction_amount, sanction_date,
+          sanction_authority, sanction_letter_path)
+       VALUES (?, ?, ?, ?, ?, ?);`,
       [
         workId,
         docket_number,
         amountValue,
         sanctionDateStored,
+        sanction_authority,
         sanction_letter_path,
       ],
     );
@@ -88,6 +93,7 @@ export const mapSanctionRowToForm = (row) => {
     docket_number: row.docket_number ?? '',
     sanction_amount: row.sanction_amount != null ? String(row.sanction_amount) : '',
     sanction_date: formatDateForStorage(row.sanction_date),
+    sanction_authority: row.sanction_authority ?? '',
     sanction_letter_path: row.sanction_letter_path ?? '',
   };
 };
@@ -107,6 +113,7 @@ export const getSanctionByWorkId = (workId) => {
        docket_number,
        sanction_amount,
        sanction_date,
+       sanction_authority,
        sanction_letter_path
      FROM sanctions
      WHERE work_id = ?

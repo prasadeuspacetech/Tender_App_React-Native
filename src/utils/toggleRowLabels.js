@@ -21,6 +21,9 @@ export const deriveToggleOffLabel = (onLabel) => {
   if (/\bsubmitted\b/i.test(trimmed)) {
     return trimmed.replace(/\bsubmitted\b/i, 'not submitted');
   }
+  if (/\bopen\b/i.test(trimmed) && !/\bnot\s+open\b/i.test(trimmed)) {
+    return trimmed.replace(/\bopen\b/i, 'Not Open');
+  }
   if (/\benabled\b/i.test(trimmed)) {
     return trimmed.replace(/\benabled\b/i, 'not enabled');
   }

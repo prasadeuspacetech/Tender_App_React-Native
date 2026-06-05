@@ -23,33 +23,39 @@ const getExtension = (fileName, mimeType) => {
   return '';
 };
 
-const getWorkProgressPhotosDirectory = (workId) => {
-  const dir = new Directory(Paths.document, 'app_documents', `work_${workId}`, 'work_progress_photos');
+const getWorkPhotosDirectory = (workId, subfolder = 'work_progress_photos') => {
+  const dir = new Directory(Paths.document, 'app_documents', `work_${workId}`, subfolder);
   if (!dir.exists) {
     dir.create({ intermediates: true });
   }
   return dir;
 };
 
-const buildStoredFileName = (originalName, mimeType, index) => {
+const buildStoredFileName = (originalName, mimeType, index, filePrefix = 'site_photo') => {
   const ext = getExtension(originalName, mimeType);
   if (!ext) return null;
   const stamp = Date.now();
-  return `site_photo_${stamp}_${index}.${ext}`;
+  return `${filePrefix}_${stamp}_${index}.${ext}`;
 };
 
 /**
  * Pick one JPG/PNG and copy to app storage.
  * @returns {Promise<string|null>} local file URI
  */
-export const pickAndStoreSitePhoto = async (workId, currentCount = 0) => {
+export const pickAndStoreSitePhoto = async (workId, currentCount = 0, options = {}) => {
+  const {
+    subfolder = 'work_progress_photos',
+    filePrefix = 'site_photo',
+    maxPhotos = MAX_SITE_PHOTOS,
+  } = options;
+
   if (!workId) {
     Alert.alert('Upload failed', 'Work ID not found. Save work details first.');
     return null;
   }
 
-  if (currentCount >= MAX_SITE_PHOTOS) {
-    Alert.alert('Limit reached', `You can upload up to ${MAX_SITE_PHOTOS} photos.`);
+  if (currentCount >= maxPhotos) {
+    Alert.alert('Limit reached', `You can upload up to ${maxPhotos} photos.`);
     return null;
   }
 
@@ -77,14 +83,19 @@ export const pickAndStoreSitePhoto = async (workId, currentCount = 0) => {
     return null;
   }
 
-  const storedFileName = buildStoredFileName(asset.name, asset.mimeType, currentCount + 1);
+  const storedFileName = buildStoredFileName(
+    asset.name,
+    asset.mimeType,
+    currentCount + 1,
+    filePrefix,
+  );
   if (!storedFileName) {
     Alert.alert('Unsupported file', 'Only JPG and PNG photos are allowed.');
     return null;
   }
 
   try {
-    const workDir = getWorkProgressPhotosDirectory(workId);
+    const workDir = getWorkPhotosDirectory(workId, subfolder);
     const source = new File(asset.uri);
     const destination = new File(workDir, storedFileName);
 

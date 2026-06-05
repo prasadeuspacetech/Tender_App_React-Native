@@ -206,6 +206,15 @@ const CREATE_COMPLETION_CLOSURE = `
   );
 `;
 
+const CREATE_GENERAL_CORRESPONDENCE = `
+  CREATE TABLE IF NOT EXISTS general_correspondence (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    subject    TEXT,
+    date       TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+`;
+
 // ─── All migrations in order ──────────────────────────────────────────────────
 // Each entry runs once. To add columns in future: add a new ALTER TABLE entry.
 const MIGRATIONS = [
@@ -222,6 +231,7 @@ const MIGRATIONS = [
   CREATE_WORK_PROGRESS,
   CREATE_BILL_SUBMISSIONS,
   CREATE_COMPLETION_CLOSURE,
+  CREATE_GENERAL_CORRESPONDENCE,
 ];
 
 // ─── Additive column migrations (run after table creation) ────────────────────
@@ -255,6 +265,16 @@ const runColumnMigrations = (db) => {
   addColumnIfMissing('contractors', 'final_tender_amount', 'REAL');
   // v5 — Payment Status document path
   addColumnIfMissing('payments', 'payment_receipt_path', 'TEXT');
+  // v7 — Tender Creation A/B packet open flags
+  addColumnIfMissing('tenders', 'a_packet_open', 'INTEGER DEFAULT 0');
+  addColumnIfMissing('tenders', 'b_packet_open', 'INTEGER DEFAULT 0');
+  // v8 — Sanction Approval authority
+  addColumnIfMissing('sanctions', 'sanction_authority', 'TEXT');
+  // v9 — Work Order notes + inauguration photos
+  addColumnIfMissing('work_orders', 'notes', 'TEXT');
+  addColumnIfMissing('work_orders', 'inauguration_photos', 'TEXT');
+  // v10 — Work Progress completion flag
+  addColumnIfMissing('work_progress', 'work_completion', 'INTEGER DEFAULT 0');
 
   // v6 — UNIQUE indexes (IF NOT EXISTS keeps these silent on every launch).
   const indexStatements = [

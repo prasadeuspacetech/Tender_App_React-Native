@@ -1,14 +1,13 @@
-// src/navigation/WorkflowNavigator.jsx — 12-step workflow stack
+// src/navigation/WorkflowNavigator.jsx — 11-step workflow stack
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
-import { WORKFLOW_ROUTES } from '../constants/WorkflowSteps.js';
+import { WORKFLOW_ROUTES } from '../constants/WorkflowSteps';
 import { Colors } from '../theme';
 
 import AddWorkScreen from '../screens/AddWork/AddWorkScreen';
 import BillSubmissionWorkflowScreen from '../screens/AddWork/workflow/BillSubmissionWorkflowScreen';
-import CompletionClosureScreen from '../screens/AddWork/workflow/CompletionClosureScreen';
 import ContractorAssignmentScreen from '../screens/AddWork/workflow/ContractorAssignmentScreen';
 import EstimationScreen from '../screens/AddWork/workflow/EstimationScreen';
 import PaymentStatusScreen from '../screens/AddWork/workflow/PaymentStatusScreen';
@@ -56,10 +55,6 @@ const WorkflowNavigator = () => (
     <Stack.Screen
       name={WORKFLOW_ROUTES.BILL_SUBMISSION}
       component={BillSubmissionWorkflowScreen}
-    />
-    <Stack.Screen
-      name={WORKFLOW_ROUTES.COMPLETION_CLOSURE}
-      component={CompletionClosureScreen}
     />
   </Stack.Navigator>
 );

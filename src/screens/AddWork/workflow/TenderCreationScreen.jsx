@@ -2,15 +2,15 @@
 // Step 4 of 10: Tender Creation
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
+import FormToggleField from '../../../components/FormToggleField';
 import Inputboxfield from '../../../components/Inputboxfield';
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
 import WorkflowProgress from '../../../components/layouts/Workflowprogress';
 import NativeDateField from '../../../components/NativeDateField';
 import PrimaryButton from '../../../components/PrimaryButton';
-import StatusToggle from '../../../components/StatusToggle';
 import UploadDocument from '../../../components/UploadDocument';
 import { DOCUMENT_TYPES } from '../../../constants/documentTypes';
 import useDocumentUpload from '../../../hooks/useDocumentUpload';
@@ -25,6 +25,7 @@ import useWorkStore from '../../../store/useWorkStore';
 import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
 import { getTenderByWorkId, upsertTender } from '../../../db/repositories/tendersRepository';
 import theme from '../../../theme';
+import { formFieldStyles } from '../../../theme/formFieldStyles';
 import { formatDateForStorage } from '../../../utils/dateFormat';
 
 // ─── Initial form ─────────────────────────────────────────────────────────────
@@ -33,7 +34,8 @@ const EMPTY_FORM = {
   tender_number:      '',
   tender_date:        '',       // stored as 'DD/MM/YYYY' string
   tender_amount:      '',
-  status:             'closed', // 'open' | 'closed'
+  a_packet_open:      false,
+  b_packet_open:      false,
   advertisement_path: null,
   tender_notice_path: null,
 };
@@ -80,7 +82,8 @@ const TenderCreationScreen = ({ navigation }) => {
             tender_number: saved.tender_number ?? '',
             tender_date: saved.tender_date ?? '',
             tender_amount: saved.tender_amount != null ? String(saved.tender_amount) : '',
-            status: saved.status ?? 'closed',
+            a_packet_open: !!saved.a_packet_open,
+            b_packet_open: !!saved.b_packet_open,
             advertisement_path: saved.advertisement_path ?? null,
             tender_notice_path: saved.tender_notice_path ?? null,
           };
@@ -102,10 +105,6 @@ const TenderCreationScreen = ({ navigation }) => {
 
     hydrate();
   }, [currentWorkId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleStatusToggle = useCallback(() => {
-    updateField('status', form.status === 'open' ? 'closed' : 'open', { immediate: true });
-  }, [form.status, updateField]);
 
   // ── Save & Continue ────────────────────────────────────────────────────────
   const { saveAndContinue, isSaving } = useSaveAndContinue(
@@ -161,7 +160,7 @@ const TenderCreationScreen = ({ navigation }) => {
       <View style={styles.form}>
 
         <Inputboxfield
-          label="Tender name"
+          label="Tender work name"
           placeholder="Enter the tender name"
           type="textOnly"
           value={form.tender_name}
@@ -177,7 +176,7 @@ const TenderCreationScreen = ({ navigation }) => {
         />
 
         <NativeDateField
-          label="Tender date"
+          label="Advertisment date"
           placeholder="dd/mm/yy"
           value={form.tender_date}
           onDateChange={(date) =>
@@ -194,16 +193,27 @@ const TenderCreationScreen = ({ navigation }) => {
           onChangeText={(v) => updateField('tender_amount', v)}
         />
 
-        <Inputboxfield
-          label="Status"
-          placeholder="Tender Status"
-          value=""
-          editable={false}
-          rightIcon={
-            <StatusToggle
-              status={form.status}
-              onToggle={handleStatusToggle}
-            />
+        <Text style={styles.sectionLabel}>Tender Status</Text>
+
+        <FormToggleField
+          rowLabelOn="A Packet Open"
+          rowLabelOff="A Packet Not Open"
+          value={form.a_packet_open}
+          segmentLeftLabel="Close"
+          segmentRightLabel="Open"
+          onToggle={() =>
+            updateField('a_packet_open', !form.a_packet_open, { immediate: true })
+          }
+        />
+
+        <FormToggleField
+          rowLabelOn="B Packet Open"
+          rowLabelOff="B Packet Not Open"
+          value={form.b_packet_open}
+          segmentLeftLabel="Close"
+          segmentRightLabel="Open"
+          onToggle={() =>
+            updateField('b_packet_open', !form.b_packet_open, { immediate: true })
           }
         />
 
@@ -218,13 +228,13 @@ const TenderCreationScreen = ({ navigation }) => {
               onPress: pickAdvertisement,
               loading: uploadingAdvertisement,
             }),
-            buildUploadDocumentEntry({
-              title: 'Tender Notice',
-              uploadText: 'Upload Tender notice',
-              filePath: form.tender_notice_path,
-              onPress: pickTenderNotice,
-              loading: uploadingTenderNotice,
-            }),
+            // buildUploadDocumentEntry({
+            //   title: 'Tender Notice',
+            //   uploadText: 'Upload Tender notice',
+            //   filePath: form.tender_notice_path,
+            //   onPress: pickTenderNotice,
+            //   loading: uploadingTenderNotice,
+            // }),
           ]}
         />
 
@@ -245,6 +255,10 @@ const TenderCreationScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   progress: { marginBottom: theme.Spacing?.sm ?? 8 },
   form:     { marginTop:    theme.Spacing?.sm ?? 8 },
+  sectionLabel: {
+    ...formFieldStyles.label,
+    marginBottom: theme.Spacing?.xs ?? 4,
+  },
 
   cta: {
     marginTop:    theme.Spacing?.lg ?? 24,

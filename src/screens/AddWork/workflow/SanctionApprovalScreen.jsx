@@ -41,8 +41,9 @@ import { formatDateForStorage } from '../../../utils/dateFormat';
 // ─── Initial form state ───────────────────────────────────────────────────────
 const EMPTY_FORM = {
   docket_number:        '',
-  sanction_amount:      '',
   sanction_date:        '',
+  sanction_amount:      '',
+  sanction_authority:   '',
   sanction_letter_path: '',
 };
 
@@ -164,16 +165,6 @@ const SanctionApprovalScreen = ({ navigation }) => {
           onChangeText={(v) => updateField('docket_number', v)}
         />
 
-        {/* Sanction Amount — numeric, ₹ prefix */}
-        <Inputboxfield
-          label="Sanction amount (₹)"
-          placeholder="₹0.00"
-          type="number"
-          value={form.sanction_amount}
-          onChangeText={(v) => updateField('sanction_amount', v)}
-          keyboardType="decimal-pad"
-        />
-
         <NativeDateField
           label="Sanction date"
           placeholder="dd/mm/yy"
@@ -183,13 +174,29 @@ const SanctionApprovalScreen = ({ navigation }) => {
           }
         />
 
+        <Inputboxfield
+          label="Sanction amount (₹)"
+          placeholder="₹0.00"
+          type="number"
+          value={form.sanction_amount}
+          onChangeText={(v) => updateField('sanction_amount', v)}
+          keyboardType="decimal-pad"
+        />
+
+        <Inputboxfield
+          label="Sanction Authority"
+          placeholder="Enter sanction authority"
+          value={form.sanction_authority}
+          onChangeText={(v) => updateField('sanction_authority', v)}
+        />
+
         {/* ── Documents section ────────────────────────────────────────── */}
         <UploadDocument
           sectionLabel="Documents"
           documents={[
             buildUploadDocumentEntry({
               title: 'Sanction letter',
-              uploadText: 'Upload Sanction letter',
+              uploadText: 'Upload resolution/Sanction letter',
               filePath: form.sanction_letter_path,
               onPress: pickSanctionLetter,
               loading: uploadingSanctionLetter,

@@ -26,6 +26,8 @@ import {
     normalizeEstimateType,
     upsertContractorAssignment,
 } from '../../../db/repositories/contractorRepository';
+import { getTenderAmountByWorkId } from '../../../db/repositories/tendersRepository';
+import { computeFinalTenderAmount } from '../../../utils/finalTenderAmount';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
@@ -61,20 +63,57 @@ const ContractorAssignmentScreen = ({ navigation }) => {
   const { currentWorkId } = useWorkStore();
 
   const [form, setForm] = useState(EMPTY_FORM);
+  const [tenderAmount, setTenderAmount] = useState(null);
   const { bindForm, scheduleDebouncedSave, saveImmediately } = useWorkflowAutoSave('contractorAssignment');
+
+  const withComputedFinalAmount = useCallback(
+    (baseForm, baseTenderAmount = tenderAmount) => {
+      const computed = computeFinalTenderAmount(
+        baseTenderAmount,
+        baseForm.percentage_above_below,
+        baseForm.percentage_variation,
+      );
+      return {
+        ...baseForm,
+        final_tender_amount: computed != null ? String(computed) : '',
+      };
+    },
+    [tenderAmount],
+  );
 
   useEffect(() => {
     bindForm(form);
   }, [form, bindForm]);
 
   useEffect(() => {
+    if (!currentWorkId) {
+      setTenderAmount(null);
+      return;
+    }
+    try {
+      setTenderAmount(getTenderAmountByWorkId(currentWorkId));
+    } catch (e) {
+      console.warn('[ContractorAssignment] tender amount load failed:', e);
+      setTenderAmount(null);
+    }
+  }, [currentWorkId]);
+
+  useEffect(() => {
     const hydrate = () => {
+      const baseTenderAmount = currentWorkId
+        ? getTenderAmountByWorkId(currentWorkId)
+        : null;
+      setTenderAmount(baseTenderAmount);
+
       if (currentWorkId) {
         try {
           const row = getContractorByWorkId(currentWorkId);
           const hydrated = mapContractorRowToForm(row, EMPTY_FORM);
           if (hydrated) {
-            const merged = { ...EMPTY_FORM, ...hydrated };
+            const merged = withComputedFinalAmount(
+              { ...EMPTY_FORM, ...hydrated },
+              baseTenderAmount,
+            );
             setForm(merged);
             bindForm(merged);
             queueMicrotask(() => setDraft('contractorAssignment', merged));
@@ -91,11 +130,14 @@ const ContractorAssignmentScreen = ({ navigation }) => {
           ?? (typeof draft.percentage_direction === 'string'
             ? draft.percentage_direction
             : draft.percentage_direction?.value);
-        const merged = {
-          ...EMPTY_FORM,
-          ...draft,
-          percentage_above_below: normalizeEstimateType(legacyDirection),
-        };
+        const merged = withComputedFinalAmount(
+          {
+            ...EMPTY_FORM,
+            ...draft,
+            percentage_above_below: normalizeEstimateType(legacyDirection),
+          },
+          baseTenderAmount,
+        );
         setForm(merged);
         bindForm(merged);
       }
@@ -107,7 +149,10 @@ const ContractorAssignmentScreen = ({ navigation }) => {
   const updateField = useCallback(
     (key, value, { immediate = false } = {}) => {
       setForm((prev) => {
-        const updated = { ...prev, [key]: value };
+        let updated = { ...prev, [key]: value };
+        if (key === 'percentage_above_below' || key === 'percentage_variation') {
+          updated = withComputedFinalAmount(updated);
+        }
         queueMicrotask(() => {
           setDraft('contractorAssignment', updated);
           bindForm(updated);
@@ -117,7 +162,7 @@ const ContractorAssignmentScreen = ({ navigation }) => {
         return updated;
       });
     },
-    [setDraft, bindForm, scheduleDebouncedSave, saveImmediately],
+    [setDraft, bindForm, scheduleDebouncedSave, saveImmediately, withComputedFinalAmount],
   );
 
   // ─── Save & Continue ──────────────────────────────────────────────────────
@@ -185,7 +230,7 @@ const ContractorAssignmentScreen = ({ navigation }) => {
 
         {/* Contractor Contact */}
         <Inputboxfield
-          label="Contractor contact"
+          label="Contract person mobile no."
           placeholder="+91 8833557722"
           value={form.contractor_contact}
           type="phone"
@@ -226,14 +271,14 @@ const ContractorAssignmentScreen = ({ navigation }) => {
 
         </View>
 
-        {/* Final Tender Amount */}
+        {/* Final Tender Amount — calculated from tender amount + above/below % */}
         <Inputboxfield
           label="Final tender amount (₹)"
           placeholder="₹0.00"
           value={form.final_tender_amount}
           type="number"
           keyboardType="numeric"
-          onChangeText={(v) => updateField('final_tender_amount', v)}
+          editable={false}
         />
 
         {/* ── Documents section ──────────────────────────────────────────── */}

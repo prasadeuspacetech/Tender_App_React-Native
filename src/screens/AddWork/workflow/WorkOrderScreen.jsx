@@ -9,7 +9,9 @@ import ScreenLayout from '../../../components/layouts/Screenlayout';
 import WorkflowProgress from '../../../components/layouts/Workflowprogress';
 import NativeDateField from '../../../components/NativeDateField';
 import PrimaryButton from '../../../components/PrimaryButton';
+import SitePhotosUpload from '../../../components/workflow/SitePhotosUpload';
 import UploadDocument from '../../../components/UploadDocument';
+import { MAX_INAUGURATION_PHOTOS } from '../../../db/repositories/workOrdersRepository';
 import { DOCUMENT_TYPES } from '../../../constants/documentTypes';
 import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
 import {
@@ -33,6 +35,8 @@ const EMPTY_FORM = {
   work_order_number: '',
   work_start_date: '',
   expected_completion_date: '',
+  notes: '',
+  inauguration_photos: [],
   work_order_document_path: '',
 };
 
@@ -165,6 +169,30 @@ const WorkOrderScreen = ({ navigation }) => {
           onDateChange={(v) =>
             updateField('expected_completion_date', formatDateForStorage(v), { immediate: true })
           }
+        />
+
+        <Inputboxfield
+          label="Notes (Optional)"
+          placeholder="Add notes (optional)"
+          value={form.notes}
+          onChangeText={(v) => updateField('notes', v)}
+          multiline
+          numberOfLines={3}
+        />
+
+        <SitePhotosUpload
+          workId={currentWorkId}
+          photos={form.inauguration_photos}
+          onChange={(photos) =>
+            updateField('inauguration_photos', photos, { immediate: true })
+          }
+          sectionLabel="Inauguration Photos"
+          maxPhotos={MAX_INAUGURATION_PHOTOS}
+          storageSubfolder="work_order_inauguration_photos"
+          filePrefix="inauguration_photo"
+          addPhotoLabel="+ Add Photo"
+          removeConfirmTitle="Remove photo"
+          removeConfirmMessage="Remove this inauguration photo?"
         />
 
         <UploadDocument

@@ -3,6 +3,8 @@
 // Pure functions for the `contractors` table.
 
 import { getDB } from '../database';
+import { computeFinalTenderAmount } from '../../utils/finalTenderAmount';
+import { getTenderAmountByWorkId } from './tendersRepository';
 
 const VALID_ESTIMATE_TYPES = new Set(['above', 'below']);
 
@@ -32,6 +34,25 @@ export const mapContractorRowToForm = (row, baseForm = {}) => {
       row.final_tender_amount != null ? String(row.final_tender_amount) : '',
     contractor_doc_path: row.document_path ?? '',
   };
+};
+
+/** Authoritative Final Tender Amount for payment / budget calculations. */
+export const getFinalTenderAmountForWork = (workId) => {
+  if (!workId) return null;
+
+  const contractor = getContractorByWorkId(workId);
+  if (!contractor) return null;
+
+  const tenderAmount = getTenderAmountByWorkId(workId);
+  const computed = computeFinalTenderAmount(
+    tenderAmount,
+    contractor.percentage_above_below,
+    contractor.percentage_variation,
+  );
+
+  if (computed != null) return computed;
+
+  return parseAmount(contractor.final_tender_amount);
 };
 
 // ─── Get contractor record by work_id ─────────────────────────────────────────
@@ -73,7 +94,14 @@ export const upsertContractorAssignment = (workId, data = {}) => {
       ? parseFloat(percentage_variation)
       : 0;
 
-  const finalAmountValue = parseAmount(final_tender_amount);
+  const tenderAmount = getTenderAmountByWorkId(workId);
+  const computedFinal = computeFinalTenderAmount(
+    tenderAmount,
+    percentage_above_below,
+    variationValue,
+  );
+  const finalAmountValue =
+    computedFinal ?? parseAmount(final_tender_amount);
 
   if (!existing) {
     db.runSync(

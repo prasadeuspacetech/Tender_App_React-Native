@@ -17,10 +17,40 @@ export const parseSitePhotosJson = (raw) => {
 
 export const serializeSitePhotos = (photos) => JSON.stringify(Array.isArray(photos) ? photos : []);
 
+/** Maps Work Progress toggle to work list / dashboard status strings. */
+export const workCompletionToWorkCompletedStatus = (workCompletion) =>
+  workCompletion ? 'Completed' : 'In Progress';
+
+const syncWorkCompletedStatus = (db, workId, workCompletion) => {
+  const workCompleted = workCompletionToWorkCompletedStatus(!!workCompletion);
+  const existing = db.getFirstSync(
+    'SELECT id FROM completion_closure WHERE work_id = ? LIMIT 1;',
+    [workId],
+  );
+
+  if (existing) {
+    db.runSync(
+      `UPDATE completion_closure SET
+         work_completed = ?,
+         updated_at     = datetime('now')
+       WHERE work_id = ?;`,
+      [workCompleted, workId],
+    );
+    return;
+  }
+
+  db.runSync(
+    `INSERT INTO completion_closure (work_id, work_completed)
+     VALUES (?, ?);`,
+    [workId, workCompleted],
+  );
+};
+
 export const mapWorkProgressRowToForm = (row) => {
   if (!row) return null;
 
   return {
+    work_completion: !!row.work_completion,
     site_notes: row.site_notes ?? '',
     site_photos: parseSitePhotosJson(row.site_photos),
   };
@@ -36,6 +66,7 @@ export const upsertWorkProgress = (workId, data) => {
     [workId],
   );
 
+  const workCompletion = data.work_completion ? 1 : 0;
   const siteNotes = String(data.site_notes ?? '').slice(0, MAX_SITE_NOTES_LENGTH);
   const photos = Array.isArray(data.site_photos) ? data.site_photos.slice(0, MAX_SITE_PHOTOS) : [];
   const sitePhotosJson = serializeSitePhotos(photos);
@@ -43,19 +74,22 @@ export const upsertWorkProgress = (workId, data) => {
   if (existing) {
     db.runSync(
       `UPDATE work_progress SET
-         site_notes  = ?,
-         site_photos = ?,
-         updated_at  = datetime('now')
+         work_completion = ?,
+         site_notes      = ?,
+         site_photos     = ?,
+         updated_at      = datetime('now')
        WHERE work_id = ?;`,
-      [siteNotes, sitePhotosJson, workId],
+      [workCompletion, siteNotes, sitePhotosJson, workId],
     );
   } else {
     db.runSync(
-      `INSERT INTO work_progress (work_id, site_notes, site_photos)
-       VALUES (?, ?, ?);`,
-      [workId, siteNotes, sitePhotosJson],
+      `INSERT INTO work_progress (work_id, work_completion, site_notes, site_photos)
+       VALUES (?, ?, ?, ?);`,
+      [workId, workCompletion, siteNotes, sitePhotosJson],
     );
   }
+
+  syncWorkCompletedStatus(db, workId, !!data.work_completion);
 
   return workId;
 };
@@ -67,7 +101,7 @@ export const getWorkProgressByWorkId = (workId) => {
 
   return (
     db.getFirstSync(
-      `SELECT id, work_id, site_notes, site_photos
+      `SELECT id, work_id, work_completion, site_notes, site_photos
        FROM work_progress
        WHERE work_id = ?
        LIMIT 1;`,

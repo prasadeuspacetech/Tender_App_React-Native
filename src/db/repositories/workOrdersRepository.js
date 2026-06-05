@@ -2,6 +2,13 @@
 
 import { getDB } from '../database';
 import { formatDateForStorage } from '../../utils/dateFormat';
+import {
+  parseSitePhotosJson,
+  serializeSitePhotos,
+  MAX_SITE_PHOTOS,
+} from './workProgressRepository';
+
+export const MAX_INAUGURATION_PHOTOS = MAX_SITE_PHOTOS;
 
 export const upsertWorkOrder = (workId, data) => {
   if (!workId) throw new Error('upsertWorkOrder: workId is required');
@@ -17,11 +24,17 @@ export const upsertWorkOrder = (workId, data) => {
     work_order_number = '',
     work_start_date = '',
     expected_completion_date = '',
+    notes = '',
+    inauguration_photos = [],
     work_order_document_path = null,
   } = data;
 
   const startStored = formatDateForStorage(work_start_date);
   const completionStored = formatDateForStorage(expected_completion_date);
+  const photos = Array.isArray(inauguration_photos)
+    ? inauguration_photos.slice(0, MAX_INAUGURATION_PHOTOS)
+    : [];
+  const inaugurationPhotosJson = serializeSitePhotos(photos);
 
   if (existing) {
     db.runSync(
@@ -29,6 +42,8 @@ export const upsertWorkOrder = (workId, data) => {
          work_order_number        = ?,
          work_start_date          = ?,
          expected_completion_date = ?,
+         notes                    = ?,
+         inauguration_photos      = ?,
          work_order_document_path = ?,
          updated_at               = datetime('now')
        WHERE work_id = ?;`,
@@ -36,6 +51,8 @@ export const upsertWorkOrder = (workId, data) => {
         work_order_number,
         startStored,
         completionStored,
+        notes,
+        inaugurationPhotosJson,
         work_order_document_path,
         workId,
       ],
@@ -43,13 +60,16 @@ export const upsertWorkOrder = (workId, data) => {
   } else {
     db.runSync(
       `INSERT INTO work_orders
-         (work_id, work_order_number, work_start_date, expected_completion_date, work_order_document_path)
-       VALUES (?, ?, ?, ?, ?);`,
+         (work_id, work_order_number, work_start_date, expected_completion_date,
+          notes, inauguration_photos, work_order_document_path)
+       VALUES (?, ?, ?, ?, ?, ?, ?);`,
       [
         workId,
         work_order_number,
         startStored,
         completionStored,
+        notes,
+        inaugurationPhotosJson,
         work_order_document_path,
       ],
     );
@@ -65,6 +85,8 @@ export const mapWorkOrderRowToForm = (row) => {
     work_order_number: row.work_order_number ?? '',
     work_start_date: formatDateForStorage(row.work_start_date),
     expected_completion_date: formatDateForStorage(row.expected_completion_date),
+    notes: row.notes ?? '',
+    inauguration_photos: parseSitePhotosJson(row.inauguration_photos),
     work_order_document_path: row.work_order_document_path ?? '',
   };
 };
@@ -81,6 +103,8 @@ export const getWorkOrderByWorkId = (workId) => {
          work_order_number,
          work_start_date,
          expected_completion_date,
+         notes,
+         inauguration_photos,
          work_order_document_path
        FROM work_orders
        WHERE work_id = ?

@@ -29,9 +29,14 @@ export const upsertTender = (workId, data) => {
     tender_date        = '',
     tender_amount      = null,
     status             = 'closed',
+    a_packet_open      = false,
+    b_packet_open      = false,
     advertisement_path = null,
     tender_notice_path = null,
   } = data;
+
+  const aPacketOpen = a_packet_open ? 1 : 0;
+  const bPacketOpen = b_packet_open ? 1 : 0;
 
   // Strip currency symbols / commas — store NULL if blank so SUM queries stay clean
   const amountValue = tender_amount
@@ -47,12 +52,15 @@ export const upsertTender = (workId, data) => {
          tender_date        = ?,
          tender_amount      = ?,
          status             = ?,
+         a_packet_open      = ?,
+         b_packet_open      = ?,
          advertisement_path = ?,
          tender_notice_path = ?
        WHERE work_id = ?;`,
       [
         tender_name, tender_number, tender_date,
         amountValue, status,
+        aPacketOpen, bPacketOpen,
         advertisement_path, tender_notice_path,
         workId,
       ],
@@ -62,12 +70,14 @@ export const upsertTender = (workId, data) => {
     db.runSync(
       `INSERT INTO tenders
          (work_id, tender_name, tender_number, tender_date,
-          tender_amount, status, advertisement_path, tender_notice_path)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+          tender_amount, status, a_packet_open, b_packet_open,
+          advertisement_path, tender_notice_path)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
       [
         workId,
         tender_name, tender_number, tender_date,
         amountValue, status,
+        aPacketOpen, bPacketOpen,
         advertisement_path, tender_notice_path,
       ],
     );
@@ -89,6 +99,7 @@ export const getTenderByWorkId = (workId) => {
     `SELECT
        id, work_id, tender_name, tender_number,
        tender_date, tender_amount, status,
+       a_packet_open, b_packet_open,
        advertisement_path, tender_notice_path
      FROM tenders
      WHERE work_id = ?
@@ -97,4 +108,19 @@ export const getTenderByWorkId = (workId) => {
   );
 
   return row ?? null;
+};
+
+/** Latest tender_amount for a work (Tender Creation base amount). */
+export const getTenderAmountByWorkId = (workId) => {
+  if (!workId) return null;
+
+  const db = getDB();
+  const row = db.getFirstSync(
+    'SELECT tender_amount FROM tenders WHERE work_id = ? ORDER BY id DESC LIMIT 1;',
+    [workId],
+  );
+
+  if (row?.tender_amount == null) return null;
+  const n = Number(row.tender_amount);
+  return Number.isFinite(n) ? n : null;
 };

@@ -45,20 +45,20 @@ const PhotoThumbnail = ({ uri, label, onRemove }) => (
   </View>
 );
 
-const AddPhotoCard = ({ onPress, loading }) => (
+const AddPhotoCard = ({ onPress, loading, label = 'Add photo' }) => (
   <Pressable
     style={styles.addCard}
     onPress={onPress}
     disabled={loading}
     accessibilityRole="button"
-    accessibilityLabel="Add photo"
+    accessibilityLabel={label}
   >
     {loading ? (
       <ActivityIndicator color={PRIMARY} />
     ) : (
       <>
         <CameraIcon />
-        <Text style={styles.addText}>Add photo</Text>
+        <Text style={styles.addText}>{label}</Text>
       </>
     )}
   </Pressable>
@@ -67,10 +67,22 @@ const AddPhotoCard = ({ onPress, loading }) => (
 /**
  * Site photos upload row — JPG/PNG only, max 10, controlled URIs array.
  */
-const SitePhotosUpload = ({ workId, photos = [], onChange, style }) => {
+const SitePhotosUpload = ({
+  workId,
+  photos = [],
+  onChange,
+  style,
+  sectionLabel = 'Site photos',
+  maxPhotos = MAX_SITE_PHOTOS,
+  storageSubfolder = 'work_progress_photos',
+  filePrefix = 'site_photo',
+  addPhotoLabel = 'Add photo',
+  removeConfirmTitle = 'Remove photo',
+  removeConfirmMessage = 'Remove this photo from site progress?',
+}) => {
   const [uploading, setUploading] = useState(false);
   const count = photos.length;
-  const canAddMore = count < MAX_SITE_PHOTOS;
+  const canAddMore = count < maxPhotos;
 
   const handleAddPhoto = useCallback(async () => {
     if (!workId) {
@@ -81,7 +93,11 @@ const SitePhotosUpload = ({ workId, photos = [], onChange, style }) => {
 
     setUploading(true);
     try {
-      const uri = await pickAndStoreSitePhoto(workId, count);
+      const uri = await pickAndStoreSitePhoto(workId, count, {
+        subfolder: storageSubfolder,
+        filePrefix,
+        maxPhotos,
+      });
       if (uri) {
         onChange?.([...photos, uri]);
       }
@@ -93,7 +109,7 @@ const SitePhotosUpload = ({ workId, photos = [], onChange, style }) => {
   const handleRemove = useCallback(
     (index) => {
       const uri = photos[index];
-      Alert.alert('Remove photo', 'Remove this photo from site progress?', [
+      Alert.alert(removeConfirmTitle, removeConfirmMessage, [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Remove',
@@ -111,7 +127,7 @@ const SitePhotosUpload = ({ workId, photos = [], onChange, style }) => {
   return (
     <View style={[styles.section, style]}>
       <View style={styles.headerRow}>
-        <Text style={styles.label}>Site photos</Text>
+        <Text style={styles.label}>{sectionLabel}</Text>
         {count > 0 ? (
           <View style={styles.countBadge}>
             <Text style={styles.countBadgeText}>{count} uploaded</Text>
@@ -133,7 +149,11 @@ const SitePhotosUpload = ({ workId, photos = [], onChange, style }) => {
           />
         ))}
         {canAddMore ? (
-          <AddPhotoCard onPress={handleAddPhoto} loading={uploading} />
+          <AddPhotoCard
+            onPress={handleAddPhoto}
+            loading={uploading}
+            label={addPhotoLabel}
+          />
         ) : null}
       </ScrollView>
 

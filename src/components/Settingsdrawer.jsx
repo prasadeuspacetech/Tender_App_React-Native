@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useRef } from 'react';
 import {
   Modal,
@@ -19,6 +20,11 @@ const ANIMATION_DURATION = 280;
 
 // ─── Menu item definitions ────────────────────────────────────────────────────
 const MENU_ITEMS = [
+  {
+    key: 'generalCorrespondence',
+    label: 'General Correspondence',
+    route: 'GeneralCorrespondence',
+  },
   { key: 'backup',       label: 'Backup',       handlerKey: 'onBackupPress' },
   { key: 'restore',      label: 'Restore',      handlerKey: 'onRestorePress' },
   { key: 'subscription', label: 'Subscription', handlerKey: 'onSubscriptionPress' },
@@ -35,6 +41,7 @@ const SettingsDrawer = ({
   onHelpPress,
   style,
 }) => {
+  const navigation = useNavigation();
   const translateX = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
@@ -70,8 +77,14 @@ const SettingsDrawer = ({
     }
   }, [visible]);
 
-  const handleItemPress = (handlerKey) => {
-    const handler = handlers[handlerKey];
+  const handleItemPress = (item) => {
+    if (item.route) {
+      navigation.navigate(item.route);
+      onClose?.();
+      return;
+    }
+
+    const handler = handlers[item.handlerKey];
     if (typeof handler === 'function') {
       handler();
     }
@@ -110,7 +123,7 @@ const SettingsDrawer = ({
                 styles.menuItem,
                 index < MENU_ITEMS.length - 1 && styles.menuItemBorder,
               ]}
-              onPress={() => handleItemPress(item.handlerKey)}
+              onPress={() => handleItemPress(item)}
               activeOpacity={0.65}
               accessibilityRole="menuitem"
               accessibilityLabel={item.label}

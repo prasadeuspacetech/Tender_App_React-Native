@@ -3,6 +3,7 @@
 // Read-only aggregations for Reports screen. Does not modify workflow data.
 
 import { formatRupeesCompact } from '../../utils/currencyFormat';
+import { computeFinalTenderAmount } from '../../utils/finalTenderAmount';
 import { getDB } from '../database';
 
 const toPositiveAmount = (value) => {
@@ -12,20 +13,24 @@ const toPositiveAmount = (value) => {
 };
 
 /**
- * Per-work effective budget (sanction-first cascade).
+ * Per-work effective budget (Final Tender Amount first).
  * @see getPaymentSummaryForWork in paymentsRepository.js
  */
 export const getEffectiveBudgetForRow = (row) => {
-  const sanction = toPositiveAmount(row.sanction_amount);
-  if (sanction != null) return sanction;
+  const computedFinal = computeFinalTenderAmount(
+    row.tender_amount,
+    row.percentage_above_below,
+    row.percentage_variation,
+  );
+  if (computedFinal != null && computedFinal > 0) return computedFinal;
+
+  const contractor = toPositiveAmount(row.final_tender_amount);
+  if (contractor != null) return contractor;
 
   if (Number(row.enable_retender) === 1) {
     const retenderAmt = toPositiveAmount(row.new_tender_amount);
     if (retenderAmt != null) return retenderAmt;
   }
-
-  const contractor = toPositiveAmount(row.final_tender_amount);
-  if (contractor != null) return contractor;
 
   const tender = toPositiveAmount(row.tender_amount);
   if (tender != null) return tender;
@@ -44,7 +49,6 @@ const WORK_BUDGET_ROWS_SQL = `
     w.id AS work_id,
     w.budget AS work_budget,
     w.financial_year,
-    s.sanction_amount,
     (
       SELECT COALESCE(SUM(amount_paid), 0)
       FROM payments
@@ -55,10 +59,11 @@ const WORK_BUDGET_ROWS_SQL = `
     est.estimated_cost,
     tend.tender_amount,
     cont.final_tender_amount,
+    cont.percentage_above_below,
+    cont.percentage_variation,
     ret.enable_retender,
     ret.new_tender_amount
   FROM works w
-  LEFT JOIN sanctions s ON s.work_id = w.id
   LEFT JOIN estimations est ON est.work_id = w.id
   LEFT JOIN retenders ret ON ret.work_id = w.id
   LEFT JOIN tenders tend ON tend.id = (

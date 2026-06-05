@@ -23,6 +23,8 @@ const FormToggleField = ({
   required = false,
   containerStyle,
   rowStyle,
+  segmentLeftLabel,
+  segmentRightLabel,
 }) => {
   const statusText = resolveToggleRowLabel(value, {
     rowLabelOn,
@@ -81,6 +83,8 @@ const FormToggleField = ({
             value={value}
             onToggle={handleToggle}
             disabled={disabled}
+            leftLabel={segmentLeftLabel}
+            rightLabel={segmentRightLabel}
           />
         </View>
       </Pressable>

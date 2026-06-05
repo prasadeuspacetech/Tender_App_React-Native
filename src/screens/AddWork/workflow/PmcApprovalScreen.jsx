@@ -172,15 +172,6 @@ const PmcApprovalScreen = ({ navigation }) => {
             placeholder="dd/mm/yyyy"
           />
 
-          <NativeDateField
-            label="Approval Date"
-            value={form.approval_date}
-            onDateChange={(date) =>
-              updateField('approval_date', formatDateForStorage(date), { immediate: true })
-            }
-            placeholder="dd/mm/yyyy"
-          />
-
           <FormToggleField
             label="Finance Committee"
             rowLabelOn="Finance committee required"
@@ -192,17 +183,28 @@ const PmcApprovalScreen = ({ navigation }) => {
           />
 
           {form.finance_committee ? (
-            <Inputboxfield
-              label="Finance Approval Status"
-              placeholder="e.g. Pending, Approved, Rejected"
-              type="textOnly"
-              value={form.finance_approval_status}
-              onChangeText={(v) => updateField('finance_approval_status', v)}
-            />
+            <>
+              <NativeDateField
+                label="Approval Date"
+                value={form.approval_date}
+                onDateChange={(date) =>
+                  updateField('approval_date', formatDateForStorage(date), { immediate: true })
+                }
+                placeholder="dd/mm/yyyy"
+              />
+
+              <Inputboxfield
+                label="Finance Approval Status"
+                placeholder="e.g. Pending, Approved, Rejected"
+                type="textOnly"
+                value={form.finance_approval_status}
+                onChangeText={(v) => updateField('finance_approval_status', v)}
+              />
+            </>
           ) : null}
 
           <UploadDocument
-            sectionLabel="Documents"
+            sectionLabel="Finance committee approval letter"
             documents={[
               buildUploadDocumentEntry({
                 title: 'PMC Letter PDF',

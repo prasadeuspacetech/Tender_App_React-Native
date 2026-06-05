@@ -126,7 +126,11 @@ export const migrateLegacyWorkflowSteps = () => {
   const now = new Date().toISOString();
 
   for (const row of rows) {
-    const mapped = LEGACY_WORKFLOW_STEP_MAP[row.workflow_step];
+    let mapped = LEGACY_WORKFLOW_STEP_MAP[row.workflow_step];
+    // Pre-11-step apps used workflow_step 13 as all-complete after 12 steps.
+    if (mapped == null && row.workflow_step >= 13) {
+      mapped = WORKFLOW_ALL_COMPLETE_STEP;
+    }
     if (mapped == null) continue;
     db.runSync(
       'UPDATE works SET workflow_step = ?, updated_at = ? WHERE id = ?;',

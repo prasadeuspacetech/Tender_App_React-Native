@@ -1,6 +1,6 @@
 // src/constants/workflowSteps.js
 //
-// Single source of truth: routes, step order (12 steps), hub gating.
+// Single source of truth: routes, step order (11 steps), hub gating.
 
 export const WORKFLOW_ROUTES = {
   ADD_WORK: 'AddWork',
@@ -15,7 +15,6 @@ export const WORKFLOW_ROUTES = {
   WORK_PROGRESS: 'WorkProgress',
   PAYMENT_STATUS: 'PaymentStatus',
   BILL_SUBMISSION: 'BillSubmission',
-  COMPLETION_CLOSURE: 'CompletionClosure',
 };
 
 export const WORKFLOW_STEPS = [
@@ -107,19 +106,11 @@ export const WORKFLOW_STEPS = [
     description: 'Submit bill details and documents',
     optional: false,
   },
-  {
-    id: 12,
-    route: WORKFLOW_ROUTES.COMPLETION_CLOSURE,
-    title: 'Completion & Closure',
-    screenType: 'completionClosure',
-    description: 'Mark work completion and close workflow',
-    optional: false,
-  },
 ];
 
 export const TOTAL_WORKFLOW_STEPS = WORKFLOW_STEPS.length;
 
-/** workflow_step value when all 12 steps are saved */
+/** workflow_step value when all steps are saved */
 export const WORKFLOW_ALL_COMPLETE_STEP = TOTAL_WORKFLOW_STEPS + 1;
 
 export const getStepByRoute = (route) =>
