@@ -18,6 +18,7 @@ export const createWork = (data = {}) => {
     department = '',
     sub_department = '',
     officer = '',
+    officer_mobile = '',
     budget = 0,
     workflow_step = 1,
   } = data;
@@ -25,10 +26,10 @@ export const createWork = (data = {}) => {
   const result = db.runSync(
     `INSERT INTO works
       (work_code, work_name, financial_year, ward, department,
-       sub_department, officer, budget, workflow_step)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+       sub_department, officer, officer_mobile, budget, workflow_step)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [work_code, work_name, financial_year, ward, department,
-     sub_department, officer, budget, workflow_step],
+     sub_department, officer, officer_mobile, budget, workflow_step],
   );
 
   return result.lastInsertRowId;

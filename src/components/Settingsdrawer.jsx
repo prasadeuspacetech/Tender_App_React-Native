@@ -1,5 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Modal,
   View,
@@ -18,17 +19,17 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const DRAWER_WIDTH = Math.min(260, SCREEN_WIDTH * 0.72);
 const ANIMATION_DURATION = 280;
 
-// ─── Menu item definitions ────────────────────────────────────────────────────
+// ─── Menu item definitions (labels resolved via i18n) ─────────────────────────
 const MENU_ITEMS = [
   {
     key: 'generalCorrespondence',
-    label: 'General Correspondence',
+    labelKey: 'drawer.generalCorrespondence',
     route: 'GeneralCorrespondence',
   },
-  { key: 'backup',       label: 'Backup',       handlerKey: 'onBackupPress' },
-  { key: 'restore',      label: 'Restore',      handlerKey: 'onRestorePress' },
-  { key: 'subscription', label: 'Subscription', handlerKey: 'onSubscriptionPress' },
-  { key: 'help',         label: 'Help',         handlerKey: 'onHelpPress' },
+  { key: 'backup',       labelKey: 'drawer.backup',       handlerKey: 'onBackupPress' },
+  { key: 'restore',      labelKey: 'drawer.restore',      handlerKey: 'onRestorePress' },
+  { key: 'subscription', labelKey: 'drawer.subscription', handlerKey: 'onSubscriptionPress' },
+  { key: 'help',         labelKey: 'drawer.help',         handlerKey: 'onHelpPress' },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -42,10 +43,20 @@ const SettingsDrawer = ({
   style,
 }) => {
   const navigation = useNavigation();
+  const { t } = useTranslation('navigation');
   const translateX = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
   const handlers = { onBackupPress, onRestorePress, onSubscriptionPress, onHelpPress };
+
+  const menuItems = useMemo(
+    () =>
+      MENU_ITEMS.map((item) => ({
+        ...item,
+        label: t(item.labelKey),
+      })),
+    [t],
+  );
 
   useEffect(() => {
     if (visible) {
@@ -110,18 +121,18 @@ const SettingsDrawer = ({
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Setting</Text>
+          <Text style={styles.headerTitle}>{t('drawer.title')}</Text>
           <View style={styles.headerDivider} />
         </View>
 
         {/* Menu items */}
         <View style={styles.menu}>
-          {MENU_ITEMS.map((item, index) => (
+          {menuItems.map((item, index) => (
             <TouchableOpacity
               key={item.key}
               style={[
                 styles.menuItem,
-                index < MENU_ITEMS.length - 1 && styles.menuItemBorder,
+                index < menuItems.length - 1 && styles.menuItemBorder,
               ]}
               onPress={() => handleItemPress(item)}
               activeOpacity={0.65}

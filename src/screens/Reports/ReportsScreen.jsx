@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 
 import ScreenLayout from '../../components/layouts/Screenlayout';
 import SettingsDrawer from '../../components/Settingsdrawer';
@@ -15,16 +16,23 @@ import ReportInfoBanner from '../../components/reports/ReportInfoBanner';
 import ReportBudgetCard from '../../components/reports/ReportBudgetCard';
 import ReportExportSection from '../../components/reports/ReportExportSection';
 import ReportShareCard from '../../components/reports/ReportShareCard';
+import { translateBudgetSummary } from '../../i18n/reportLabels';
 import {
   emptyBudgetSummary,
   getReportsBudgetSummary,
 } from '../../db/repositories/reportsRepository';
 
 const ReportsScreen = () => {
+  const { t, i18n } = useTranslation('reports');
   const { works, refreshWorks } = useWorkStore();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [fy, setFy] = useState('2025-26');
-  const [budgetSummary, setBudgetSummary] = useState(() => emptyBudgetSummary());
+  const [rawBudgetSummary, setRawBudgetSummary] = useState(() => emptyBudgetSummary());
+
+  const budgetSummary = useMemo(
+    () => translateBudgetSummary(rawBudgetSummary),
+    [rawBudgetSummary, i18n.language],
+  );
 
   const workStats = useMemo(() => {
     let completed = 0;
@@ -48,10 +56,10 @@ const ReportsScreen = () => {
 
   const loadBudgetSummary = useCallback(() => {
     try {
-      setBudgetSummary(getReportsBudgetSummary(fy));
+      setRawBudgetSummary(getReportsBudgetSummary(fy, { useTotalAmountPaid: true }));
     } catch (error) {
       console.error('[ReportsScreen] getReportsBudgetSummary failed:', error);
-      setBudgetSummary(emptyBudgetSummary());
+      setRawBudgetSummary(emptyBudgetSummary());
     }
   }, [fy]);
 
@@ -73,7 +81,7 @@ const ReportsScreen = () => {
   return (
     <>
       <ScreenLayout
-        title="Reports"
+        title={t('title')}
         showMenu
         showNotification={false}
         scrollable
@@ -95,15 +103,15 @@ const ReportsScreen = () => {
           <ReportStatCard
             variant="total"
             value={String(workStats.total)}
-            title="Total Works"
-            subtitle="+4 from last year"
+            title={t('stats.totalWorks')}
+            subtitle={t('stats.totalWorksSubtitle')}
           />
           <View style={styles.statsGap} />
           <ReportStatCard
             variant="completed"
             value={String(workStats.completed)}
-            title="Completed"
-            subtitle="58% completed rate"
+            title={t('stats.completed')}
+            subtitle={t('stats.completedSubtitle')}
           />
         </View>
 
@@ -111,15 +119,15 @@ const ReportsScreen = () => {
           <ReportStatCard
             variant="inProgress"
             value={String(workStats.inProgress)}
-            title="In Progress"
-            subtitle="Target: complete by Aug"
+            title={t('stats.inProgress')}
+            subtitle={t('stats.inProgressSubtitle')}
           />
           <View style={styles.statsGap} />
           <ReportStatCard
             variant="pending"
             value={String(workStats.pending)}
-            title="Pending"
-            subtitle="Needs attention"
+            title={t('stats.pending')}
+            subtitle={t('stats.pendingSubtitle')}
           />
         </View>
 

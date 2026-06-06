@@ -21,6 +21,9 @@ const NativeDateField = ({
   maximumDate,
   error,
   required = false,
+  helpKey,
+  helpText,
+  helpTooltipId,
   disabled = false,
 }) => {
   const [showPicker, setShowPicker] = useState(false);
@@ -67,6 +70,9 @@ const NativeDateField = ({
         onPress={openPicker}
         error={error}
         required={required}
+        helpKey={helpKey}
+        helpText={helpText}
+        helpTooltipId={helpTooltipId}
         disabled={disabled}
       />
       {showPicker && !disabled && Platform.OS === 'android' ? (

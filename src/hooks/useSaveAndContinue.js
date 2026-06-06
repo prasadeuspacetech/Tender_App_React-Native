@@ -13,6 +13,7 @@ import useDraftStore from '../store/useDraftStore';
 import useUIStore from '../store/useUIStore';
 import { advanceWorkflowStep } from '../db/repositories/worksRepository';
 import { getStepByRoute } from '../constants/WorkflowSteps';
+import { translatePersistError } from '../i18n/persistErrors';
 
 const useSaveAndContinue = (screenKey, persistFn, nextRoute, currentRoute) => {
   const { currentWorkId, setCurrentWorkId, refreshCurrentWork } = useWorkStore();
@@ -52,7 +53,7 @@ const useSaveAndContinue = (screenKey, persistFn, nextRoute, currentRoute) => {
       } catch (error) {
         console.error(`[useSaveAndContinue] ${screenKey} save failed:`, error);
         if (typeof onValidationFail === 'function') {
-          onValidationFail(error.message ?? 'Save failed. Please try again.');
+          onValidationFail(translatePersistError(error.message));
         }
       } finally {
         setSaving(false);

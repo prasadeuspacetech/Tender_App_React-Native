@@ -1,0 +1,299 @@
+{
+  "hub": {
+    "title": "काम जोडा",
+    "startNewWork": "नवीन काम सुरू करा",
+    "startNewWorkAccessibility": "नवीन काम सुरू करा"
+  },
+  "common": {
+    "saveAndContinue": "जतन करा आणि पुढे जा",
+    "submit": "सबमिट करा",
+    "saveFailedTitle": "जतन अयशस्वी",
+    "documents": "कागदपत्रे",
+    "datePlaceholder": "दि/महि/वर्ष",
+    "datePlaceholderShort": "दि/महि/वर्ष",
+    "notesOptional": "टिपणी जोडा (ऐच्छिक)",
+    "stepLabel": "पायरी {{step}}: {{title}}",
+    "stepsCompleted": "{{total}} पैकी {{current}} पायऱ्या पूर्ण झाल्या"
+  },
+  "toggles": {
+    "no": "नाही",
+    "yes": "होय",
+    "close": "बंद",
+    "open": "उघडा"
+  },
+  "alerts": {
+    "paymentExceedsTitle": "देयक प्रलंबित रकमेपेक्षा जास्त",
+    "paymentExceedsMessage": "प्रविष्ट केलेली रक्कम प्रलंबित देयकापेक्षा जास्त आहे. कृपया {{amount}} किंवा कमी प्रविष्ट करा.",
+    "uploadFailedTitle": "अपलोड अयशस्वी",
+    "uploadFailedNoWorkId": "काम आयडी सापडला नाही. प्रथम काम तपशील जतन करा.",
+    "replaceDocumentTitle": "कागदपत्र बदला",
+    "replaceDocumentMessage": "सध्याचे बिल कागदपत्र बदलण्यासाठी नवीन PDF अपलोड करायचे?",
+    "removePhotoTitle": "फोटो काढा",
+    "removePhotoMessage": "साइट प्रगतीतून हा फोटो काढायचा?",
+    "removeInaugurationPhotoMessage": "हा उद्घाटन फोटो काढायचा?",
+    "cancel": "रद्द करा",
+    "remove": "काढा",
+    "replace": "बदला"
+  },
+  "dropdowns": {
+    "above": "वर",
+    "below": "खाली",
+    "pending": "प्रलंबित",
+    "approved": "मंजूर",
+    "rejected": "नाकारले",
+    "inProgress": "प्रगतीत",
+    "completed": "पूर्ण",
+    "ward1": "प्रभाग १",
+    "ward2": "प्रभाग २",
+    "ward3": "प्रभाग ३",
+    "ward4": "प्रभाग ४",
+    "ward5": "प्रभाग ५",
+    "ward6": "प्रभाग ६",
+    "ward7": "प्रभाग ७",
+    "ward8": "प्रभाग ८",
+    "ward9": "प्रभाग ९",
+    "ward10": "प्रभाग १०",
+    "ward11": "प्रभाग ११",
+    "ward12": "प्रभाग १२",
+    "roadDept": "रस्ते विभाग",
+    "waterDept": "पाणी विभाग",
+    "sanitationDept": "स्वच्छता विभाग",
+    "gardenDept": "उद्यान विभाग",
+    "electricDept": "वीज विभाग",
+    "roadConstruction": "रस्ते बांधकाम",
+    "roadRepair": "रस्ते दुरुस्ती",
+    "pipeline": "पाईपलाईन",
+    "waterSupply": "पाणी पुरवठा",
+    "drainage": "नाले",
+    "wasteMgmt": "कचरा व्यवस्थापन",
+    "parks": "उद्याने",
+    "nursery": "नर्सरी",
+    "streetLights": "रस्ते दिवे",
+    "maintenance": "देखभाल",
+    "officerA": "अधिकारी अ",
+    "officerB": "अधिकारी ब",
+    "officerC": "अधिकारी क"
+  },
+  "payment": {
+    "totalBillAmount": "एकूण बिल रक्कम",
+    "amountPaid": "एकूण देय रक्कम",
+    "pending": "प्रलंबित",
+    "historyHeading": "देयक इतिहास",
+    "paidOn": "देयक दिनांक: {{date}}"
+  },
+  "site": {
+    "photos": "साइट फोटो",
+    "notes": "साइट टिपणी",
+    "notesPlaceholder": "उत्तरेकडील बाजूस रस्त्याचा आधार स्तर पूर्ण. दक्षिणेकडे साहित्याची वाट पाहत आहोत.",
+    "notesAccessibility": "साइट टिपणी",
+    "addPhoto": "फोटो जोडा",
+    "addPhotoPlus": "+ फोटो जोडा",
+    "removePhotoAccessibility": "फोटो काढा",
+    "uploadedCount": "{{count}} अपलोड केले",
+    "photoHelper": "कमाल १० फोटो · JPG किंवा PNG",
+    "photoBefore": "आधी",
+    "photoProgress": "प्रगती"
+  },
+  "steps": {
+    "workDetails": {
+      "title": "काम तपशील",
+      "screenTitle": "काम तपशील",
+      "description": "मूलभूत काम माहिती प्रविष्ट करा",
+      "progressDescription": "मूलभूत काम माहिती प्रविष्ट करा",
+      "fields": {
+        "budgetCode": { "label": "अंदाजपत्रक कोड", "placeholder": "उदा. ERK-2025-0001" },
+        "workName": { "label": "कामाचे नाव", "placeholder": "पूर्ण नाव प्रविष्ट करा" },
+        "budget": { "label": "अंदाजपत्रक (₹)", "placeholder": "₹15,00,000" },
+        "financialYear": { "label": "आर्थिक वर्ष", "placeholder": "आर्थिक वर्ष निवडा" },
+        "ward": { "label": "प्रभाग", "placeholder": "प्रभाग प्रविष्ट करा" },
+        "department": { "label": "विभाग", "placeholder": "विभाग प्रविष्ट करा" },
+        "subDepartment": { "label": "उपविभाग", "placeholder": "उपविभाग प्रविष्ट करा" },
+        "officer": { "label": "अधिकारी", "placeholder": "अधिकारीचे नाव प्रविष्ट करा" },
+        "officerMobile": { "label": "अधिकाऱ्याचा मोबाईल क्रमांक", "placeholder": "अधिकाऱ्याचा मोबाईल क्रमांक प्रविष्ट करा" }
+      }
+    },
+    "pmcApproval": {
+      "title": "PMC मंजुरी",
+      "screenTitle": "PMC मंजुरी",
+      "description": "PMC पत्र अपलोड करा आणि मंजुरी मिळवा",
+      "progressDescription": "PMC पत्र अपलोड करा आणि मंजुरी मिळवा",
+      "fields": {
+        "letterNumber": { "label": "पत्र क्रमांक", "placeholder": "उदा. ERK-2025-0001" },
+        "letterDate": { "label": "पत्र दिनांक", "placeholder": "दि/महि/वर्ष" },
+        "financeCommittee": { "label": "वित्त समिती" },
+        "approvalDate": { "label": "मंजुरी दिनांक", "placeholder": "दि/महि/वर्ष" },
+        "financeApprovalStatus": {
+          "label": "वित्त मंजुरी स्थिती",
+          "placeholder": "उदा. प्रलंबित, मंजूर, नाकारले"
+        }
+      },
+      "toggles": {
+        "financeOn": "वित्त समिती आवश्यक",
+        "financeOff": "वित्त समिती आवश्यक नाही"
+      },
+      "uploads": {
+        "financeLetter": "वित्त समिती मंजुरी पत्र",
+        "pmcLetterTitle": "PMC पत्र PDF",
+        "pmcLetterUpload": "PMC पत्र PDF अपलोड करा"
+      }
+    },
+    "estimation": {
+      "title": "अंदाज",
+      "screenTitle": "अंदाज",
+      "description": "अंदाज स्थिती निश्चित करा",
+      "progressDescription": "अंदाज स्थिती निश्चित करा",
+      "fields": {
+        "estimationDate": { "label": "अंदाज दिनांक", "placeholder": "दि/महि/वर्ष" },
+        "estimatedCost": { "label": "अंदाजित खर्च (₹)", "placeholder": "अंदाजित खर्च प्रविष्ट करा" },
+        "natureOfWorks": { "label": "कामाचे स्वरूप", "placeholder": "टिपणी जोडा (ऐच्छिक)" }
+      },
+      "toggles": {
+        "label": "अंदाज पूर्ण झाला?",
+        "on": "अंदाज पूर्ण",
+        "off": "अंदाज पूर्ण नाही"
+      },
+      "uploads": {
+        "section": "अंदाजित PDF",
+        "title": "अंदाज फाइल",
+        "upload": "अंदाज फाइल अपलोड करा"
+      }
+    },
+    "tenderCreation": {
+      "title": "निविदा निर्मिती",
+      "screenTitle": "निविदा निर्मिती",
+      "description": "या कामासाठी निविदा तयार करा",
+      "progressDescription": "निविदा तयार करण्याचे काम अद्याप सुरू झालेले नाही",
+      "sectionTenderStatus": "निविदा स्थिती",
+      "fields": {
+        "tenderName": { "label": "निविदा कामाचे नाव", "placeholder": "निविदेचे नाव प्रविष्ट करा" },
+        "tenderNumber": { "label": "निविदा क्रमांक", "placeholder": "उदा TND-2025-001" },
+        "advertisementDate": { "label": "जाहिरात दिनांक", "placeholder": "दि/महि/वर्ष" },
+        "tenderAmount": { "label": "निविदा रक्कम (₹)", "placeholder": "₹0.00" }
+      },
+      "toggles": {
+        "aPacketOn": "अ पाकीट उघडे",
+        "aPacketOff": "अ पाकीट उघडे नाही",
+        "bPacketOn": "ब पाकीट उघडे",
+        "bPacketOff": "ब पाकीट उघडे नाही"
+      },
+      "uploads": {
+        "newspaperTitle": "वर्तमानपत्र जाहिरात",
+        "newspaperUpload": "वर्तमानपत्र जाहिरात अपलोड करा"
+      }
+    },
+    "reTender": {
+      "title": "पुन्हा निविदा (ऐच्छिक)",
+      "screenTitle": "पुन्हा निविदा (ऐच्छिक)",
+      "description": "मूळ निविदा अयशस्वी झाल्यास पुन्हा निविदा",
+      "progressDescription": "मूळ निविदा अयशस्वी झाल्यास पुन्हा निविदा",
+      "fields": {
+        "previousRef": { "label": "मागील निविदा संदर्भ", "placeholder": "उदा TND-2025-001" },
+        "newDate": { "label": "नवीन निविदा दिनांक", "placeholder": "दि/महि/वर्ष" },
+        "newAmount": { "label": "नवीन निविदा रक्कम (₹)", "placeholder": "₹0.00" },
+        "reason": { "label": "पुन्हा निविदेचे कारण", "placeholder": "ही निविदा पुन्हा का जारी केली?" }
+      },
+      "toggles": {
+        "on": "पुन्हा निविदा सक्षम",
+        "off": "पुन्हा निविदा सक्षम नाही"
+      }
+    },
+    "contractorAssignment": {
+      "title": "ठेकेदार नियुक्ती",
+      "screenTitle": "ठेकेदार नियुक्ती",
+      "description": "कामासाठी ठेकेदार नियुक्त करा",
+      "progressDescription": "कामासाठी ठेकेदार नियुक्त करा",
+      "fields": {
+        "contractorName": { "label": "ठेकेदाराचे नाव", "placeholder": "पूर्ण नाव प्रविष्ट करा" },
+        "contactMobile": { "label": "संपर्क व्यक्ती मोबाईल क्र.", "placeholder": "+91 8833557722" },
+        "percentRow": "% अंदाजापेक्षा वर / खाली",
+        "percentPlaceholder": "0.00",
+        "finalTenderAmount": { "label": "अंतिम निविदा रक्कम (₹)", "placeholder": "₹0.00" }
+      },
+      "uploads": {
+        "contractorTitle": "ठेकेदार तपशील",
+        "contractorUpload": "ठेकेदार तपशील अपलोड करा"
+      }
+    },
+    "sanctionApproval": {
+      "title": "मंजुरी मान्यता",
+      "screenTitle": "मंजुरी मान्यता",
+      "description": "काम आदेशासाठी मंजुरी मिळवा",
+      "progressDescription": "काम आदेशासाठी मंजुरी मिळवा",
+      "fields": {
+        "docketNumber": { "label": "डॉकेट क्रमांक", "placeholder": "DKT 005-2035" },
+        "sanctionDate": { "label": "मंजुरी दिनांक", "placeholder": "दि/महि/वर्ष" },
+        "sanctionAmount": { "label": "मंजुरी रक्कम (₹)", "placeholder": "₹0.00" },
+        "sanctionAuthority": { "label": "मंजुरी प्राधिकरण", "placeholder": "मंजुरी प्राधिकरण प्रविष्ट करा" }
+      },
+      "uploads": {
+        "sanctionLetterTitle": "मंजुरी पत्र",
+        "sanctionLetterUpload": "ठराव/मंजुरी पत्र अपलोड करा"
+      }
+    },
+    "workOrder": {
+      "title": "काम आदेश",
+      "screenTitle": "काम आदेश / सुरुवात",
+      "description": "काम आदेश जारी / काम सुरू",
+      "progressDescription": "काम आदेश जारी / काम सुरू झाले",
+      "fields": {
+        "orderNumber": { "label": "काम आदेश क्रमांक", "placeholder": "DKT 005-2035" },
+        "startDate": { "label": "काम सुरुवात दिनांक", "placeholder": "दि/महि/वर्ष" },
+        "expectedCompletion": { "label": "अपेक्षित पूर्णता", "placeholder": "दि/महि/वर्ष" },
+        "notes": { "label": "टिपणी (ऐच्छिक)", "placeholder": "टिपणी जोडा (ऐच्छिक)" }
+      },
+      "uploads": {
+        "inaugurationPhotos": "उद्घाटन फोटो",
+        "workOrderTitle": "काम आदेश कागदपत्र",
+        "workOrderUpload": "काम आदेश कागदपत्र अपलोड करा"
+      }
+    },
+    "workProgress": {
+      "title": "काम प्रगती ट्रॅकिंग",
+      "screenTitle": "काम प्रगती ट्रॅकिंग",
+      "description": "काम पूर्णता प्रगती ट्रॅक करा",
+      "progressDescription": "काम आदेश जारी / काम सुरू झाले",
+      "toggles": {
+        "label": "काम पूर्णता",
+        "on": "काम पूर्ण",
+        "off": "काम प्रगतीत"
+      }
+    },
+    "paymentStatus": {
+      "title": "देयक स्थिती",
+      "screenTitle": "देयक स्थिती",
+      "description": "देयक प्रक्रिया आणि देय रक्कम ट्रॅक करा",
+      "progressDescription": "देयक प्रक्रिया आणि देय रक्कम ट्रॅक करा",
+      "fields": {
+        "amountPaid": { "label": "देय रक्कम (₹)", "placeholder": "देय रक्कम (₹)" },
+        "paymentDate": { "label": "देयक दिनांक", "placeholder": "दि/महि/वर्ष" }
+      },
+      "toggles": {
+        "on": "देयक प्रक्रिया झाली",
+        "off": "देयक प्रक्रिया झाली नाही"
+      },
+      "uploads": {
+        "paymentTitle": "देयक PDF",
+        "paymentUpload": "देयक PDF अपलोड करा"
+      }
+    },
+    "billSubmission": {
+      "title": "बिल सबमिशन",
+      "screenTitle": "बिल सबमिशन",
+      "description": "बिल तपशील आणि कागदपत्रे सबमिट करा",
+      "progressDescription": "देयक झालेले नाही",
+      "fields": {
+        "billNumber": { "label": "बिल क्रमांक", "placeholder": "बिल क्रमांक" },
+        "billDate": { "label": "बिल दिनांक", "placeholder": "दि/महि/वर्ष" }
+      },
+      "toggles": {
+        "label": "बिल सबमिट केले?",
+        "on": "बिल सबमिट केले",
+        "off": "बिल सबमिट केले नाही"
+      },
+      "uploads": {
+        "billTitle": "बिल PDF",
+        "billUpload": "बिल PDF अपलोड करा"
+      }
+    }
+  }
+}

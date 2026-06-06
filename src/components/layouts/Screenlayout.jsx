@@ -9,6 +9,7 @@ import {
   StatusBar,
   StyleSheet,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import BackButton from '../../components/Backbutton';
 import NotificationButton from '../../components/Notificationbutton';
@@ -48,6 +49,7 @@ const ScreenLayout = ({
   headerStyle,
   contentStyle,
 }) => {
+  const { t } = useTranslation('navigation');
   const insets = useSafeAreaInsets();
 
   // ─── Header ───────────────────────────────────────────────────────────────
@@ -70,7 +72,7 @@ const ScreenLayout = ({
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               activeOpacity={0.65}
               accessibilityRole="button"
-              accessibilityLabel="Open menu"
+              accessibilityLabel={t('accessibility.openMenu')}
               style={styles.menuButton}
             >
               <FigmaMenuIcon color={theme.Colors.white ?? '#FFFFFF'} size={FIGMA_HEADER_ICON_SIZE} />

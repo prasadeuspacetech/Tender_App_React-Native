@@ -2,9 +2,11 @@
 // Step 3 of 9: Estimation
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import FormToggleField from '../../../components/FormToggleField';
+import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import Inputboxfield from '../../../components/Inputboxfield';
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
@@ -18,17 +20,24 @@ import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
 
 import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
 import {
-    getEstimationByWorkId,
-    mapEstimationRowToForm,
-    upsertEstimation,
+  getEstimationByWorkId,
+  mapEstimationRowToForm,
+  upsertEstimation,
 } from '../../../db/repositories/estimationsRepository';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import {
+  getStepProgressDescription,
+  getStepScreenTitle,
+  getStepTitle,
+} from '../../../i18n/workflowLabels';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
 import theme from '../../../theme';
 import { formatDateForStorage } from '../../../utils/dateFormat';
+
+const SCREEN_TYPE = 'estimation';
 
 const EMPTY_FORM = {
   estimate_done:    false,
@@ -39,6 +48,8 @@ const EMPTY_FORM = {
 };
 
 const EstimationScreen = ({ navigation }) => {
+  const { t } = useTranslation('workflow');
+
   useWorkflowStepGuard(WORKFLOW_ROUTES.ESTIMATION, navigation);
 
   const getDraft = useDraftStore((s) => s.getDraft);
@@ -127,13 +138,13 @@ const EstimationScreen = ({ navigation }) => {
 
   const handleSave = () => {
     saveAndContinue(form, navigation, {
-      onValidationFail: (m) => Alert.alert('Save Failed', m),
+      onValidationFail: (m) => Alert.alert(t('common.saveFailedTitle'), m),
     });
   };
 
   return (
     <ScreenLayout
-      title="Estimation"
+      title={getStepScreenTitle(SCREEN_TYPE, t)}
       showBack
       showNotification
       scrollable
@@ -148,69 +159,79 @@ const EstimationScreen = ({ navigation }) => {
       />
       <ProgressSlot
         step={3}
-        title="Estimation"
-        description="Confirm estimation status"
+        title={getStepTitle(SCREEN_TYPE, t)}
+        description={getStepProgressDescription(SCREEN_TYPE, t)}
         screenType="estimation"
       />
 
-      <View style={styles.form}>
-        <FormToggleField
-          label="Estimation done?"
-          rowLabelOn="Estimation done"
-          rowLabelOff="Estimation not done"
-          value={form.estimate_done}
-          onToggle={() =>
-            updateField('estimate_done', !form.estimate_done, { immediate: true })
-          }
-        />
+      <HelpTooltipScope>
+        <View style={styles.form}>
+          <FormToggleField
+            label={t('steps.estimation.toggles.label')}
+            rowLabelOn={t('steps.estimation.toggles.on')}
+            rowLabelOff={t('steps.estimation.toggles.off')}
+            helpKey="workflow.estimation.estimationDone"
+            helpTooltipId="estimation-estimationDone"
+            value={form.estimate_done}
+            onToggle={() =>
+              updateField('estimate_done', !form.estimate_done, { immediate: true })
+            }
+          />
 
-        {form.estimate_done && (
-          <>
-            <NativeDateField
-              label="Estimation Date"
-              value={form.estimation_date}
-              onDateChange={(date) =>
-                updateField('estimation_date', formatDateForStorage(date), { immediate: true })
-              }
-              placeholder="dd/mm/yyyy"
-            />
+          {form.estimate_done && (
+            <>
+              <NativeDateField
+                label={t('steps.estimation.fields.estimationDate.label')}
+                value={form.estimation_date}
+                onDateChange={(date) =>
+                  updateField('estimation_date', formatDateForStorage(date), { immediate: true })
+                }
+                placeholder={t('steps.estimation.fields.estimationDate.placeholder')}
+                helpKey="workflow.estimation.estimationDate"
+                helpTooltipId="estimation-estimationDate"
+              />
 
-            <Inputboxfield
-              label="Estimated Cost (₹)"
-              placeholder="Enter estimated cost"
-              type="number"
-              keyboardType="numeric"
-              value={form.estimated_cost}
-              onChangeText={(v) => updateField('estimated_cost', v)}
-            />
+              <Inputboxfield
+                label={t('steps.estimation.fields.estimatedCost.label')}
+                placeholder={t('steps.estimation.fields.estimatedCost.placeholder')}
+                helpKey="workflow.estimation.estimatedCost"
+                helpTooltipId="estimation-estimatedCost"
+                type="number"
+                keyboardType="numeric"
+                value={form.estimated_cost}
+                onChangeText={(v) => updateField('estimated_cost', v)}
+              />
 
-            <Inputboxfield
-              label="Nature of Works"
-              placeholder="Add notes (optional)"
-              value={form.notes}
-              onChangeText={(v) => updateField('notes', v)}
-              multiline
-              numberOfLines={2}
-            />
-          </>
-        )}
+              <Inputboxfield
+                label={t('steps.estimation.fields.natureOfWorks.label')}
+                placeholder={t('steps.estimation.fields.natureOfWorks.placeholder')}
+                helpKey="workflow.estimation.natureOfWorks"
+                helpTooltipId="estimation-natureOfWorks"
+                value={form.notes}
+                onChangeText={(v) => updateField('notes', v)}
+                multiline
+                numberOfLines={2}
+              />
+            </>
+          )}
 
-        <UploadDocument
-          sectionLabel="Estimated Pdf"
-          documents={[
-            buildUploadDocumentEntry({
-              title: 'Estimation file',
-              uploadText: 'Upload estimation file',
-              filePath: form.estimation_file_path,
-              onPress: pickEstimationFile,
-              loading: uploadingEstimationFile,
-            }),
-          ]}
-        />
-      </View>
+          <UploadDocument
+            sectionLabel={t('steps.estimation.uploads.section')}
+            documents={[
+              buildUploadDocumentEntry({
+                title: t('steps.estimation.uploads.title'),
+                uploadText: t('steps.estimation.uploads.upload'),
+                filePath: form.estimation_file_path,
+                onPress: pickEstimationFile,
+                loading: uploadingEstimationFile,
+              }),
+            ]}
+          />
+        </View>
+      </HelpTooltipScope>
 
       <PrimaryButton
-        title="Save & Continue"
+        title={t('common.saveAndContinue')}
         loading={isSaving}
         fullWidth
         style={styles.cta}

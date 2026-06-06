@@ -2,7 +2,6 @@
  * Bill PDF upload — PDF only (Step 11 Bill Submission).
  */
 
-import { Alert } from 'react-native';
 import { getDocumentAsync } from 'expo-document-picker';
 import { Directory, File, Paths } from 'expo-file-system';
 
@@ -10,6 +9,7 @@ import { patchBillDocumentPath } from '../db/repositories/billSubmissionReposito
 import { upsertDocumentRecord } from '../db/repositories/documentsRepository';
 import { getFileNameFromPath } from '../utils/fileName';
 import { DOCUMENT_TYPES } from '../constants/documentTypes';
+import { showUploadAlert } from '../i18n/alertMessages';
 
 const PICKER_TYPES = ['application/pdf'];
 
@@ -33,7 +33,7 @@ const getBillDocumentsDirectory = (workId) => {
 
 export const pickAndStoreBillPdf = async (workId) => {
   if (!workId) {
-    Alert.alert('Upload failed', 'Work ID not found. Save work details first.');
+    showUploadAlert('upload.failedTitle', 'upload.failedNoWorkId');
     return null;
   }
 
@@ -46,7 +46,7 @@ export const pickAndStoreBillPdf = async (workId) => {
     });
   } catch (e) {
     console.warn('[billPdfUploadService] picker error:', e);
-    Alert.alert('Upload failed', 'Could not open the document picker.');
+    showUploadAlert('upload.failedTitle', 'upload.failedPicker');
     return null;
   }
 
@@ -56,7 +56,7 @@ export const pickAndStoreBillPdf = async (workId) => {
 
   const asset = result.assets[0];
   if (!getExtension(asset.name, asset.mimeType)) {
-    Alert.alert('Unsupported file', 'Only PDF files are allowed.');
+    showUploadAlert('upload.unsupportedTitle', 'upload.unsupportedPdf');
     return null;
   }
 
@@ -81,7 +81,7 @@ export const pickAndStoreBillPdf = async (workId) => {
     return { filePath, fileName };
   } catch (e) {
     console.warn('[billPdfUploadService] store error:', e);
-    Alert.alert('Upload failed', 'Could not save the PDF on this device.');
+    showUploadAlert('upload.failedTitle', 'upload.failedSavePdf');
     return null;
   }
 };

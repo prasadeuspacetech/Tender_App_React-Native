@@ -1,0 +1,81 @@
+{
+  "accessibility": {
+    "helpFor": "Help for {{field}}",
+    "fieldHelp": "Field help",
+    "hint": "Shows a short explanation for this field"
+  },
+  "workflow": {
+    "workDetails": {
+      "budgetCode": "The unique budget reference code assigned to this work in the municipal records.",
+      "workName": "Enter the official work name approved for this project.",
+      "budget": "The sanctioned budget amount allocated for this work in the current financial year.",
+      "financialYear": "Select the government financial year (April–March) under which this work is booked.",
+      "ward": "The municipal ward where this work will be carried out.",
+      "department": "The PMC department responsible for executing this work.",
+      "subDepartment": "The sub-department or unit within the main department handling this work.",
+      "officer": "The nodal officer accountable for tracking and reporting on this work.",
+      "officerMobile": "Enter the contact mobile number of the officer responsible for this work."
+    },
+    "pmcApproval": {
+      "letterNumber": "The official PMC letter reference number for this approval.",
+      "letterDate": "The date on the PMC approval letter.",
+      "financeCommittee": "Indicates whether finance committee approval is required before this work can proceed.",
+      "approvalDate": "The date when the finance committee granted approval.",
+      "financeApprovalStatus": "Current status of finance committee approval (e.g. approved, pending, rejected)."
+    },
+    "estimation": {
+      "estimationDone": "Mark yes when the departmental cost estimate has been prepared and approved.",
+      "estimationDate": "The date when the cost estimate was finalised.",
+      "estimatedCost": "The total estimated cost of the work as prepared by the department.",
+      "natureOfWorks": "Brief description of the scope and nature of works covered by this estimate."
+    },
+    "tenderCreation": {
+      "tenderName": "The title or name of the tender as published in the notice.",
+      "tenderNumber": "The official tender reference number assigned by PMC.",
+      "advertisementDate": "The date the tender was advertised in the newspaper or portal.",
+      "tenderAmount": "The amount quoted in the tender notice before contractor assignment.",
+      "aPacketOpen": "Whether the A packet (technical bid) has been opened.",
+      "bPacketOpen": "Whether the B packet (financial bid) has been opened."
+    },
+    "reTender": {
+      "enableRetender": "Turn on if the original tender failed and a fresh tender is being issued.",
+      "previousRef": "Reference number of the original tender that is being re-issued.",
+      "newDate": "Date of the new tender advertisement or notice.",
+      "newAmount": "Revised tender amount for the re-tendered work.",
+      "reason": "Reason for re-tendering (e.g. no valid bids, cancelled tender)."
+    },
+    "contractorAssignment": {
+      "contractorName": "Full name of the contractor awarded the work.",
+      "contactMobile": "Mobile number of the contractor's contact person.",
+      "percentAboveBelow": "Whether the contractor's bid is above or below the estimate, and by what percentage.",
+      "finalTenderAmount": "Final contract amount after applying the above/below percentage to the tender amount."
+    },
+    "sanctionApproval": {
+      "docketNumber": "The official docket or file number under which sanction was granted.",
+      "sanctionDate": "The date on the administrative sanction order.",
+      "sanctionAmount": "The amount sanctioned for execution of this work.",
+      "sanctionAuthority": "The officer or body that issued the sanction (e.g. Commissioner, Standing Committee)."
+    },
+    "workOrder": {
+      "orderNumber": "The official work order number issued to the contractor.",
+      "startDate": "The date on which work execution officially started on site.",
+      "expectedCompletion": "The target date by which the work is expected to be completed.",
+      "notes": "Any additional remarks about work commencement or site conditions."
+    },
+    "workProgress": {
+      "workCompletion": "Mark yes when the physical work on site has been fully completed.",
+      "siteNotes": "On-site observations, progress updates, or issues noted during inspection."
+    },
+    "paymentStatus": {
+      "paymentReleased": "Turn on when a payment installment has been released for this work.",
+      "amountPaid": "The amount paid in this installment (partial payments are allowed).",
+      "paymentDate": "The date when this payment installment was released.",
+      "paymentHistory": "This history shows only amount paid."
+    },
+    "billSubmission": {
+      "billSubmitted": "Turn on when the contractor's bill has been submitted for payment.",
+      "billNumber": "The bill or invoice reference number from the contractor.",
+      "billDate": "The date on the submitted bill or invoice."
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
 
 import { dashboardCardSurfaceStyle } from '../dashboard/dashboardCardBorder';
 
@@ -13,16 +14,20 @@ const ExportCard = ({ iconName, title }) => (
   </Pressable>
 );
 
-const ReportExportSection = ({ style }) => (
-  <View style={[styles.section, style]}>
-    <Text style={styles.sectionTitle}>Export Report</Text>
-    <View style={styles.row}>
-      <ExportCard iconName="document-text-outline" title="Export PDF" />
-      <View style={styles.gap} />
-      <ExportCard iconName="grid-outline" title="Export Excel" />
+const ReportExportSection = ({ style }) => {
+  const { t } = useTranslation('reports');
+
+  return (
+    <View style={[styles.section, style]}>
+      <Text style={styles.sectionTitle}>{t('export.sectionTitle')}</Text>
+      <View style={styles.row}>
+        <ExportCard iconName="document-text-outline" title={t('export.pdf')} />
+        <View style={styles.gap} />
+        <ExportCard iconName="grid-outline" title={t('export.excel')} />
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   section: {

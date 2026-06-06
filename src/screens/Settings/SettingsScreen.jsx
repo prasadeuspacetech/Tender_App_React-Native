@@ -1,12 +1,15 @@
-// src/screens/Settings/SettingsScreen.jsx
-// Static Settings UI — Figma layout (no handlers / logic)
+// Settings — includes language picker (Phase 2 i18n)
 
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
 
+import HelpTooltipDemo from '../../components/help/HelpTooltipDemo';
+import LanguagePicker from '../../components/LanguagePicker';
 import ScreenLayout from '../../components/layouts/Screenlayout';
 import NavigationCard from '../../components/Navigationcard';
+import SettingsDrawer from '../../components/Settingsdrawer';
 import {
   Colors,
   FontFamily,
@@ -25,64 +28,88 @@ const SettingsSection = ({ title, children }) => (
   </View>
 );
 
-const SubscriptionSubtitle = () => (
-  <Text style={styles.subtitleLine}>
-    <Text style={styles.subtitleActive}>Active</Text>
-    <Text style={styles.subtitleRest}> · Expires Jun 2026</Text>
-  </Text>
-);
-
 const SettingsScreen = () => {
+  const { t } = useTranslation('settings');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const SubscriptionSubtitle = () => (
+    <Text style={styles.subtitleLine}>
+      <Text style={styles.subtitleActive}>{t('subscription.active')}</Text>
+      <Text style={styles.subtitleRest}>{` · ${t('subscription.expires')}`}</Text>
+    </Text>
+  );
+
   return (
-    <ScreenLayout
-      showMenu
-      showNotification
-      scrollable
-      title="Settings"
-      headerTitleStyle={styles.heroTitle}
-      contentStyle={styles.scrollContent}
-    >
-      <SettingsSection title="Data Management">
-        <NavigationCard
-          interactive={false}
-          title="Backup Data"
-          subtitle="Export all works as JSON"
-          leftIcon={
-            <Ionicons name="cloud-upload-outline" size={ICON_SIZE} color={ICON_COLOR} />
-          }
-        />
-        <NavigationCard
-          interactive={false}
-          title="Restore Data"
-          subtitle="Import from backup file"
-          leftIcon={
-            <Ionicons name="cloud-download-outline" size={ICON_SIZE} color={ICON_COLOR} />
-          }
-        />
-      </SettingsSection>
+    <>
+      <ScreenLayout
+        showMenu
+        showNotification
+        scrollable
+        title={t('title')}
+        headerTitleStyle={styles.heroTitle}
+        contentStyle={styles.scrollContent}
+        onMenuPress={() => setDrawerOpen(true)}
+      >
+        <SettingsSection title={t('sections.language')}>
+          <Text style={styles.languageHint}>{t('language.subtitle')}</Text>
+          <LanguagePicker />
+        </SettingsSection>
 
-      <SettingsSection title="Account">
-        <NavigationCard
-          interactive={false}
-          title="Subscription Status"
-          subtitle={<SubscriptionSubtitle />}
-          leftIcon={
-            <Ionicons name="star-outline" size={ICON_SIZE} color={ICON_COLOR} />
-          }
-        />
-      </SettingsSection>
+        <View style={styles.sectionDivider} />
 
-      <SettingsSection title="Support">
-        <NavigationCard
-          interactive={false}
-          title="Help & Guide"
-          subtitle="App usage instructions"
-          leftIcon={
-            <Ionicons name="help-circle-outline" size={ICON_SIZE} color={ICON_COLOR} />
-          }
-        />
-      </SettingsSection>
-    </ScreenLayout>
+        <SettingsSection title={t('sections.tooltipDemo')}>
+          <HelpTooltipDemo />
+        </SettingsSection>
+
+        <View style={styles.sectionDivider} />
+
+        <SettingsSection title={t('sections.dataManagement')}>
+          <NavigationCard
+            interactive={false}
+            title={t('backup.title')}
+            subtitle={t('backup.subtitle')}
+            leftIcon={
+              <Ionicons name="cloud-upload-outline" size={ICON_SIZE} color={ICON_COLOR} />
+            }
+          />
+          <NavigationCard
+            interactive={false}
+            title={t('restore.title')}
+            subtitle={t('restore.subtitle')}
+            leftIcon={
+              <Ionicons name="cloud-download-outline" size={ICON_SIZE} color={ICON_COLOR} />
+            }
+          />
+        </SettingsSection>
+
+        <SettingsSection title={t('sections.account')}>
+          <NavigationCard
+            interactive={false}
+            title={t('subscription.title')}
+            subtitle={<SubscriptionSubtitle />}
+            leftIcon={
+              <Ionicons name="star-outline" size={ICON_SIZE} color={ICON_COLOR} />
+            }
+          />
+        </SettingsSection>
+
+        <SettingsSection title={t('sections.support')}>
+          <NavigationCard
+            interactive={false}
+            title={t('help.title')}
+            subtitle={t('help.subtitle')}
+            leftIcon={
+              <Ionicons name="help-circle-outline" size={ICON_SIZE} color={ICON_COLOR} />
+            }
+          />
+        </SettingsSection>
+      </ScreenLayout>
+
+      <SettingsDrawer
+        visible={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+      />
+    </>
   );
 };
 
@@ -108,7 +135,16 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     letterSpacing: 0.2,
   },
-  sectionCards: {
+  sectionCards: {},
+  languageHint: {
+    fontSize: FontSize.sm ?? 13,
+    color: Colors.textSecondary ?? '#666666',
+    marginBottom: Spacing.sm,
+  },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: Colors.borderDefault ?? '#E4E4E4',
+    marginBottom: Spacing.lg,
   },
   subtitleLine: {
     marginTop: 2,

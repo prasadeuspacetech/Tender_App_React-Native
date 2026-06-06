@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import theme from '../../theme';
 
 const WorkflowProgress = ({
@@ -20,6 +21,7 @@ const WorkflowProgress = ({
   // Clamp step to valid range
   const safeStep = Math.min(Math.max(currentStep, 0), totalSteps);
   const safeTotalSteps = Math.max(totalSteps, 1);
+  const { t } = useTranslation('workflow');
   const ratio = safeStep / safeTotalSteps;
   const percentage = Math.round(ratio * 100);
 
@@ -50,10 +52,10 @@ const WorkflowProgress = ({
       <View style={styles.textRow}>
         {showStepText ? (
           <Text style={styles.stepText}>
-            <Text style={styles.stepCount}>{safeStep}</Text>
-            {' of '}
-            <Text style={styles.stepCount}>{safeTotalSteps}</Text>
-            {' steps completed'}
+            {t('common.stepsCompleted', {
+              current: safeStep,
+              total: safeTotalSteps,
+            })}
           </Text>
         ) : null}
 

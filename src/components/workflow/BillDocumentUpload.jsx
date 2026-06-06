@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import UploadDocument from '../UploadDocument';
 import { buildUploadDocumentEntry } from '../../utils/documentUploadProps';
@@ -12,11 +13,15 @@ import {
  * Bill PDF upload section — PDF only, replace support.
  */
 const BillDocumentUpload = ({ workId, filePath = '', onChange }) => {
+  const { t } = useTranslation('workflow');
   const [uploading, setUploading] = useState(false);
 
   const handlePick = useCallback(async () => {
     if (!workId) {
-      Alert.alert('Upload failed', 'Work ID not found. Save work details first.');
+      Alert.alert(
+        t('alerts.uploadFailedTitle'),
+        t('alerts.uploadFailedNoWorkId'),
+      );
       return;
     }
 
@@ -36,23 +41,27 @@ const BillDocumentUpload = ({ workId, filePath = '', onChange }) => {
     };
 
     if (filePath) {
-      Alert.alert('Replace document', 'Upload a new PDF to replace the current bill document?', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Replace', onPress: uploadPdf },
-      ]);
+      Alert.alert(
+        t('alerts.replaceDocumentTitle'),
+        t('alerts.replaceDocumentMessage'),
+        [
+          { text: t('alerts.cancel'), style: 'cancel' },
+          { text: t('alerts.replace'), onPress: uploadPdf },
+        ],
+      );
       return;
     }
 
     await uploadPdf();
-  }, [workId, filePath, onChange]);
+  }, [workId, filePath, onChange, t]);
 
   return (
     <UploadDocument
-      sectionLabel="Documents"
+      sectionLabel={t('common.documents')}
       documents={[
         buildUploadDocumentEntry({
-          title: 'Bill PDF',
-          uploadText: 'Upload Bill PDF',
+          title: t('steps.billSubmission.uploads.billTitle'),
+          uploadText: t('steps.billSubmission.uploads.billUpload'),
           filePath,
           onPress: handlePick,
           loading: uploading,

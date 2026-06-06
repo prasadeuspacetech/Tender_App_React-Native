@@ -2,12 +2,12 @@
  * Site progress photo pick + local store (JPG/PNG only, max 10 per work).
  */
 
-import { Alert } from 'react-native';
 import { getDocumentAsync } from 'expo-document-picker';
 import { Directory, File, Paths } from 'expo-file-system';
 
 import { MAX_SITE_PHOTOS } from '../db/repositories/workProgressRepository';
 import { getFileNameFromPath } from '../utils/fileName';
+import { showUploadAlert } from '../i18n/alertMessages';
 
 const ALLOWED_EXTENSIONS = new Set(['jpg', 'jpeg', 'png']);
 const PICKER_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
@@ -50,12 +50,12 @@ export const pickAndStoreSitePhoto = async (workId, currentCount = 0, options = 
   } = options;
 
   if (!workId) {
-    Alert.alert('Upload failed', 'Work ID not found. Save work details first.');
+    showUploadAlert('upload.failedTitle', 'upload.failedNoWorkId');
     return null;
   }
 
   if (currentCount >= maxPhotos) {
-    Alert.alert('Limit reached', `You can upload up to ${maxPhotos} photos.`);
+    showUploadAlert('upload.limitReachedTitle', 'upload.limitReachedPhotos', { max: maxPhotos });
     return null;
   }
 
@@ -68,7 +68,7 @@ export const pickAndStoreSitePhoto = async (workId, currentCount = 0, options = 
     });
   } catch (e) {
     console.warn('[sitePhotosUploadService] picker error:', e);
-    Alert.alert('Upload failed', 'Could not open the photo picker.');
+    showUploadAlert('upload.failedTitle', 'upload.failedPhotoPicker');
     return null;
   }
 
@@ -79,7 +79,7 @@ export const pickAndStoreSitePhoto = async (workId, currentCount = 0, options = 
   const asset = result.assets[0];
   const ext = getExtension(asset.name, asset.mimeType);
   if (!ext) {
-    Alert.alert('Unsupported file', 'Only JPG and PNG photos are allowed.');
+    showUploadAlert('upload.unsupportedTitle', 'upload.unsupportedPhotos');
     return null;
   }
 
@@ -90,7 +90,7 @@ export const pickAndStoreSitePhoto = async (workId, currentCount = 0, options = 
     filePrefix,
   );
   if (!storedFileName) {
-    Alert.alert('Unsupported file', 'Only JPG and PNG photos are allowed.');
+    showUploadAlert('upload.unsupportedTitle', 'upload.unsupportedPhotos');
     return null;
   }
 
@@ -107,7 +107,7 @@ export const pickAndStoreSitePhoto = async (workId, currentCount = 0, options = 
     return destination.uri;
   } catch (e) {
     console.warn('[sitePhotosUploadService] store error:', e);
-    Alert.alert('Upload failed', 'Could not save the photo on this device.');
+    showUploadAlert('upload.failedTitle', 'upload.failedSavePhoto');
     return null;
   }
 };

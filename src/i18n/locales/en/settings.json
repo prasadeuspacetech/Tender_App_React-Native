@@ -1,0 +1,54 @@
+{
+  "title": "Settings",
+  "sections": {
+    "language": "Language",
+    "dataManagement": "Data Management",
+    "account": "Account",
+    "support": "Support",
+    "tooltipDemo": "Field help preview"
+  },
+  "language": {
+    "subtitle": "Choose app display language",
+    "english": "English",
+    "marathi": "मराठी",
+    "selected": "Selected"
+  },
+  "backup": {
+    "title": "Backup Data",
+    "subtitle": "Export all works as JSON"
+  },
+  "restore": {
+    "title": "Restore Data",
+    "subtitle": "Import from backup file"
+  },
+  "subscription": {
+    "title": "Subscription Status",
+    "active": "Active",
+    "expires": "Expires Jun 2026"
+  },
+  "help": {
+    "title": "Help & Guide",
+    "subtitle": "App usage instructions"
+  },
+  "tooltipDemo": {
+    "hint": "Tap ⓘ next to a label to see contextual help. Tap outside to close. Includes Inputboxfield and FormToggleField demos.",
+    "samplePlaceholder": "Sample field",
+    "workName": {
+      "label": "Work Name"
+    },
+    "tenderAmount": {
+      "label": "Tender Amount (₹)"
+    },
+    "financeCommittee": {
+      "label": "Finance Committee"
+    },
+    "budgetCode": {
+      "label": "Budget Code"
+    },
+    "estimationDone": {
+      "label": "Estimation done?",
+      "rowOn": "Estimation done",
+      "rowOff": "Estimation not done"
+    }
+  }
+}

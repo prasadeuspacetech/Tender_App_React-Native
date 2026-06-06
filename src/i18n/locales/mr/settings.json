@@ -1,0 +1,54 @@
+{
+  "title": "सेटिंग",
+  "sections": {
+    "language": "भाषा",
+    "dataManagement": "डेटा व्यवस्थापन",
+    "account": "खाते",
+    "support": "मदत",
+    "tooltipDemo": "फील्ड मदत पूर्वावलोकन"
+  },
+  "language": {
+    "subtitle": "अॅप प्रदर्शन भाषा निवडा",
+    "english": "English",
+    "marathi": "मराठी",
+    "selected": "निवडले"
+  },
+  "backup": {
+    "title": "डेटा बॅकअप",
+    "subtitle": "सर्व कामे JSON म्हणून निर्यात करा"
+  },
+  "restore": {
+    "title": "डेटा पुनर्संचयित",
+    "subtitle": "बॅकअप फाइलमधून आयात करा"
+  },
+  "subscription": {
+    "title": "सदस्यता स्थिती",
+    "active": "सक्रिय",
+    "expires": "जून २०२६ पर्यंत वैध"
+  },
+  "help": {
+    "title": "मदत आणि मार्गदर्शक",
+    "subtitle": "अॅप वापर सूचना"
+  },
+  "tooltipDemo": {
+    "hint": "या फील्डचा अर्थ समजण्यासाठी लेबलजवळील ⓘ वर टॅप करा. बंद करण्यासाठी बाहेर टॅप करा. Inputboxfield आणि FormToggleField नमुने समाविष्ट.",
+    "samplePlaceholder": "नमुना फील्ड",
+    "workName": {
+      "label": "कामाचे नाव"
+    },
+    "tenderAmount": {
+      "label": "निविदा रक्कम (₹)"
+    },
+    "financeCommittee": {
+      "label": "वित्त समिती"
+    },
+    "budgetCode": {
+      "label": "अंदाजपत्रक कोड"
+    },
+    "estimationDone": {
+      "label": "अंदाज पूर्ण झाला?",
+      "rowOn": "अंदाज पूर्ण",
+      "rowOff": "अंदाज पूर्ण नाही"
+    }
+  }
+}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../theme';
 
@@ -16,6 +17,7 @@ const Tab = createBottomTabNavigator();
 const TAB_BAR_BG = Colors.primary ?? '#062E52';
 
 const BottomTabNavigator = () => {
+  const { t } = useTranslation('navigation');
   const insets = useSafeAreaInsets();
 
   const androidTabBarStyle = {
@@ -57,6 +59,7 @@ const BottomTabNavigator = () => {
           fontWeight: '500',
           marginBottom: 2,
         },
+        tabBarAllowFontScaling: true,
         tabBarStyle:
           Platform.OS === 'ios' ? iosTabBarStyle : androidTabBarStyle,
         tabBarIcon: ({ color, size, focused }) => {
@@ -83,23 +86,27 @@ const BottomTabNavigator = () => {
       <Tab.Screen
         name="Dashboard"
         component={DashboardScreen}
-        options={{ tabBarLabel: 'Dashboard' }}
+        options={{ tabBarLabel: t('tabs.dashboard') }}
       />
-      <Tab.Screen name="Works" component={WorksScreen} options={{ tabBarLabel: 'Work' }} />
+      <Tab.Screen
+        name="Works"
+        component={WorksScreen}
+        options={{ tabBarLabel: t('tabs.works') }}
+      />
       <Tab.Screen
         name="Add Work"
         component={WorkflowNavigator}
-        options={{ tabBarLabel: 'Add work' }}
+        options={{ tabBarLabel: t('tabs.addWork') }}
       />
       <Tab.Screen
         name="Reports"
         component={ReportsScreen}
-        options={{ tabBarLabel: 'Report', headerShown: false }}
+        options={{ tabBarLabel: t('tabs.reports'), headerShown: false }}
       />
       <Tab.Screen
         name="Settings"
         component={SettingsScreen}
-        options={{ tabBarLabel: 'Setting' }}
+        options={{ tabBarLabel: t('tabs.settings') }}
       />
     </Tab.Navigator>
   );

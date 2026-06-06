@@ -6,6 +6,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import theme from '../theme';
 
 // ─── Variant config ───────────────────────────────────────────────────────────
@@ -46,6 +47,7 @@ const PrimaryButton = ({
   style,
   textStyle,
 }) => {
+  const { t } = useTranslation('errors');
   const config = VARIANTS[variant] ?? VARIANTS.primary;
   const isInteractive = !disabled && !loading;
 
@@ -72,7 +74,7 @@ const PrimaryButton = ({
         <ActivityIndicator
           size="small"
           color={config.loaderColor}
-          accessibilityLabel="Loading"
+          accessibilityLabel={t('accessibility.loading')}
         />
       ) : (
         <View style={styles.inner}>

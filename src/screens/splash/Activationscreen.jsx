@@ -1,6 +1,7 @@
 // src/screens/splash/ActivationScreen.jsx
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -47,6 +48,7 @@ const ARC_MD = Layout.screenWidth * 1.25;
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ActivationScreen = ({ navigation }) => {
+  const { t } = useTranslation('auth');
   const [mobileNumber, setMobileNumber] = useState('');
   const [subscriptionKey, setSubscriptionKey] = useState('');
 
@@ -59,9 +61,9 @@ const ActivationScreen = ({ navigation }) => {
   const handleActivate = () => {
     if (mobileNumber.length !== 10) {
       Alert.alert(
-        'Invalid Mobile Number',
-        'Please enter a valid 10-digit mobile number.',
-        [{ text: 'OK' }],
+        t('invalidMobileTitle'),
+        t('invalidMobileMessage'),
+        [{ text: t('ok') }],
       );
       return;
     }
@@ -93,11 +95,11 @@ const ActivationScreen = ({ navigation }) => {
           {/* ── Glass card ──────────────────────────────────────────────────── */}
           <View style={styles.card}>
 
-            <Text style={styles.welcomeText}>Welcome</Text>
+            <Text style={styles.welcomeText}>{t('welcome')}</Text>
 
             {/* Mobile Number field */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Mobile Number</Text>
+              <Text style={styles.fieldLabel}>{t('mobileNumber')}</Text>
               <TextInput
                 style={styles.input}
                 value={mobileNumber}
@@ -111,7 +113,7 @@ const ActivationScreen = ({ navigation }) => {
 
             {/* Subscription Key field */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Subscription Key</Text>
+              <Text style={styles.fieldLabel}>{t('subscriptionKey')}</Text>
               <TextInput
                 style={styles.input}
                 value={subscriptionKey}
@@ -129,7 +131,7 @@ const ActivationScreen = ({ navigation }) => {
               onPress={handleActivate}
               activeOpacity={0.82}
             >
-              <Text style={styles.activateButtonText}>Activate App</Text>
+              <Text style={styles.activateButtonText}>{t('activateApp')}</Text>
             </TouchableOpacity>
 
           </View>

@@ -3,6 +3,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   FlatList,
   Modal,
@@ -30,21 +31,21 @@ const EMPTY_FORM = {
   date: '',
 };
 
-const CorrespondenceCard = ({ item, onDelete }) => (
+const CorrespondenceCard = ({ item, onDelete, t }) => (
   <View style={styles.card}>
     <View style={styles.cardBody}>
       <Text style={styles.cardSubject} numberOfLines={2}>
-        {item.subject || '—'}
+        {item.subject || t('common:dash')}
       </Text>
       <Text style={styles.cardDate} numberOfLines={1}>
-        {formatDateForStorage(item.date) || '—'}
+        {formatDateForStorage(item.date) || t('common:dash')}
       </Text>
     </View>
     <TouchableOpacity
       onPress={() => onDelete(item.id)}
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       accessibilityRole="button"
-      accessibilityLabel="Delete correspondence"
+      accessibilityLabel={t('correspondence:deleteAccessibility')}
       style={styles.deleteButton}
     >
       <Ionicons
@@ -57,6 +58,7 @@ const CorrespondenceCard = ({ item, onDelete }) => (
 );
 
 const GeneralCorrespondenceScreen = ({ navigation }) => {
+  const { t } = useTranslation(['correspondence', 'common']);
   const [entries, setEntries] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -119,17 +121,17 @@ const GeneralCorrespondenceScreen = ({ navigation }) => {
       onPress={openModal}
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       accessibilityRole="button"
-      accessibilityLabel="Add correspondence"
+      accessibilityLabel={t('correspondence:addAccessibility')}
       style={styles.addButton}
     >
-      <Text style={styles.addButtonText}>+ Add</Text>
+      <Text style={styles.addButtonText}>{t('common:add')}</Text>
     </TouchableOpacity>
   );
 
   return (
     <>
       <ScreenLayout
-        title="General Correspondence"
+        title={t('correspondence:title')}
         showBack
         showNotification={false}
         scrollable={false}
@@ -141,7 +143,7 @@ const GeneralCorrespondenceScreen = ({ navigation }) => {
           data={entries}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
-            <CorrespondenceCard item={item} onDelete={handleDelete} />
+            <CorrespondenceCard item={item} onDelete={handleDelete} t={t} />
           )}
           contentContainerStyle={[
             styles.listContent,
@@ -149,10 +151,8 @@ const GeneralCorrespondenceScreen = ({ navigation }) => {
           ]}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyText}>No correspondence yet</Text>
-              <Text style={styles.emptyHint}>
-                Tap + Add to create your first entry.
-              </Text>
+              <Text style={styles.emptyText}>{t('correspondence:emptyTitle')}</Text>
+              <Text style={styles.emptyHint}>{t('correspondence:emptyHint')}</Text>
             </View>
           }
         />
@@ -170,19 +170,19 @@ const GeneralCorrespondenceScreen = ({ navigation }) => {
 
         <View style={styles.modalSheet}>
           <View style={styles.modalHandle} />
-          <Text style={styles.modalTitle}>New Correspondence</Text>
+          <Text style={styles.modalTitle}>{t('correspondence:modalTitle')}</Text>
 
           <Inputboxfield
-            label="Subject"
-            placeholder="Subject"
+            label={t('common:subject')}
+            placeholder={t('common:subject')}
             type="text"
             value={form.subject}
             onChangeText={(value) => setForm((prev) => ({ ...prev, subject: value }))}
           />
 
           <NativeDateField
-            label="Date"
-            placeholder="dd/mm/yyyy"
+            label={t('common:date')}
+            placeholder={t('common:datePlaceholder')}
             value={form.date}
             onDateChange={(date) =>
               setForm((prev) => ({
@@ -193,7 +193,7 @@ const GeneralCorrespondenceScreen = ({ navigation }) => {
           />
 
           <PrimaryButton
-            title="Submit"
+            title={t('common:submit')}
             fullWidth
             loading={submitting}
             style={styles.submitButton}

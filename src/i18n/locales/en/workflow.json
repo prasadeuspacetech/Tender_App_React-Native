@@ -1,0 +1,299 @@
+{
+  "hub": {
+    "title": "Add Work",
+    "startNewWork": "Start new work",
+    "startNewWorkAccessibility": "Start new work"
+  },
+  "common": {
+    "saveAndContinue": "Save & Continue",
+    "submit": "Submit",
+    "saveFailedTitle": "Save Failed",
+    "documents": "Documents",
+    "datePlaceholder": "dd/mm/yyyy",
+    "datePlaceholderShort": "dd/mm/yy",
+    "notesOptional": "Add notes (optional)",
+    "stepLabel": "Step {{step}}: {{title}}",
+    "stepsCompleted": "{{current}} of {{total}} steps completed"
+  },
+  "toggles": {
+    "no": "No",
+    "yes": "Yes",
+    "close": "Close",
+    "open": "Open"
+  },
+  "alerts": {
+    "paymentExceedsTitle": "Payment exceeds pending",
+    "paymentExceedsMessage": "Entered amount exceeds pending payment. Please enter {{amount}} or less.",
+    "uploadFailedTitle": "Upload failed",
+    "uploadFailedNoWorkId": "Work ID not found. Save work details first.",
+    "replaceDocumentTitle": "Replace document",
+    "replaceDocumentMessage": "Upload a new PDF to replace the current bill document?",
+    "removePhotoTitle": "Remove photo",
+    "removePhotoMessage": "Remove this photo from site progress?",
+    "removeInaugurationPhotoMessage": "Remove this inauguration photo?",
+    "cancel": "Cancel",
+    "remove": "Remove",
+    "replace": "Replace"
+  },
+  "dropdowns": {
+    "above": "Above",
+    "below": "Below",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "inProgress": "In Progress",
+    "completed": "Completed",
+    "ward1": "Ward 1",
+    "ward2": "Ward 2",
+    "ward3": "Ward 3",
+    "ward4": "Ward 4",
+    "ward5": "Ward 5",
+    "ward6": "Ward 6",
+    "ward7": "Ward 7",
+    "ward8": "Ward 8",
+    "ward9": "Ward 9",
+    "ward10": "Ward 10",
+    "ward11": "Ward 11",
+    "ward12": "Ward 12",
+    "roadDept": "Road Dept",
+    "waterDept": "Water Dept",
+    "sanitationDept": "Sanitation Dept",
+    "gardenDept": "Garden Dept",
+    "electricDept": "Electric Dept",
+    "roadConstruction": "Road Construction",
+    "roadRepair": "Road Repair",
+    "pipeline": "Pipeline",
+    "waterSupply": "Water Supply",
+    "drainage": "Drainage",
+    "wasteMgmt": "Waste Mgmt",
+    "parks": "Parks",
+    "nursery": "Nursery",
+    "streetLights": "Street Lights",
+    "maintenance": "Maintenance",
+    "officerA": "Officer A",
+    "officerB": "Officer B",
+    "officerC": "Officer C"
+  },
+  "payment": {
+    "totalBillAmount": "Total bill amount",
+    "amountPaid": "Total Amount Paid",
+    "pending": "Pending",
+    "historyHeading": "Payment History",
+    "paidOn": "Paid on: {{date}}"
+  },
+  "site": {
+    "photos": "Site photos",
+    "notes": "Site notes",
+    "notesPlaceholder": "Road base layer done on north side. Awaiting material for south stretch.",
+    "notesAccessibility": "Site notes",
+    "addPhoto": "Add photo",
+    "addPhotoPlus": "+ Add Photo",
+    "removePhotoAccessibility": "Remove photo",
+    "uploadedCount": "{{count}} uploaded",
+    "photoHelper": "Max 10 photos · JPG or PNG",
+    "photoBefore": "Before",
+    "photoProgress": "Progress"
+  },
+  "steps": {
+    "workDetails": {
+      "title": "Work Details",
+      "screenTitle": "Work Details",
+      "description": "Enter basic work information",
+      "progressDescription": "Enter basic work information",
+      "fields": {
+        "budgetCode": { "label": "Budget Code", "placeholder": "eg. ERK-2025-0001" },
+        "workName": { "label": "Work Name", "placeholder": "Enter the full name" },
+        "budget": { "label": "Budget (₹)", "placeholder": "₹15,00,000" },
+        "financialYear": { "label": "Financial Year", "placeholder": "Select financial year" },
+        "ward": { "label": "Ward", "placeholder": "Enter ward" },
+        "department": { "label": "Department", "placeholder": "Enter department" },
+        "subDepartment": { "label": "Sub Department", "placeholder": "Enter sub department" },
+        "officer": { "label": "Officer", "placeholder": "Enter officer name" },
+        "officerMobile": { "label": "Officer Mobile Number", "placeholder": "Enter officer mobile number" }
+      }
+    },
+    "pmcApproval": {
+      "title": "PMC Approval",
+      "screenTitle": "PMC Approval",
+      "description": "Upload PMC letter and get approval",
+      "progressDescription": "Upload PMC letter and get approval",
+      "fields": {
+        "letterNumber": { "label": "Letter Number", "placeholder": "eg. ERK-2025-0001" },
+        "letterDate": { "label": "Letter Date", "placeholder": "dd/mm/yyyy" },
+        "financeCommittee": { "label": "Finance Committee" },
+        "approvalDate": { "label": "Approval Date", "placeholder": "dd/mm/yyyy" },
+        "financeApprovalStatus": {
+          "label": "Finance Approval Status",
+          "placeholder": "e.g. Pending, Approved, Rejected"
+        }
+      },
+      "toggles": {
+        "financeOn": "Finance committee required",
+        "financeOff": "Finance committee not required"
+      },
+      "uploads": {
+        "financeLetter": "Finance committee approval letter",
+        "pmcLetterTitle": "PMC Letter PDF",
+        "pmcLetterUpload": "Upload PMC Letter PDF"
+      }
+    },
+    "estimation": {
+      "title": "Estimation",
+      "screenTitle": "Estimation",
+      "description": "Confirm estimation status",
+      "progressDescription": "Confirm estimation status",
+      "fields": {
+        "estimationDate": { "label": "Estimation Date", "placeholder": "dd/mm/yyyy" },
+        "estimatedCost": { "label": "Estimated Cost (₹)", "placeholder": "Enter estimated cost" },
+        "natureOfWorks": { "label": "Nature of Works", "placeholder": "Add notes (optional)" }
+      },
+      "toggles": {
+        "label": "Estimation done?",
+        "on": "Estimation done",
+        "off": "Estimation not done"
+      },
+      "uploads": {
+        "section": "Estimated Pdf",
+        "title": "Estimation file",
+        "upload": "Upload estimation file"
+      }
+    },
+    "tenderCreation": {
+      "title": "Tender Creation",
+      "screenTitle": "Tender Creation",
+      "description": "Create the tender for this work",
+      "progressDescription": "Work on creating the tender has not started",
+      "sectionTenderStatus": "Tender Status",
+      "fields": {
+        "tenderName": { "label": "Tender work name", "placeholder": "Enter the tender name" },
+        "tenderNumber": { "label": "Tender number", "placeholder": "e.g TND-2025-001" },
+        "advertisementDate": { "label": "Advertisment date", "placeholder": "dd/mm/yy" },
+        "tenderAmount": { "label": "Tender amount (₹)", "placeholder": "₹0.00" }
+      },
+      "toggles": {
+        "aPacketOn": "A Packet Open",
+        "aPacketOff": "A Packet Not Open",
+        "bPacketOn": "B Packet Open",
+        "bPacketOff": "B Packet Not Open"
+      },
+      "uploads": {
+        "newspaperTitle": "Newspaper Advertisement",
+        "newspaperUpload": "Upload Newspaper ad"
+      }
+    },
+    "reTender": {
+      "title": "Re-Tender (Optional)",
+      "screenTitle": "Re-Tender (Optional)",
+      "description": "Re-tender if original tender failed",
+      "progressDescription": "Re-tender if original tender failed",
+      "fields": {
+        "previousRef": { "label": "Previous tender ref", "placeholder": "e.g TND-2025-001" },
+        "newDate": { "label": "New tender date", "placeholder": "dd/mm/yyyy" },
+        "newAmount": { "label": "New tender amount (₹)", "placeholder": "₹0.00" },
+        "reason": { "label": "Re-tender reason", "placeholder": "Why is this tender re-issued?" }
+      },
+      "toggles": {
+        "on": "Re-tender enabled",
+        "off": "Re-tender not enabled"
+      }
+    },
+    "contractorAssignment": {
+      "title": "Contractor Assignment",
+      "screenTitle": "Contractor Assignment",
+      "description": "Assign contractor for the work",
+      "progressDescription": "Assign contractor for the work",
+      "fields": {
+        "contractorName": { "label": "Contractor name", "placeholder": "Enter full name" },
+        "contactMobile": { "label": "Contract person mobile no.", "placeholder": "+91 8833557722" },
+        "percentRow": "% above / below estimate",
+        "percentPlaceholder": "0.00",
+        "finalTenderAmount": { "label": "Final tender amount (₹)", "placeholder": "₹0.00" }
+      },
+      "uploads": {
+        "contractorTitle": "Contractor details",
+        "contractorUpload": "Upload Contractor details"
+      }
+    },
+    "sanctionApproval": {
+      "title": "Sanction Approval",
+      "screenTitle": "Sanction Approval",
+      "description": "Get sanction approval for work order",
+      "progressDescription": "Get sanction approval for work order",
+      "fields": {
+        "docketNumber": { "label": "Docket number", "placeholder": "DKT 005-2035" },
+        "sanctionDate": { "label": "Sanction date", "placeholder": "dd/mm/yy" },
+        "sanctionAmount": { "label": "Sanction amount (₹)", "placeholder": "₹0.00" },
+        "sanctionAuthority": { "label": "Sanction Authority", "placeholder": "Enter sanction authority" }
+      },
+      "uploads": {
+        "sanctionLetterTitle": "Sanction letter",
+        "sanctionLetterUpload": "Upload resolution/Sanction letter"
+      }
+    },
+    "workOrder": {
+      "title": "Work Order",
+      "screenTitle": "Work Order / Start",
+      "description": "Work order issued / work started",
+      "progressDescription": "Work order issued / Work started",
+      "fields": {
+        "orderNumber": { "label": "Work order number", "placeholder": "DKT 005-2035" },
+        "startDate": { "label": "Work start date", "placeholder": "dd/mm/yyyy" },
+        "expectedCompletion": { "label": "Expected completion", "placeholder": "dd/mm/yyyy" },
+        "notes": { "label": "Notes (Optional)", "placeholder": "Add notes (optional)" }
+      },
+      "uploads": {
+        "inaugurationPhotos": "Inauguration Photos",
+        "workOrderTitle": "Work order document",
+        "workOrderUpload": "Upload work order document"
+      }
+    },
+    "workProgress": {
+      "title": "Work Progress Tracking",
+      "screenTitle": "Work Progress Tracking",
+      "description": "Track work completion progress",
+      "progressDescription": "Work order issued / Work started",
+      "toggles": {
+        "label": "Work Completion",
+        "on": "Work completed",
+        "off": "Work in progress"
+      }
+    },
+    "paymentStatus": {
+      "title": "Payment Status",
+      "screenTitle": "Payment Status",
+      "description": "Track payment release and amount paid",
+      "progressDescription": "Track payment release and amount paid",
+      "fields": {
+        "amountPaid": { "label": "Amount paid (₹)", "placeholder": "Amount paid (₹)" },
+        "paymentDate": { "label": "Payment date", "placeholder": "dd/mm/yy" }
+      },
+      "toggles": {
+        "on": "Payment released",
+        "off": "Payment not released"
+      },
+      "uploads": {
+        "paymentTitle": "Payment PDF",
+        "paymentUpload": "Upload Payment PDF"
+      }
+    },
+    "billSubmission": {
+      "title": "Bill Submission",
+      "screenTitle": "Bill Submission",
+      "description": "Submit bill details and documents",
+      "progressDescription": "Payment is not pay",
+      "fields": {
+        "billNumber": { "label": "Bill number", "placeholder": "Bill number" },
+        "billDate": { "label": "Bill date", "placeholder": "dd/mm/yy" }
+      },
+      "toggles": {
+        "label": "Bill submitted?",
+        "on": "Bill submitted",
+        "off": "Bill not submitted"
+      },
+      "uploads": {
+        "billTitle": "Bill PDF",
+        "billUpload": "Upload Bill PDF"
+      }
+    }
+  }
+}

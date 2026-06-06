@@ -1,7 +1,8 @@
 // src/screens/AddWork/workflow/ContractorAssignmentScreen.jsx
 // Step 6 of 10: Contractor Assignment
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
@@ -11,6 +12,8 @@ import WorkflowProgress from '../../../components/layouts/Workflowprogress';
 
 // ─── Form components ──────────────────────────────────────────────────────────
 import FormDropdown from '../../../components/FormDropdown';
+import FormFieldLabel from '../../../components/help/FormFieldLabel';
+import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import Inputboxfield from '../../../components/Inputboxfield';
 import PrimaryButton from '../../../components/PrimaryButton';
 import UploadDocument from '../../../components/UploadDocument';
@@ -21,23 +24,31 @@ import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
 // ─── State & data ─────────────────────────────────────────────────────────────
 import { CONTRACTOR_ESTIMATE_OPTIONS } from '../../../constants/dropdownOptions';
 import {
-    getContractorByWorkId,
-    mapContractorRowToForm,
-    normalizeEstimateType,
-    upsertContractorAssignment,
+  getContractorByWorkId,
+  mapContractorRowToForm,
+  normalizeEstimateType,
+  upsertContractorAssignment,
 } from '../../../db/repositories/contractorRepository';
 import { getTenderAmountByWorkId } from '../../../db/repositories/tendersRepository';
-import { computeFinalTenderAmount } from '../../../utils/finalTenderAmount';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import {
+  getStepProgressDescription,
+  getStepScreenTitle,
+  getStepTitle,
+  localizeDropdownOptions,
+} from '../../../i18n/workflowLabels';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
+import { computeFinalTenderAmount } from '../../../utils/finalTenderAmount';
+
+const SCREEN_TYPE = 'contractorAssignment';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 import {
-    TOTAL_WORKFLOW_STEPS,
-    WORKFLOW_ROUTES,
+  TOTAL_WORKFLOW_STEPS,
+  WORKFLOW_ROUTES,
 } from '../../../constants/WorkflowSteps';
 
 import theme from '../../../theme';
@@ -56,6 +67,12 @@ const EMPTY_FORM = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 const ContractorAssignmentScreen = ({ navigation }) => {
+  const { t } = useTranslation('workflow');
+  const estimateOptions = useMemo(
+    () => localizeDropdownOptions(CONTRACTOR_ESTIMATE_OPTIONS, t),
+    [t],
+  );
+
   useWorkflowStepGuard(WORKFLOW_ROUTES.CONTRACTOR_ASSIGNMENT, navigation);
 
   const getDraft = useDraftStore((s) => s.getDraft);
@@ -189,14 +206,14 @@ const ContractorAssignmentScreen = ({ navigation }) => {
 
   const handleSave = () => {
     saveAndContinue(form, navigation, {
-      onValidationFail: (msg) => Alert.alert('Save Failed', msg),
+      onValidationFail: (msg) => Alert.alert(t('common.saveFailedTitle'), msg),
     });
   };
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <ScreenLayout
-      title="Contractor Assignment"
+      title={getStepScreenTitle(SCREEN_TYPE, t)}
       showBack
       showNotification
       scrollable
@@ -212,93 +229,98 @@ const ContractorAssignmentScreen = ({ navigation }) => {
 
       <ProgressSlot
         step={6}
-        title="Contractor Assignment"
-        description="Assign contractor for the work"
+        title={getStepTitle(SCREEN_TYPE, t)}
+        description={getStepProgressDescription(SCREEN_TYPE, t)}
         screenType="contractorAssignment"
       />
 
-      <View style={styles.form}>
+      <HelpTooltipScope>
+        <View style={styles.form}>
 
-        {/* Contractor Name */}
-        <Inputboxfield
-          label="Contractor name"
-          placeholder="Enter full name"
-          type="textOnly"
-          value={form.contractor_name}
-          onChangeText={(v) => updateField('contractor_name', v)}
-        />
+          <Inputboxfield
+            label={t('steps.contractorAssignment.fields.contractorName.label')}
+            placeholder={t('steps.contractorAssignment.fields.contractorName.placeholder')}
+            helpKey="workflow.contractorAssignment.contractorName"
+            helpTooltipId="contractorAssignment-contractorName"
+            type="textOnly"
+            value={form.contractor_name}
+            onChangeText={(v) => updateField('contractor_name', v)}
+          />
 
-        {/* Contractor Contact */}
-        <Inputboxfield
-          label="Contract person mobile no."
-          placeholder="+91 8833557722"
-          value={form.contractor_contact}
-          type="phone"
-          keyboardType="phone-pad"
-          onChangeText={(v) => updateField('contractor_contact', v)}
-        />
+          <Inputboxfield
+            label={t('steps.contractorAssignment.fields.contactMobile.label')}
+            placeholder={t('steps.contractorAssignment.fields.contactMobile.placeholder')}
+            helpKey="workflow.contractorAssignment.contactMobile"
+            helpTooltipId="contractorAssignment-contactMobile"
+            value={form.contractor_contact}
+            type="phone"
+            keyboardType="phone-pad"
+            onChangeText={(v) => updateField('contractor_contact', v)}
+          />
 
-        {/* % above / below estimate — side-by-side row */}
-        <Text style={styles.rowLabel}>% above / below estimate</Text>
-        <View style={styles.percentRow}>
+          <FormFieldLabel
+            label={t('steps.contractorAssignment.fields.percentRow')}
+            helpKey="workflow.contractorAssignment.percentAboveBelow"
+            helpTooltipId="contractorAssignment-percentAboveBelow"
+            labelStyle={styles.rowLabel}
+            style={styles.percentLabelRow}
+          />
+          <View style={styles.percentRow}>
+            <View style={styles.directionCell}>
+              <FormDropdown
+                placeholder={t('dropdowns.above')}
+                data={estimateOptions}
+                value={form.percentage_above_below || null}
+                onChange={(item) =>
+                  updateField('percentage_above_below', item.value, { immediate: true })
+                }
+                style={styles.noMargin}
+                fieldStyle={styles.directionField}
+              />
+            </View>
 
-          {/* Direction dropdown — compact left cell */}
-          <View style={styles.directionCell}>
-            <FormDropdown
-              placeholder="Above"
-              data={CONTRACTOR_ESTIMATE_OPTIONS}
-              value={form.percentage_above_below || null}
-              onChange={(item) =>
-                updateField('percentage_above_below', item.value, { immediate: true })
-              }
-              style={styles.noMargin}
-              fieldStyle={styles.directionField}
-            />
+            <View style={styles.percentCell}>
+              <Inputboxfield
+                placeholder={t('steps.contractorAssignment.fields.percentPlaceholder')}
+                value={form.percentage_variation}
+                type="decimal"
+                keyboardType="decimal-pad"
+                onChangeText={(v) => updateField('percentage_variation', v)}
+                rightIcon={<Text style={styles.percentSuffix}>%</Text>}
+                containerStyle={styles.noMargin}
+              />
+            </View>
           </View>
 
-          {/* Percentage value — expands to fill remaining space */}
-          <View style={styles.percentCell}>
-            <Inputboxfield
-              placeholder="0.00"
-              value={form.percentage_variation}
-              type="decimal"
-              keyboardType="decimal-pad"
-              onChangeText={(v) => updateField('percentage_variation', v)}
-              rightIcon={<Text style={styles.percentSuffix}>%</Text>}
-              containerStyle={styles.noMargin}
-            />
-          </View>
+          <Inputboxfield
+            label={t('steps.contractorAssignment.fields.finalTenderAmount.label')}
+            placeholder={t('steps.contractorAssignment.fields.finalTenderAmount.placeholder')}
+            helpKey="workflow.contractorAssignment.finalTenderAmount"
+            helpTooltipId="contractorAssignment-finalTenderAmount"
+            value={form.final_tender_amount}
+            type="number"
+            keyboardType="numeric"
+            editable={false}
+          />
+
+          <UploadDocument
+            sectionLabel={t('common.documents')}
+            documents={[
+              buildUploadDocumentEntry({
+                title: t('steps.contractorAssignment.uploads.contractorTitle'),
+                uploadText: t('steps.contractorAssignment.uploads.contractorUpload'),
+                filePath: form.contractor_doc_path,
+                onPress: pickContractorDoc,
+                loading: uploadingContractorDoc,
+              }),
+            ]}
+          />
 
         </View>
-
-        {/* Final Tender Amount — calculated from tender amount + above/below % */}
-        <Inputboxfield
-          label="Final tender amount (₹)"
-          placeholder="₹0.00"
-          value={form.final_tender_amount}
-          type="number"
-          keyboardType="numeric"
-          editable={false}
-        />
-
-        {/* ── Documents section ──────────────────────────────────────────── */}
-        <UploadDocument
-          sectionLabel="Documents"
-          documents={[
-            buildUploadDocumentEntry({
-              title: 'Contractor details',
-              uploadText: 'Upload Contractor details',
-              filePath: form.contractor_doc_path,
-              onPress: pickContractorDoc,
-              loading: uploadingContractorDoc,
-            }),
-          ]}
-        />
-
-      </View>
+      </HelpTooltipScope>
 
       <PrimaryButton
-        title="Save & Continue"
+        title={t('common.saveAndContinue')}
         onPress={handleSave}
         loading={isSaving}
         fullWidth
@@ -316,12 +338,15 @@ const styles = StyleSheet.create({
   cta: { marginTop: theme.Spacing?.lg ?? 24, marginBottom: theme.Spacing?.xl ?? 32 },
 
   // ── % above/below row ──────────────────────────────────────────────────────
+  percentLabelRow: {
+    marginBottom: theme.Spacing?.xs ?? 6,
+  },
   rowLabel: {
     fontSize: theme.FontSize?.sm ?? 14,
     fontWeight: theme.FontWeight?.medium ?? '500',
     fontFamily: theme.FontFamily?.regular ?? undefined,
     color: theme.Colors?.textPrimary ?? '#1A1A1A',
-    marginBottom: theme.Spacing?.xs ?? 6,
+    marginBottom: 0,
     letterSpacing: 0.1,
   },
   percentRow: {

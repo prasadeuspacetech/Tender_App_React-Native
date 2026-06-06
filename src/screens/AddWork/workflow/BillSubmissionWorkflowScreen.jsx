@@ -2,7 +2,9 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
+import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import Inputboxfield from '../../../components/Inputboxfield';
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
@@ -28,7 +30,13 @@ import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
 import theme from '../../../theme';
 import { formatDateForStorage } from '../../../utils/dateFormat';
+import {
+  getStepProgressDescription,
+  getStepScreenTitle,
+  getStepTitle,
+} from '../../../i18n/workflowLabels';
 
+const SCREEN_TYPE = 'billSubmission';
 const STEP = getStepByRoute(WORKFLOW_ROUTES.BILL_SUBMISSION)?.id ?? 11;
 
 const EMPTY_FORM = {
@@ -39,6 +47,8 @@ const EMPTY_FORM = {
 };
 
 const BillSubmissionWorkflowScreen = ({ navigation }) => {
+  const { t } = useTranslation('workflow');
+
   useWorkflowStepGuard(WORKFLOW_ROUTES.BILL_SUBMISSION, navigation);
 
   const getDraft = useDraftStore((s) => s.getDraft);
@@ -121,13 +131,13 @@ const BillSubmissionWorkflowScreen = ({ navigation }) => {
 
   const handleSubmit = () => {
     saveAndContinue(form, navigation, {
-      onValidationFail: (m) => Alert.alert('Save Failed', m),
+      onValidationFail: (m) => Alert.alert(t('common.saveFailedTitle'), m),
     });
   };
 
   return (
     <ScreenLayout
-      title="Bill Submission"
+      title={getStepScreenTitle(SCREEN_TYPE, t)}
       showBack
       showNotification
       scrollable
@@ -142,44 +152,55 @@ const BillSubmissionWorkflowScreen = ({ navigation }) => {
       />
       <ProgressSlot
         step={STEP}
-        title="Bill Submission"
-        description="Payment is not pay"
+        title={getStepTitle(SCREEN_TYPE, t)}
+        description={getStepProgressDescription(SCREEN_TYPE, t)}
         screenType="billSubmission"
         statusType="error"
       />
 
-      <View style={styles.form}>
-        <BillSubmissionToggle value={form.bill_submitted} onToggle={handleToggle} />
+      <HelpTooltipScope>
+        <View style={styles.form}>
+          <BillSubmissionToggle
+            value={form.bill_submitted}
+            onToggle={handleToggle}
+            helpKey="workflow.billSubmission.billSubmitted"
+            helpTooltipId="billSubmission-billSubmitted"
+          />
 
-        {form.bill_submitted ? (
-          <>
-            <Inputboxfield
-              label="Bill number"
-              placeholder="Bill number"
-              type="alphanumeric"
-              value={form.bill_number}
-              onChangeText={(v) => updateField('bill_number', v)}
-            />
-            <NativeDateField
-              label="Bill date"
-              placeholder="dd/mm/yy"
-              value={form.bill_date}
-              onDateChange={(date) =>
-                updateField('bill_date', formatDateForStorage(date), { immediate: true })
-              }
-            />
-          </>
-        ) : null}
+          {form.bill_submitted ? (
+            <>
+              <Inputboxfield
+                label={t('steps.billSubmission.fields.billNumber.label')}
+                placeholder={t('steps.billSubmission.fields.billNumber.placeholder')}
+                helpKey="workflow.billSubmission.billNumber"
+                helpTooltipId="billSubmission-billNumber"
+                type="alphanumeric"
+                value={form.bill_number}
+                onChangeText={(v) => updateField('bill_number', v)}
+              />
+              <NativeDateField
+                label={t('steps.billSubmission.fields.billDate.label')}
+                placeholder={t('steps.billSubmission.fields.billDate.placeholder')}
+                helpKey="workflow.billSubmission.billDate"
+                helpTooltipId="billSubmission-billDate"
+                value={form.bill_date}
+                onDateChange={(date) =>
+                  updateField('bill_date', formatDateForStorage(date), { immediate: true })
+                }
+              />
+            </>
+          ) : null}
 
-        <BillDocumentUpload
-          workId={currentWorkId}
-          filePath={form.bill_document}
-          onChange={(path) => updateField('bill_document', path, { immediate: true })}
-        />
-      </View>
+          <BillDocumentUpload
+            workId={currentWorkId}
+            filePath={form.bill_document}
+            onChange={(path) => updateField('bill_document', path, { immediate: true })}
+          />
+        </View>
+      </HelpTooltipScope>
 
       <PrimaryButton
-        title="Submit"
+        title={t('common.submit')}
         loading={isSaving}
         fullWidth
         style={styles.cta}

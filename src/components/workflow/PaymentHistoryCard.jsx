@@ -1,6 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
+import FormFieldLabel from '../help/FormFieldLabel';
 import theme from '../../theme';
 import { parseStoredDate } from '../../utils/dateFormat';
 
@@ -30,11 +32,19 @@ const formatRupee = (amount) => {
 };
 
 const PaymentHistoryCard = ({ installments = [], style }) => {
+  const { t } = useTranslation('workflow');
+
   if (!installments || installments.length === 0) return null;
 
   return (
     <View style={[styles.card, style]}>
-      <Text style={styles.heading}>Payment History</Text>
+      <FormFieldLabel
+        label={t('payment.historyHeading')}
+        helpKey="workflow.paymentStatus.paymentHistory"
+        helpTooltipId="paymentStatus-paymentHistory"
+        labelStyle={styles.heading}
+        style={styles.headingRow}
+      />
 
       {installments.map((row, index) => (
         <View
@@ -42,7 +52,9 @@ const PaymentHistoryCard = ({ installments = [], style }) => {
           style={[styles.row, index < installments.length - 1 && styles.rowDivider]}
         >
           <Text style={styles.amount}>{formatRupee(row.amount_paid)}</Text>
-          <Text style={styles.date}>Paid on: {formatPaymentDate(row.payment_date)}</Text>
+          <Text style={styles.date}>
+            {t('payment.paidOn', { date: formatPaymentDate(row.payment_date) })}
+          </Text>
         </View>
       ))}
     </View>
@@ -59,11 +71,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.Spacing?.md ?? 14,
     marginTop: theme.Spacing?.md ?? 14,
   },
+  headingRow: {
+    marginBottom: theme.Spacing?.xs ?? 8,
+  },
   heading: {
     fontSize: theme.FontSize?.md ?? 14,
     fontWeight: '700',
     color: TEXT,
-    marginBottom: theme.Spacing?.xs ?? 8,
+    marginBottom: 0,
   },
   row: {
     paddingVertical: theme.Spacing?.sm ?? 10,

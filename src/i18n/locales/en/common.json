@@ -1,0 +1,21 @@
+{
+  "appName": "Tender Tracking",
+  "loading": "Loading...",
+  "search": "Search",
+  "submit": "Submit",
+  "add": "+ Add",
+  "date": "Date",
+  "subject": "Subject",
+  "datePlaceholder": "dd/mm/yyyy",
+  "untitledWork": "Untitled work",
+  "codePrefix": "Code : {{code}}",
+  "dash": "—",
+  "status": {
+    "all": "All",
+    "pending": "Pending",
+    "progress": "Progress",
+    "completed": "Completed",
+    "statusAccessibility": "{{label}} status",
+    "statusLabel": "Status {{label}}"
+  }
+}

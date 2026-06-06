@@ -1,0 +1,43 @@
+{
+  "title": "अहवाल",
+  "categories": {
+    "all": "सर्व",
+    "roadRepair": "रस्ता दुरुस्ती",
+    "drainage": "नाले",
+    "parks": "उद्याने",
+    "school": "शाळा",
+    "water": "पाणी"
+  },
+  "stats": {
+    "totalWorks": "एकूण कामे",
+    "totalWorksSubtitle": "मागील वर्षापेक्षा +४",
+    "completed": "पूर्ण",
+    "completedSubtitle": "५८% पूर्ण दर",
+    "inProgress": "प्रगतीत",
+    "inProgressSubtitle": "उद्दिष्ट: ऑगस्टपर्यंत पूर्ण",
+    "pending": "प्रलंबित",
+    "pendingSubtitle": "लक्ष देणे आवश्यक"
+  },
+  "budget": {
+    "title": "बजेट",
+    "subtitle": "प्रत्येक विभागाच्या बजेटपैकी किती खर्च झाले",
+    "unitLabel": "₹ लाखांमध्ये",
+    "usedSoFar": "आतापर्यंत वापरले",
+    "sanctioned": "मंजूर",
+    "totalBudget": "एकूण बजेट",
+    "totalUsed": "एकूण वापरले",
+    "banner": "{{used}} पैकी {{total}} एकूण बजेट वापरले ({{percent}}%).",
+    "barPrimary": "{{used}} पैकी {{total}}",
+    "barRemaining": "{{remaining}} शिल्लक"
+  },
+  "export": {
+    "sectionTitle": "अहवाल निर्यात",
+    "pdf": "PDF निर्यात",
+    "excel": "Excel निर्यात"
+  },
+  "share": {
+    "title": "WhatsApp / ईमेलद्वारे शेअर",
+    "subtitle": "अहवाल थेट हितधारकांना पाठवा",
+    "accessibility": "WhatsApp किंवा ईमेलद्वारे शेअर करा"
+  }
+}

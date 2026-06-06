@@ -3,8 +3,10 @@
 
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, View } from 'react-native';
 
+import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import Inputboxfield from '../../../components/Inputboxfield';
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
@@ -31,6 +33,13 @@ import theme from '../../../theme';
 import { formatDateForStorage } from '../../../utils/dateFormat';
 
 import FormToggleField from '../../../components/FormToggleField';
+import {
+  getStepProgressDescription,
+  getStepScreenTitle,
+  getStepTitle,
+} from '../../../i18n/workflowLabels';
+
+const SCREEN_TYPE = 'pmcApproval';
 
 const EMPTY_FORM = {
   letter_number: '',
@@ -42,6 +51,8 @@ const EMPTY_FORM = {
 };
 
 const PmcApprovalScreen = ({ navigation }) => {
+  const { t } = useTranslation('workflow');
+
   useWorkflowStepGuard(WORKFLOW_ROUTES.PMC_APPROVAL, navigation);
 
   const getDraft = useDraftStore((s) => s.getDraft);
@@ -128,13 +139,13 @@ const PmcApprovalScreen = ({ navigation }) => {
 
   const handleSave = () => {
     saveAndContinue(form, navigation, {
-      onValidationFail: (m) => Alert.alert('Save Failed', m),
+      onValidationFail: (m) => Alert.alert(t('common.saveFailedTitle'), m),
     });
   };
 
   return (
       <ScreenLayout
-        title="PMC Approval"
+        title={getStepScreenTitle(SCREEN_TYPE, t)}
         showBack
         showNotification
         scrollable
@@ -149,77 +160,89 @@ const PmcApprovalScreen = ({ navigation }) => {
         />
         <ProgressSlot
           step={2}
-          title="PMC Approval"
-          description="Upload PMC letter and get approval"
+          title={getStepTitle(SCREEN_TYPE, t)}
+          description={getStepProgressDescription(SCREEN_TYPE, t)}
           screenType="pmcApproval"
         />
 
-        <View style={styles.form}>
-          <Inputboxfield
-            label="Letter Number"
-            placeholder="eg. ERK-2025-0001"
-            type="alphanumeric"
-            value={form.letter_number}
-            onChangeText={(v) => updateField('letter_number', v)}
-          />
+        <HelpTooltipScope>
+          <View style={styles.form}>
+            <Inputboxfield
+              label={t('steps.pmcApproval.fields.letterNumber.label')}
+              placeholder={t('steps.pmcApproval.fields.letterNumber.placeholder')}
+              helpKey="workflow.pmcApproval.letterNumber"
+              helpTooltipId="pmcApproval-letterNumber"
+              type="alphanumeric"
+              value={form.letter_number}
+              onChangeText={(v) => updateField('letter_number', v)}
+            />
 
-          <NativeDateField
-            label="Letter Date"
-            value={form.letter_date}
-            onDateChange={(date) =>
-              updateField('letter_date', formatDateForStorage(date), { immediate: true })
-            }
-            placeholder="dd/mm/yyyy"
-          />
+            <NativeDateField
+              label={t('steps.pmcApproval.fields.letterDate.label')}
+              value={form.letter_date}
+              onDateChange={(date) =>
+                updateField('letter_date', formatDateForStorage(date), { immediate: true })
+              }
+              placeholder={t('steps.pmcApproval.fields.letterDate.placeholder')}
+              helpKey="workflow.pmcApproval.letterDate"
+              helpTooltipId="pmcApproval-letterDate"
+            />
 
-          <FormToggleField
-            label="Finance Committee"
-            rowLabelOn="Finance committee required"
-            rowLabelOff="Finance committee not required"
-            value={form.finance_committee}
-            onToggle={() =>
-              updateField('finance_committee', !form.finance_committee, { immediate: true })
-            }
-          />
+            <FormToggleField
+              label={t('steps.pmcApproval.fields.financeCommittee.label')}
+              rowLabelOn={t('steps.pmcApproval.toggles.financeOn')}
+              rowLabelOff={t('steps.pmcApproval.toggles.financeOff')}
+              helpKey="workflow.pmcApproval.financeCommittee"
+              helpTooltipId="pmcApproval-financeCommittee"
+              value={form.finance_committee}
+              onToggle={() =>
+                updateField('finance_committee', !form.finance_committee, { immediate: true })
+              }
+            />
 
-          {form.finance_committee ? (
-            <>
-              <NativeDateField
-                label="Approval Date"
-                value={form.approval_date}
-                onDateChange={(date) =>
-                  updateField('approval_date', formatDateForStorage(date), { immediate: true })
-                }
-                placeholder="dd/mm/yyyy"
-              />
+            {form.finance_committee ? (
+              <>
+                <NativeDateField
+                  label={t('steps.pmcApproval.fields.approvalDate.label')}
+                  value={form.approval_date}
+                  onDateChange={(date) =>
+                    updateField('approval_date', formatDateForStorage(date), { immediate: true })
+                  }
+                  placeholder={t('steps.pmcApproval.fields.approvalDate.placeholder')}
+                  helpKey="workflow.pmcApproval.approvalDate"
+                  helpTooltipId="pmcApproval-approvalDate"
+                />
 
-              <Inputboxfield
-                label="Finance Approval Status"
-                placeholder="e.g. Pending, Approved, Rejected"
-                type="textOnly"
-                value={form.finance_approval_status}
-                onChangeText={(v) => updateField('finance_approval_status', v)}
-              />
-            </>
-          ) : null}
+                <Inputboxfield
+                  label={t('steps.pmcApproval.fields.financeApprovalStatus.label')}
+                  placeholder={t('steps.pmcApproval.fields.financeApprovalStatus.placeholder')}
+                  helpKey="workflow.pmcApproval.financeApprovalStatus"
+                  helpTooltipId="pmcApproval-financeApprovalStatus"
+                  type="textOnly"
+                  value={form.finance_approval_status}
+                  onChangeText={(v) => updateField('finance_approval_status', v)}
+                />
+              </>
+            ) : null}
 
-          <UploadDocument
-            sectionLabel="Finance committee approval letter"
-            documents={[
-              buildUploadDocumentEntry({
-                title: 'PMC Letter PDF',
-                uploadText: 'Upload PMC Letter PDF',
-                filePath: form.pmc_letter_path,
-                onPress: pickPmcLetter,
-                loading: uploadingPmcLetter,
-                showUploadAction: true,
-              }),
-            ]}
-          />
-        </View>
+            <UploadDocument
+              sectionLabel={t('steps.pmcApproval.uploads.financeLetter')}
+              documents={[
+                buildUploadDocumentEntry({
+                  title: t('steps.pmcApproval.uploads.pmcLetterTitle'),
+                  uploadText: t('steps.pmcApproval.uploads.pmcLetterUpload'),
+                  filePath: form.pmc_letter_path,
+                  onPress: pickPmcLetter,
+                  loading: uploadingPmcLetter,
+                  showUploadAction: true,
+                }),
+              ]}
+            />
+          </View>
+        </HelpTooltipScope>
 
         <PrimaryButton
-          title="Save & Continue"
+          title={t('common.saveAndContinue')}
           loading={isSaving}
           fullWidth
           style={styles.cta}

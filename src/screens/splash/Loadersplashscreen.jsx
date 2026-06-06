@@ -6,6 +6,7 @@
 
 import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import {
   Colors,
   FontFamily,
@@ -32,6 +33,8 @@ const TITLE_LINE_HEIGHT = Math.round(TITLE_FONT_SIZE * LineHeight.tight); // ~43
 const TITLE_LETTER_SPC  = +(TITLE_FONT_SIZE * 0.11).toFixed(2);          // ~3.96
 
 const LoaderSplashScreen = ({ navigation }) => {
+  const { t } = useTranslation('auth');
+
   useEffect(() => {
     const timer = setTimeout(() => {
       navigation.replace('Activation');   // ← goes to ActivationScreen next
@@ -44,7 +47,7 @@ const LoaderSplashScreen = ({ navigation }) => {
     <View style={styles.container}>
       <View style={styles.content}>
 
-        <Text style={styles.title}>{'PMC\nTenderTracker'}</Text>
+        <Text style={styles.title}>{t('appTitle')}</Text>
 
         <ActivityIndicator
           size={40}                      // Figma: 40×40

@@ -1,15 +1,22 @@
 import React from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
+import FormFieldLabel from '../help/FormFieldLabel';
 import { MAX_SITE_NOTES_LENGTH } from '../../db/repositories/workProgressRepository';
-
-const PLACEHOLDER =
-  'Road base layer done on north side. Awaiting material for south stretch.';
 
 /**
  * Site notes field — controlled component with live character counter.
  */
-const SiteNotes = ({ value = '', onChangeText, style }) => {
+const SiteNotes = ({
+  value = '',
+  onChangeText,
+  style,
+  helpKey,
+  helpText,
+  helpTooltipId,
+}) => {
+  const { t } = useTranslation('workflow');
   const length = String(value ?? '').length;
   const displayCount = Math.min(length, MAX_SITE_NOTES_LENGTH);
 
@@ -23,18 +30,25 @@ const SiteNotes = ({ value = '', onChangeText, style }) => {
 
   return (
     <View style={[styles.section, style]}>
-      <Text style={styles.label}>Site notes</Text>
+      <FormFieldLabel
+        label={t('site.notes')}
+        helpKey={helpKey}
+        helpText={helpText}
+        helpTooltipId={helpTooltipId}
+        labelStyle={styles.label}
+        style={styles.labelRow}
+      />
 
       <View style={styles.inputWrap}>
         <TextInput
           style={styles.input}
           value={value}
           onChangeText={handleChange}
-          placeholder={PLACEHOLDER}
+          placeholder={t('site.notesPlaceholder')}
           placeholderTextColor="rgba(0, 0, 0, 0.45)"
           multiline
           textAlignVertical="top"
-          accessibilityLabel="Site notes"
+          accessibilityLabel={t('site.notesAccessibility')}
         />
       </View>
 
@@ -50,12 +64,15 @@ const styles = StyleSheet.create({
     marginTop: -15,
     marginBottom: 10,
   },
+  labelRow: {
+    marginBottom: 10,
+  },
   label: {
     fontSize: 15,
     fontWeight: '400',
     color: '#000000',
     lineHeight: 18,
-    marginBottom: 10,
+    marginBottom: 0,
   },
   inputWrap: {
     borderWidth: 1,

@@ -1,29 +1,36 @@
 // Step 9: Work Progress Tracking
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import FormToggleField from '../../../components/FormToggleField';
+import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
 import WorkflowProgress from '../../../components/layouts/Workflowprogress';
 import PrimaryButton from '../../../components/PrimaryButton';
-import ReportCategoryChipRow from '../../../components/reports/ReportCategoryChipRow';
 import SiteNotes from '../../../components/workflow/SiteNotes';
 import SitePhotosUpload from '../../../components/workflow/SitePhotosUpload';
 import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
 import {
-    getWorkProgressByWorkId,
-    mapWorkProgressRowToForm,
-    upsertWorkProgress,
+  getWorkProgressByWorkId,
+  mapWorkProgressRowToForm,
+  upsertWorkProgress,
 } from '../../../db/repositories/workProgressRepository';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import {
+  getStepProgressDescription,
+  getStepScreenTitle,
+  getStepTitle,
+} from '../../../i18n/workflowLabels';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
 import theme from '../../../theme';
 
+const SCREEN_TYPE = 'workProgress';
 const STEP = 9;
 
 const EMPTY_FORM = {
@@ -33,6 +40,8 @@ const EMPTY_FORM = {
 };
 
 const WorkProgressTrackingScreen = ({ navigation }) => {
+  const { t } = useTranslation('workflow');
+
   useWorkflowStepGuard(WORKFLOW_ROUTES.WORK_PROGRESS, navigation);
 
   const getDraft = useDraftStore((s) => s.getDraft);
@@ -109,13 +118,13 @@ const WorkProgressTrackingScreen = ({ navigation }) => {
 
   const handleSave = () => {
     saveAndContinue(form, navigation, {
-      onValidationFail: (m) => Alert.alert('Save Failed', m),
+      onValidationFail: (m) => Alert.alert(t('common.saveFailedTitle'), m),
     });
   };
 
   return (
     <ScreenLayout
-      title="Work Progress Tracking"
+      title={getStepScreenTitle(SCREEN_TYPE, t)}
       showBack
       showNotification
       scrollable
@@ -130,37 +139,43 @@ const WorkProgressTrackingScreen = ({ navigation }) => {
       />
       <ProgressSlot
         step={STEP}
-        title="Work Progress Tracking"
-        description="Work order issued / Work started"
+        title={getStepTitle(SCREEN_TYPE, t)}
+        description={getStepProgressDescription(SCREEN_TYPE, t)}
         screenType="workProgress"
       />
 
-      <View style={styles.content}>
-        <ReportCategoryChipRow style={styles.chips} />
+      <HelpTooltipScope>
+        <View style={styles.content}>
 
-        <FormToggleField
-          label="Work Completion"
-          rowLabelOn="Work completed"
-          rowLabelOff="Work in progress"
-          value={form.work_completion}
-          onToggle={() =>
-            updateField('work_completion', !form.work_completion, { immediate: true })
-          }
-        />
+          <FormToggleField
+            label={t('steps.workProgress.toggles.label')}
+            rowLabelOn={t('steps.workProgress.toggles.on')}
+            rowLabelOff={t('steps.workProgress.toggles.off')}
+            helpKey="workflow.workProgress.workCompletion"
+            helpTooltipId="workProgress-workCompletion"
+            value={form.work_completion}
+            onToggle={() =>
+              updateField('work_completion', !form.work_completion, { immediate: true })
+            }
+          />
 
-        <SiteNotes style={styles.siteNotes}
-          value={form.site_notes}
-          onChangeText={(v) => updateField('site_notes', v)}
-        />
-        <SitePhotosUpload
-          workId={currentWorkId}
-          photos={form.site_photos}
-          onChange={(photos) => updateField('site_photos', photos, { immediate: true })}
-        />
-      </View>
+          <SiteNotes
+            style={styles.siteNotes}
+            value={form.site_notes}
+            onChangeText={(v) => updateField('site_notes', v)}
+            helpKey="workflow.workProgress.siteNotes"
+            helpTooltipId="workProgress-siteNotes"
+          />
+          <SitePhotosUpload
+            workId={currentWorkId}
+            photos={form.site_photos}
+            onChange={(photos) => updateField('site_photos', photos, { immediate: true })}
+          />
+        </View>
+      </HelpTooltipScope>
 
       <PrimaryButton
-        title="Save & Continue"
+        title={t('common.saveAndContinue')}
         loading={isSaving}
         fullWidth
         style={styles.cta}

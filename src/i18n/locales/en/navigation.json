@@ -1,0 +1,20 @@
+{
+  "tabs": {
+    "dashboard": "Dashboard",
+    "works": "Work",
+    "addWork": "Add work",
+    "reports": "Report",
+    "settings": "Setting"
+  },
+  "drawer": {
+    "title": "Setting",
+    "generalCorrespondence": "General Correspondence",
+    "backup": "Backup",
+    "restore": "Restore",
+    "subscription": "Subscription",
+    "help": "Help"
+  },
+  "accessibility": {
+    "openMenu": "Open menu"
+  }
+}

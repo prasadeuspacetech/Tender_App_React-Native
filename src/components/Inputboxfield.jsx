@@ -7,6 +7,7 @@ import {
   Platform,
   StyleSheet,
 } from 'react-native';
+import FormFieldLabel from './help/FormFieldLabel';
 import theme from '../theme';
 import {
   formFieldStyles,
@@ -61,6 +62,9 @@ const InputBoxField = forwardRef(({
   rightIcon,
   error,
   required = false,
+  helpKey,
+  helpText,
+  helpTooltipId,
   multiline = false,
   numberOfLines = 1,
   onPress,
@@ -166,10 +170,13 @@ const InputBoxField = forwardRef(({
   return (
     <View style={[formFieldStyles.container, containerStyle]}>
       {label ? (
-        <Text style={formFieldStyles.label}>
-          {label}
-          {required && <Text style={formFieldStyles.required}> *</Text>}
-        </Text>
+        <FormFieldLabel
+          label={label}
+          required={required}
+          helpKey={helpKey}
+          helpText={helpText}
+          helpTooltipId={helpTooltipId}
+        />
       ) : null}
 
       <View ref={ref} collapsable={false}>

@@ -6,6 +6,7 @@ import {
   MultiSelect,
 } from 'react-native-element-dropdown';
 
+import FormFieldLabel from './help/FormFieldLabel';
 import theme from '../theme';
 import {
   FORM_FIELD_BORDER_COLOR,
@@ -73,6 +74,9 @@ const FormDropdown = ({
   disabled = false,
   error,
   required = false,
+  helpKey,
+  helpText,
+  helpTooltipId,
   emptyMessage = 'No options available',
   searchable = false,
   searchPlaceholder = 'Search...',
@@ -195,10 +199,13 @@ const FormDropdown = ({
       ]}
     >
       {label ? (
-        <Text style={formFieldStyles.label}>
-          {label}
-          {required ? <Text style={formFieldStyles.required}> *</Text> : null}
-        </Text>
+        <FormFieldLabel
+          label={label}
+          required={required}
+          helpKey={helpKey}
+          helpText={helpText}
+          helpTooltipId={helpTooltipId}
+        />
       ) : null}
       {fieldControl}
       {error ? <Text style={formFieldStyles.errorText}>{error}</Text> : null}

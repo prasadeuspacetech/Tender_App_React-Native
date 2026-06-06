@@ -1,15 +1,33 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, Pressable, StyleSheet, Text } from 'react-native';
-
-const CATEGORIES = ['All', 'Road Repair', 'Drainage', 'Parks', 'School', 'Water'];
+import { useTranslation } from 'react-i18next';
 
 const PRIMARY = '#062E52';
+
+const CATEGORY_KEYS = [
+  'all',
+  'roadRepair',
+  'drainage',
+  'parks',
+  'school',
+  'water',
+];
 
 /**
  * Horizontal category chips — UI only (selection is local visual state).
  */
 const ReportCategoryChipRow = ({ style }) => {
-  const [selected, setSelected] = useState('All');
+  const { t } = useTranslation('reports');
+  const [selected, setSelected] = useState('all');
+
+  const categories = useMemo(
+    () =>
+      CATEGORY_KEYS.map((key) => ({
+        key,
+        label: t(`categories.${key}`),
+      })),
+    [t],
+  );
 
   return (
     <ScrollView
@@ -17,18 +35,18 @@ const ReportCategoryChipRow = ({ style }) => {
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={[styles.scrollContent, style]}
     >
-      {CATEGORIES.map((label) => {
-        const isSelected = selected === label;
+      {categories.map((item) => {
+        const isSelected = selected === item.key;
         return (
           <Pressable
-            key={label}
-            onPress={() => setSelected(label)}
+            key={item.key}
+            onPress={() => setSelected(item.key)}
             style={[styles.chip, isSelected && styles.chipSelected]}
             accessibilityRole="button"
             accessibilityState={{ selected: isSelected }}
           >
             <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-              {label}
+              {item.label}
             </Text>
           </Pressable>
         );

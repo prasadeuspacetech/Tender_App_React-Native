@@ -1,6 +1,7 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import BudgetUtilisationCard from '../../components/dashboard/BudgetUtilisationCard';
 import DashboardStatCard from '../../components/dashboard/DashboardStatCard';
@@ -11,7 +12,10 @@ import SearchBar from '../../components/dashboard/SearchBar';
 import ScreenLayout from '../../components/layouts/Screenlayout';
 import SettingsDrawer from '../../components/Settingsdrawer';
 import { workCompletedToChipStatus } from '../../components/Statuschip';
-import { getTotalAmountPaidAll } from '../../db/repositories/paymentsRepository';
+import {
+  emptyBudgetSummary,
+  getReportsBudgetSummary,
+} from '../../db/repositories/reportsRepository';
 import useWorkStore from '../../store/useWorkStore';
 import { Colors } from '../../theme';
 
@@ -32,24 +36,33 @@ const ringPercent = (part, whole, fallback = 0) => {
 };
 
 const DashboardScreen = () => {
+  const { t } = useTranslation(['dashboard', 'common']);
   const navigation = useNavigation();
   const { works, refreshWorks } = useWorkStore();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [fy, setFy] = useState('2025-26');
   const [search, setSearch] = useState('');
-  const [budgetUsedTotal, setBudgetUsedTotal] = useState(0);
+  const [rawBudgetSummary, setRawBudgetSummary] = useState(() => emptyBudgetSummary());
+
+  const loadBudgetSummary = useCallback(() => {
+    try {
+      setRawBudgetSummary(getReportsBudgetSummary(fy));
+    } catch (error) {
+      console.error('[Dashboard] getReportsBudgetSummary failed:', error);
+      setRawBudgetSummary(emptyBudgetSummary());
+    }
+  }, [fy]);
 
   useFocusEffect(
     useCallback(() => {
       refreshWorks();
-      try {
-        setBudgetUsedTotal(getTotalAmountPaidAll());
-      } catch (error) {
-        console.error('[Dashboard] getTotalAmountPaidAll failed:', error);
-        setBudgetUsedTotal(0);
-      }
-    }, [refreshWorks]),
+      loadBudgetSummary();
+    }, [refreshWorks, loadBudgetSummary]),
   );
+
+  useEffect(() => {
+    loadBudgetSummary();
+  }, [loadBudgetSummary]);
 
   const dashboardStats = useMemo(() => {
     const total = works.length;
@@ -62,23 +75,17 @@ const DashboardScreen = () => {
       else if (status === 'pending') pending += 1;
     });
 
-    const totalBudget = works.reduce(
-      (sum, work) => sum + (Number(work.budget) || 0),
-      0,
-    );
-
     return {
       total,
       complete,
       pending,
-      budgetUsedTotal,
       totalPercent: total > 0 ? 100 : 0,
       completePercent: ringPercent(complete, total),
       pendingPercent: ringPercent(pending, total),
-      budgetPercent: ringPercent(budgetUsedTotal, totalBudget),
-      budgetDisplay: formatBudgetUsed(budgetUsedTotal),
+      budgetPercent: rawBudgetSummary.percent,
+      budgetDisplay: formatBudgetUsed(rawBudgetSummary.budgetUsed),
     };
-  }, [works, budgetUsedTotal]);
+  }, [works, rawBudgetSummary]);
 
   const recentWorks = useMemo(
     () => works.slice(0, RECENT_WORK_LIMIT),
@@ -92,7 +99,7 @@ const DashboardScreen = () => {
   return (
     <>
       <ScreenLayout
-        title="Dashboard"
+        title={t('dashboard:title')}
         showMenu
         showNotification={false}
         scrollable
@@ -103,12 +110,13 @@ const DashboardScreen = () => {
         <SearchBar
           value={search}
           onChangeText={setSearch}
+          placeholder={t('common:search')}
           style={styles.search}
         />
 
         <View style={styles.statsRow}>
           <DashboardStatCard
-            label="Total Work"
+            label={t('dashboard:stats.totalWork')}
             value={String(dashboardStats.total)}
             percent={dashboardStats.totalPercent}
             ringColor="#9CA3AF"
@@ -116,55 +124,58 @@ const DashboardScreen = () => {
           />
           <View style={styles.statsGap} />
           <DashboardStatCard
-            label="Complete"
+            label={t('dashboard:stats.complete')}
             value={String(dashboardStats.complete)}
             percent={dashboardStats.completePercent}
             ringColor="#2F5E34"
-            trackColor="#D9EDE2"
+            trackColor="#2F5E34"
           />
         </View>
 
         <View style={styles.statsRow}>
           <DashboardStatCard
-            label="Pending"
+            label={t('dashboard:stats.pending')}
             value={String(dashboardStats.pending)}
             percent={dashboardStats.pendingPercent}
             ringColor="#FF5D00"
-            trackColor="#FFE8D6"
+            trackColor="#FF5D00"
           />
           <View style={styles.statsGap} />
           <DashboardStatCard
-            label="Budget Used"
+            label={t('dashboard:stats.budgetUsed')}
             value={dashboardStats.budgetDisplay}
             percent={dashboardStats.budgetPercent}
             ringColor={PRIMARY}
-            trackColor="#D6E8F7"
+            trackColor={PRIMARY}
             valueFontSize={15}
           />
         </View>
 
-        <BudgetUtilisationCard percent={65} />
+        <BudgetUtilisationCard
+          percent={rawBudgetSummary.percent}
+          title={t('dashboard:budgetUtilisation')}
+        />
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Work</Text>
+          <Text style={styles.sectionTitle}>{t('dashboard:recentWork')}</Text>
           <Pressable
             onPress={handleViewAll}
             hitSlop={8}
             accessibilityRole="button"
-            accessibilityLabel="View all works"
+            accessibilityLabel={t('dashboard:viewAllAccessibility')}
           >
-            <Text style={styles.viewAll}>View all</Text>
+            <Text style={styles.viewAll}>{t('dashboard:viewAll')}</Text>
           </Pressable>
         </View>
 
         {recentWorks.length === 0 ? (
-          <Text style={styles.emptyRecent}>No recent work available</Text>
+          <Text style={styles.emptyRecent}>{t('dashboard:emptyRecent')}</Text>
         ) : (
           recentWorks.map((work) => (
             <RecentWorkCard
               key={String(work.id)}
-              title={work.work_name || 'Untitled work'}
-              code={work.work_code || '—'}
+              title={work.work_name || t('common:untitledWork')}
+              code={work.work_code || t('common:dash')}
               status={workCompletedToChipStatus(work.work_completed)}
               iconName="construct-outline"
             />

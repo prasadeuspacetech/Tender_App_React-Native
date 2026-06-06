@@ -10,15 +10,13 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 
 import ScreenLayout from '../../components/layouts/Screenlayout';
 import SettingsDrawer from '../../components/Settingsdrawer';
 import StatusChip from '../../components/Statuschip';
 import StatusChipGroup from '../../components/Statuschipgroup';
-import {
-  workCompletedToChipLabel,
-  workCompletedToChipStatus,
-} from '../../components/Statuschip';
+import { workCompletedToChipStatus } from '../../components/Statuschip';
 import useWorkStore from '../../store/useWorkStore';
 import { WORKFLOW_ROUTES } from '../../constants/WorkflowSteps';
 import theme from '../../theme';
@@ -29,9 +27,8 @@ const formatBudget = (budget) => {
   return `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 };
 
-const WorkListCard = ({ work, onPress }) => {
+const WorkListCard = ({ work, onPress, t }) => {
   const chipStatus = workCompletedToChipStatus(work.work_completed);
-  const chipLabel = workCompletedToChipLabel(work.work_completed);
   const meta = [work.ward, work.department].filter(Boolean).join(' | ');
 
   return (
@@ -40,16 +37,18 @@ const WorkListCard = ({ work, onPress }) => {
       onPress={onPress}
       activeOpacity={0.72}
       accessibilityRole="button"
-      accessibilityLabel={`Open work ${work.work_name}`}
+      accessibilityLabel={t('works:openWorkAccessibility', {
+        name: work.work_name || t('common:untitledWork'),
+      })}
     >
       <View style={styles.cardRow}>
         <View style={styles.cardBody}>
           <Text style={styles.cardTitle} numberOfLines={2}>
-            {work.work_name || 'Untitled work'}
+            {work.work_name || t('common:untitledWork')}
           </Text>
           {work.work_code ? (
             <Text style={styles.cardCode} numberOfLines={1}>
-              {`Code : ${work.work_code}`}
+              {t('common:codePrefix', { code: work.work_code })}
             </Text>
           ) : null}
           {meta ? (
@@ -61,7 +60,7 @@ const WorkListCard = ({ work, onPress }) => {
         </View>
 
         <View style={styles.cardChipColumn}>
-          <StatusChip status={chipStatus} label={chipLabel} />
+          <StatusChip status={chipStatus} />
         </View>
       </View>
     </TouchableOpacity>
@@ -69,6 +68,7 @@ const WorkListCard = ({ work, onPress }) => {
 };
 
 const WorksScreen = ({ navigation }) => {
+  const { t, i18n } = useTranslation(['works', 'common']);
   const { works, refreshWorks, setCurrentWorkId } = useWorkStore();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -98,9 +98,9 @@ const WorksScreen = ({ navigation }) => {
 
   const renderItem = useCallback(
     ({ item }) => (
-      <WorkListCard work={item} onPress={() => handleOpenWork(item)} />
+      <WorkListCard work={item} onPress={() => handleOpenWork(item)} t={t} />
     ),
-    [handleOpenWork],
+    [handleOpenWork, t, i18n.language],
   );
 
   const ListHeader = useCallback(
@@ -110,13 +110,13 @@ const WorksScreen = ({ navigation }) => {
         onChange={setStatusFilter}
       />
     ),
-    [statusFilter],
+    [statusFilter, i18n.language],
   );
 
   return (
     <>
       <ScreenLayout
-        title="Work List"
+        title={t('works:title')}
         showMenu
         showNotification
         scrollable={false}
@@ -125,16 +125,15 @@ const WorksScreen = ({ navigation }) => {
         <FlatList
           style={styles.list}
           data={filteredWorks}
+          extraData={i18n.language}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
           ListHeaderComponent={ListHeader}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyText}>No works yet.</Text>
-              <Text style={styles.emptyHint}>
-                Add a work from the Add Work tab to get started.
-              </Text>
+              <Text style={styles.emptyText}>{t('works:emptyTitle')}</Text>
+              <Text style={styles.emptyHint}>{t('works:emptyHint')}</Text>
             </View>
           }
         />

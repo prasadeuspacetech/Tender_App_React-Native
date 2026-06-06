@@ -1,13 +1,13 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-
+import { useStatusLabel } from '../../i18n/statusLabels';
 import { dashboardCardBorderStyle } from './dashboardCardBorder';
 
-const STATUS_STYLES = {
-  completed: { label: 'Completed', color: '#2F5E34' },
-  pending: { label: 'Pending', color: '#8B2513' },
-  progress: { label: 'Progress', color: '#FF5D00' },
+const STATUS_COLORS = {
+  completed: '#2F5E34',
+  pending: '#8B2513',
+  progress: '#FF5D00',
 };
 
 const RecentWorkCard = ({
@@ -17,7 +17,8 @@ const RecentWorkCard = ({
   iconName = 'construct-outline',
   style,
 }) => {
-  const statusConfig = STATUS_STYLES[status] ?? STATUS_STYLES.pending;
+  const statusColor = STATUS_COLORS[status] ?? STATUS_COLORS.pending;
+  const statusLabel = useStatusLabel(status);
 
   return (
     <View style={[styles.card, style]}>
@@ -34,8 +35,8 @@ const RecentWorkCard = ({
         </Text>
       </View>
 
-      <Text style={[styles.status, { color: statusConfig.color }]}>
-        {statusConfig.label}
+      <Text style={[styles.status, { color: statusColor }]}>
+        {statusLabel}
       </Text>
     </View>
   );

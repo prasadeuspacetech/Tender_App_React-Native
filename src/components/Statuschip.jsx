@@ -1,28 +1,18 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import theme from '../theme';
+import { getStatusLabel, useStatusLabel } from '../i18n/statusLabels';
 
 // Figma Work List status chips — shared by filters + card badges
 const CHIP_WIDTH = 112;
 const CHIP_HEIGHT = 30;
 
 const STATUS_CONFIG = {
-  all: {
-    label: 'All',
-    color: '#555555',
-  },
-  pending: {
-    label: 'Pending',
-    color: '#8B2513',
-  },
-  progress: {
-    label: 'Progress',
-    color: '#FF5D00',
-  },
-  completed: {
-    label: 'Completed',
-    color: '#2F5E34',
-  },
+  all: { color: '#555555' },
+  pending: { color: '#8B2513' },
+  progress: { color: '#FF5D00' },
+  completed: { color: '#2F5E34' },
 };
 
 const StatusChip = ({
@@ -34,8 +24,10 @@ const StatusChip = ({
   disabled = false,
   compact = false,
 }) => {
+  const { t } = useTranslation('common');
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
-  const displayLabel = label ?? config.label;
+  const translatedLabel = useStatusLabel(status);
+  const displayLabel = label ?? translatedLabel;
   const isInteractive = typeof onPress === 'function' && !disabled;
 
   const chipStyle = [
@@ -60,7 +52,7 @@ const StatusChip = ({
         activeOpacity={0.72}
         accessibilityRole="button"
         accessibilityState={{ selected, disabled }}
-        accessibilityLabel={`${displayLabel} status`}
+        accessibilityLabel={t('status.statusAccessibility', { label: displayLabel })}
         style={chipStyle}
       >
         {content}
@@ -72,7 +64,7 @@ const StatusChip = ({
     <View
       style={chipStyle}
       accessibilityRole="text"
-      accessibilityLabel={`Status ${displayLabel}`}
+      accessibilityLabel={t('status.statusLabel', { label: displayLabel })}
     >
       {content}
     </View>
@@ -150,7 +142,7 @@ export const workCompletedToChipStatus = (workCompleted) => {
 
 export const workCompletedToChipLabel = (workCompleted) => {
   const status = workCompletedToChipStatus(workCompleted);
-  return STATUS_CONFIG[status]?.label ?? 'Pending';
+  return getStatusLabel(status);
 };
 
 export default StatusChip;

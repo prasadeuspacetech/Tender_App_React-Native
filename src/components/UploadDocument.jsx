@@ -14,6 +14,8 @@ import {
   View,
 } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
+import { useTranslation } from 'react-i18next';
+import FormFieldLabel from './help/FormFieldLabel';
 import DocumentFileIcon from './DocumentFileIcon';
 import theme from '../theme';
 import {
@@ -89,7 +91,9 @@ const DocumentField = ({
   onUploadPress,
   style,
 }) => {
+  const { t } = useTranslation('errors');
   const label = displayName || title;
+  const uploadLabel = t('uploadDocument.upload');
 
   const content = (
     <>
@@ -97,7 +101,9 @@ const DocumentField = ({
       <Text style={styles.fieldLabel} numberOfLines={1}>
         {label}
       </Text>
-      {showUploadAction ? <Text style={styles.fieldUploadAction}>Upload</Text> : null}
+      {showUploadAction ? (
+        <Text style={styles.fieldUploadAction}>{uploadLabel}</Text>
+      ) : null}
     </>
   );
 
@@ -108,7 +114,7 @@ const DocumentField = ({
         onPress={onUploadPress}
         activeOpacity={0.75}
         accessibilityRole="button"
-        accessibilityLabel={`${title}, upload`}
+        accessibilityLabel={t('uploadDocument.accessibilityUploadField', { title })}
       >
         {content}
       </TouchableOpacity>
@@ -131,6 +137,7 @@ const DashedUploadBox = ({
   fileName,
   style,
 }) => {
+  const { t } = useTranslation('errors');
   const showSuccess = fileUploaded && !loading;
 
   const sizeStyle = [
@@ -145,7 +152,13 @@ const DashedUploadBox = ({
       onPress={disabled || loading ? undefined : onPress}
       activeOpacity={disabled || loading ? 1 : 0.72}
       accessibilityRole="button"
-      accessibilityLabel={fileUploaded ? `Uploaded: ${fileName ?? uploadText}` : uploadText}
+      accessibilityLabel={
+        fileUploaded
+          ? t('uploadDocument.accessibilityUploaded', {
+              name: fileName ?? uploadText,
+            })
+          : uploadText
+      }
       accessibilityState={{ disabled: disabled || loading, busy: loading }}
       style={[
         styles.uploadBox,
@@ -161,7 +174,7 @@ const DashedUploadBox = ({
       ) : showSuccess ? (
         <View style={styles.uploadInner}>
           <TickIcon size={16} color={theme.Colors?.status?.success?.icon ?? '#2F5E34'} />
-          <Text style={styles.uploadedLabel}>File Uploaded</Text>
+          <Text style={styles.uploadedLabel}>{t('uploadDocument.fileUploaded')}</Text>
           {fileName ? (
             <Text style={styles.fileName} numberOfLines={1}>
               {fileName}
@@ -202,6 +215,9 @@ const DashedUploadBox = ({
  */
 const UploadDocument = ({
   sectionLabel = 'Documents',
+  sectionHelpKey,
+  sectionHelpText,
+  sectionHelpTooltipId,
   documents = [],
   layout = 'stack',
   style,
@@ -211,7 +227,14 @@ const UploadDocument = ({
   return (
     <View style={[styles.section, style]}>
       {sectionLabel ? (
-        <Text style={styles.sectionLabel}>{sectionLabel}</Text>
+        <FormFieldLabel
+          label={sectionLabel}
+          helpKey={sectionHelpKey}
+          helpText={sectionHelpText}
+          helpTooltipId={sectionHelpTooltipId}
+          labelStyle={styles.sectionLabelText}
+          style={styles.sectionLabelRow}
+        />
       ) : null}
 
       {isGrid
@@ -275,14 +298,16 @@ const styles = StyleSheet.create({
   section: {
     width: '100%',
   },
-  sectionLabel: {
+  sectionLabelRow: {
+    marginTop: SECTION.marginTop,
+    marginBottom: SECTION.marginBottom,
+  },
+  sectionLabelText: {
     fontSize: SECTION.fontSize,
     lineHeight: SECTION.lineHeight,
     fontWeight: SECTION.fontWeight,
     fontFamily: theme.FontFamily?.regular ?? undefined,
     color: SECTION.color,
-    marginTop: SECTION.marginTop,
-    marginBottom: SECTION.marginBottom,
     letterSpacing: 0.1,
   },
   stackGroup: {

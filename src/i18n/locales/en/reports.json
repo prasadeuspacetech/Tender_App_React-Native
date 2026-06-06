@@ -1,0 +1,43 @@
+{
+  "title": "Reports",
+  "categories": {
+    "all": "All",
+    "roadRepair": "Road Repair",
+    "drainage": "Drainage",
+    "parks": "Parks",
+    "school": "School",
+    "water": "Water"
+  },
+  "stats": {
+    "totalWorks": "Total Works",
+    "totalWorksSubtitle": "+4 from last year",
+    "completed": "Completed",
+    "completedSubtitle": "58% completed rate",
+    "inProgress": "In Progress",
+    "inProgressSubtitle": "Target: complete by Aug",
+    "pending": "Pending",
+    "pendingSubtitle": "Needs attention"
+  },
+  "budget": {
+    "title": "Budget",
+    "subtitle": "How much of each department's budget has been spent",
+    "unitLabel": "₹ in Lakhs",
+    "usedSoFar": "Used so far",
+    "sanctioned": "Sanctioned",
+    "totalBudget": "Total budget",
+    "totalUsed": "Total used",
+    "banner": "{{used}} of {{total}} total budget used ({{percent}}%).",
+    "barPrimary": "{{used}} of {{total}}",
+    "barRemaining": "{{remaining}} remaining"
+  },
+  "export": {
+    "sectionTitle": "Export Report",
+    "pdf": "Export PDF",
+    "excel": "Export Excel"
+  },
+  "share": {
+    "title": "Share via WhatsApp / Email",
+    "subtitle": "Send report directly to stakeholders",
+    "accessibility": "Share via WhatsApp or Email"
+  }
+}

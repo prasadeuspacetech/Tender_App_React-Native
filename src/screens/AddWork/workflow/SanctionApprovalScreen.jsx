@@ -10,8 +10,10 @@
 //   + Validation for required fields
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, View } from 'react-native';
 
+import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import Inputboxfield from '../../../components/Inputboxfield';
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
@@ -21,7 +23,14 @@ import PrimaryButton from '../../../components/PrimaryButton';
 import UploadDocument from '../../../components/UploadDocument';
 import { DOCUMENT_TYPES } from '../../../constants/documentTypes';
 import useDocumentUpload from '../../../hooks/useDocumentUpload';
+import {
+  getStepProgressDescription,
+  getStepScreenTitle,
+  getStepTitle,
+} from '../../../i18n/workflowLabels';
 import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
+
+const SCREEN_TYPE = 'sanctionApproval';
 
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
@@ -31,9 +40,9 @@ import useWorkStore from '../../../store/useWorkStore';
 
 import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
 import {
-    getSanctionByWorkId,
-    mapSanctionRowToForm,
-    upsertSanction,
+  getSanctionByWorkId,
+  mapSanctionRowToForm,
+  upsertSanction,
 } from '../../../db/repositories/sanctionsRepository';
 import theme from '../../../theme';
 import { formatDateForStorage } from '../../../utils/dateFormat';
@@ -49,6 +58,8 @@ const EMPTY_FORM = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 const SanctionApprovalScreen = ({ navigation }) => {
+  const { t } = useTranslation('workflow');
+
   useWorkflowStepGuard(WORKFLOW_ROUTES.SANCTION_APPROVAL, navigation);
 
   const getDraft = useDraftStore((s) => s.getDraft);
@@ -127,14 +138,14 @@ const SanctionApprovalScreen = ({ navigation }) => {
 
   const handleSave = () => {
     saveAndContinue(form, navigation, {
-      onValidationFail: (m) => Alert.alert('Save Failed', m),
+      onValidationFail: (m) => Alert.alert(t('common.saveFailedTitle'), m),
     });
   };
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <ScreenLayout
-      title="Sanction Approval"
+      title={getStepScreenTitle(SCREEN_TYPE, t)}
       showBack
       showNotification
       scrollable
@@ -149,65 +160,73 @@ const SanctionApprovalScreen = ({ navigation }) => {
       />
       <ProgressSlot
         step={7}
-        title="Sanction Approval"
-        description="Get sanction approval for work order"
+        title={getStepTitle(SCREEN_TYPE, t)}
+        description={getStepProgressDescription(SCREEN_TYPE, t)}
         screenType="sanctionApproval"
       />
 
-      <View style={styles.form}>
+      <HelpTooltipScope>
+        <View style={styles.form}>
 
-        {/* Docket Number */}
-        <Inputboxfield
-          label="Docket number"
-          placeholder="DKT 005-2035"
-          type="alphanumeric"
-          value={form.docket_number}
-          onChangeText={(v) => updateField('docket_number', v)}
-        />
+          <Inputboxfield
+            label={t('steps.sanctionApproval.fields.docketNumber.label')}
+            placeholder={t('steps.sanctionApproval.fields.docketNumber.placeholder')}
+            helpKey="workflow.sanctionApproval.docketNumber"
+            helpTooltipId="sanctionApproval-docketNumber"
+            type="alphanumeric"
+            value={form.docket_number}
+            onChangeText={(v) => updateField('docket_number', v)}
+          />
 
-        <NativeDateField
-          label="Sanction date"
-          placeholder="dd/mm/yy"
-          value={form.sanction_date}
-          onDateChange={(v) =>
-            updateField('sanction_date', formatDateForStorage(v), { immediate: true })
-          }
-        />
+          <NativeDateField
+            label={t('steps.sanctionApproval.fields.sanctionDate.label')}
+            placeholder={t('steps.sanctionApproval.fields.sanctionDate.placeholder')}
+            helpKey="workflow.sanctionApproval.sanctionDate"
+            helpTooltipId="sanctionApproval-sanctionDate"
+            value={form.sanction_date}
+            onDateChange={(v) =>
+              updateField('sanction_date', formatDateForStorage(v), { immediate: true })
+            }
+          />
 
-        <Inputboxfield
-          label="Sanction amount (₹)"
-          placeholder="₹0.00"
-          type="number"
-          value={form.sanction_amount}
-          onChangeText={(v) => updateField('sanction_amount', v)}
-          keyboardType="decimal-pad"
-        />
+          <Inputboxfield
+            label={t('steps.sanctionApproval.fields.sanctionAmount.label')}
+            placeholder={t('steps.sanctionApproval.fields.sanctionAmount.placeholder')}
+            helpKey="workflow.sanctionApproval.sanctionAmount"
+            helpTooltipId="sanctionApproval-sanctionAmount"
+            type="number"
+            value={form.sanction_amount}
+            onChangeText={(v) => updateField('sanction_amount', v)}
+            keyboardType="decimal-pad"
+          />
 
-        <Inputboxfield
-          label="Sanction Authority"
-          placeholder="Enter sanction authority"
-          value={form.sanction_authority}
-          onChangeText={(v) => updateField('sanction_authority', v)}
-        />
+          <Inputboxfield
+            label={t('steps.sanctionApproval.fields.sanctionAuthority.label')}
+            placeholder={t('steps.sanctionApproval.fields.sanctionAuthority.placeholder')}
+            helpKey="workflow.sanctionApproval.sanctionAuthority"
+            helpTooltipId="sanctionApproval-sanctionAuthority"
+            value={form.sanction_authority}
+            onChangeText={(v) => updateField('sanction_authority', v)}
+          />
 
-        {/* ── Documents section ────────────────────────────────────────── */}
-        <UploadDocument
-          sectionLabel="Documents"
-          documents={[
-            buildUploadDocumentEntry({
-              title: 'Sanction letter',
-              uploadText: 'Upload resolution/Sanction letter',
-              filePath: form.sanction_letter_path,
-              onPress: pickSanctionLetter,
-              loading: uploadingSanctionLetter,
-            }),
-          ]}
-        />
+          <UploadDocument
+            sectionLabel={t('common.documents')}
+            documents={[
+              buildUploadDocumentEntry({
+                title: t('steps.sanctionApproval.uploads.sanctionLetterTitle'),
+                uploadText: t('steps.sanctionApproval.uploads.sanctionLetterUpload'),
+                filePath: form.sanction_letter_path,
+                onPress: pickSanctionLetter,
+                loading: uploadingSanctionLetter,
+              }),
+            ]}
+          />
 
-      </View>
+        </View>
+      </HelpTooltipScope>
 
       <PrimaryButton
-        title="Save & Continue"
+        title={t('common.saveAndContinue')}
         loading={isSaving}
         fullWidth
         style={styles.cta}

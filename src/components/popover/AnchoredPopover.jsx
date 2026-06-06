@@ -5,19 +5,19 @@
  */
 import React, { useMemo } from 'react';
 import {
-  Modal,
-  Pressable,
-  StyleSheet,
-  View,
-  Platform,
+    Modal,
+    Platform,
+    Pressable,
+    StyleSheet,
+    View,
 } from 'react-native';
 
-import { computeAnchoredLayout } from './anchoredLayout';
 import {
-  FORM_FIELD_BORDER_RADIUS,
-  FORM_FIELD_BORDER_WIDTH,
-  FORM_FIELD_BORDER_COLOR,
+    FORM_FIELD_BORDER_COLOR,
+    FORM_FIELD_BORDER_RADIUS,
+    FORM_FIELD_BORDER_WIDTH,
 } from '../../theme/formFieldStyles';
+import { computeAnchoredLayout } from './anchoredLayout';
 
 const AnchoredPopover = ({
   visible = false,

@@ -1,0 +1,14 @@
+{
+  "title": "Dashboard",
+  "stats": {
+    "totalWork": "Total Work",
+    "complete": "Complete",
+    "pending": "Pending",
+    "budgetUsed": "Budget Used"
+  },
+  "budgetUtilisation": "Budget Utilisation",
+  "recentWork": "Recent Work",
+  "viewAll": "View all",
+  "viewAllAccessibility": "View all works",
+  "emptyRecent": "No recent work available"
+}

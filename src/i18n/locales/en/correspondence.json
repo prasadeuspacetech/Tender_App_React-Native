@@ -1,0 +1,8 @@
+{
+  "title": "General Correspondence",
+  "addAccessibility": "Add correspondence",
+  "deleteAccessibility": "Delete correspondence",
+  "emptyTitle": "No correspondence yet",
+  "emptyHint": "Tap + Add to create your first entry.",
+  "modalTitle": "New Correspondence"
+}

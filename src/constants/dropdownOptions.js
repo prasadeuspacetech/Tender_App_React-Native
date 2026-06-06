@@ -180,6 +180,6 @@ export const WORK_COMPLETED_OPTIONS = [
 // ─── Contractor Assignment ──────────────────────────────────────────────────────
 
 export const CONTRACTOR_ESTIMATE_OPTIONS = [
-  { label: 'Above', value: 'above' },
-  { label: 'Below', value: 'below' },
+  { label: 'Above', value: 'above', labelKey: 'above' },
+  { label: 'Below', value: 'below', labelKey: 'below' },
 ];

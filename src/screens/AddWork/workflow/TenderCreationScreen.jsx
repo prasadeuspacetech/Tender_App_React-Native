@@ -2,9 +2,11 @@
 // Step 4 of 10: Tender Creation
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import FormToggleField from '../../../components/FormToggleField';
+import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import Inputboxfield from '../../../components/Inputboxfield';
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
@@ -19,6 +21,11 @@ import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import {
+  getStepProgressDescription,
+  getStepScreenTitle,
+  getStepTitle,
+} from '../../../i18n/workflowLabels';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
 
@@ -27,6 +34,8 @@ import { getTenderByWorkId, upsertTender } from '../../../db/repositories/tender
 import theme from '../../../theme';
 import { formFieldStyles } from '../../../theme/formFieldStyles';
 import { formatDateForStorage } from '../../../utils/dateFormat';
+
+const SCREEN_TYPE = 'tenderCreation';
 
 // ─── Initial form ─────────────────────────────────────────────────────────────
 const EMPTY_FORM = {
@@ -42,6 +51,8 @@ const EMPTY_FORM = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 const TenderCreationScreen = ({ navigation }) => {
+  const { t } = useTranslation('workflow');
+
   useWorkflowStepGuard(WORKFLOW_ROUTES.TENDER_CREATION, navigation);
 
   const getDraft = useDraftStore((s) => s.getDraft);
@@ -130,14 +141,14 @@ const TenderCreationScreen = ({ navigation }) => {
 
   const handleSave = () => {
     saveAndContinue(form, navigation, {
-      onValidationFail: (m) => Alert.alert('Save Failed', m),
+      onValidationFail: (m) => Alert.alert(t('common.saveFailedTitle'), m),
     });
   };
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <ScreenLayout
-      title="Tender Creation"
+      title={getStepScreenTitle(SCREEN_TYPE, t)}
       showBack
       showNotification
       scrollable
@@ -152,96 +163,99 @@ const TenderCreationScreen = ({ navigation }) => {
       />
       <ProgressSlot
         step={4}
-        title="Tender Creation"
-        description="Work on creating the tender has not started"
+        title={getStepTitle(SCREEN_TYPE, t)}
+        description={getStepProgressDescription(SCREEN_TYPE, t)}
         screenType="tenderCreation"
       />
 
-      <View style={styles.form}>
+      <HelpTooltipScope>
+        <View style={styles.form}>
 
-        <Inputboxfield
-          label="Tender work name"
-          placeholder="Enter the tender name"
-          type="textOnly"
-          value={form.tender_name}
-          onChangeText={(v) => updateField('tender_name', v)}
-        />
+          <Inputboxfield
+            label={t('steps.tenderCreation.fields.tenderName.label')}
+            placeholder={t('steps.tenderCreation.fields.tenderName.placeholder')}
+            helpKey="workflow.tenderCreation.tenderName"
+            helpTooltipId="tenderCreation-tenderName"
+            type="textOnly"
+            value={form.tender_name}
+            onChangeText={(v) => updateField('tender_name', v)}
+          />
 
-        <Inputboxfield
-          label="Tender number"
-          placeholder="e.g TND-2025-001"
-          type="alphanumeric"
-          value={form.tender_number}
-          onChangeText={(v) => updateField('tender_number', v)}
-        />
+          <Inputboxfield
+            label={t('steps.tenderCreation.fields.tenderNumber.label')}
+            placeholder={t('steps.tenderCreation.fields.tenderNumber.placeholder')}
+            helpKey="workflow.tenderCreation.tenderNumber"
+            helpTooltipId="tenderCreation-tenderNumber"
+            type="alphanumeric"
+            value={form.tender_number}
+            onChangeText={(v) => updateField('tender_number', v)}
+          />
 
-        <NativeDateField
-          label="Advertisment date"
-          placeholder="dd/mm/yy"
-          value={form.tender_date}
-          onDateChange={(date) =>
-            updateField('tender_date', formatDateForStorage(date), { immediate: true })
-          }
-        />
+          <NativeDateField
+            label={t('steps.tenderCreation.fields.advertisementDate.label')}
+            placeholder={t('steps.tenderCreation.fields.advertisementDate.placeholder')}
+            helpKey="workflow.tenderCreation.advertisementDate"
+            helpTooltipId="tenderCreation-advertisementDate"
+            value={form.tender_date}
+            onDateChange={(date) =>
+              updateField('tender_date', formatDateForStorage(date), { immediate: true })
+            }
+          />
 
-        <Inputboxfield
-          label="Tender amount (₹)"
-          placeholder="₹0.00"
-          type="number"
-          keyboardType="numeric"
-          value={form.tender_amount}
-          onChangeText={(v) => updateField('tender_amount', v)}
-        />
+          <Inputboxfield
+            label={t('steps.tenderCreation.fields.tenderAmount.label')}
+            placeholder={t('steps.tenderCreation.fields.tenderAmount.placeholder')}
+            helpKey="workflow.tenderCreation.tenderAmount"
+            helpTooltipId="tenderCreation-tenderAmount"
+            type="number"
+            keyboardType="numeric"
+            value={form.tender_amount}
+            onChangeText={(v) => updateField('tender_amount', v)}
+          />
 
-        <Text style={styles.sectionLabel}>Tender Status</Text>
+          <Text style={styles.sectionLabel}>{t('steps.tenderCreation.sectionTenderStatus')}</Text>
 
         <FormToggleField
-          rowLabelOn="A Packet Open"
-          rowLabelOff="A Packet Not Open"
+          rowLabelOn={t('steps.tenderCreation.toggles.aPacketOn')}
+          rowLabelOff={t('steps.tenderCreation.toggles.aPacketOff')}
           value={form.a_packet_open}
-          segmentLeftLabel="Close"
-          segmentRightLabel="Open"
+          segmentLeftLabel={t('toggles.close')}
+          segmentRightLabel={t('toggles.open')}
           onToggle={() =>
             updateField('a_packet_open', !form.a_packet_open, { immediate: true })
           }
         />
 
         <FormToggleField
-          rowLabelOn="B Packet Open"
-          rowLabelOff="B Packet Not Open"
+          rowLabelOn={t('steps.tenderCreation.toggles.bPacketOn')}
+          rowLabelOff={t('steps.tenderCreation.toggles.bPacketOff')}
           value={form.b_packet_open}
-          segmentLeftLabel="Close"
-          segmentRightLabel="Open"
+          segmentLeftLabel={t('toggles.close')}
+          segmentRightLabel={t('toggles.open')}
           onToggle={() =>
             updateField('b_packet_open', !form.b_packet_open, { immediate: true })
           }
         />
 
-        <UploadDocument
-          sectionLabel="Documents"
-          layout="grid"
-          documents={[
-            buildUploadDocumentEntry({
-              title: 'Newspaper Advertisement',
-              uploadText: 'Upload Newspaper ad',
-              filePath: form.advertisement_path,
-              onPress: pickAdvertisement,
-              loading: uploadingAdvertisement,
-            }),
-            // buildUploadDocumentEntry({
-            //   title: 'Tender Notice',
-            //   uploadText: 'Upload Tender notice',
-            //   filePath: form.tender_notice_path,
-            //   onPress: pickTenderNotice,
-            //   loading: uploadingTenderNotice,
-            // }),
-          ]}
-        />
+          <UploadDocument
+            sectionLabel={t('common.documents')}
+            layout="grid"
+            documents={[
+              buildUploadDocumentEntry({
+                title: t('steps.tenderCreation.uploads.newspaperTitle'),
+                uploadText: t('steps.tenderCreation.uploads.newspaperUpload'),
+                filePath: form.advertisement_path,
+                onPress: pickAdvertisement,
+                loading: uploadingAdvertisement,
+              }),
+            ]}
+          />
 
-      </View>
+        </View>
+      </HelpTooltipScope>
 
       <PrimaryButton
-        title="Save & Continue"
+        title={t('common.saveAndContinue')}
         loading={isSaving}
         fullWidth
         style={styles.cta}

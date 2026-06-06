@@ -2,7 +2,9 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
+import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import Inputboxfield from '../../../components/Inputboxfield';
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
@@ -28,7 +30,13 @@ import useWorkStore from '../../../store/useWorkStore';
 import theme from '../../../theme';
 import { formatDateForStorage } from '../../../utils/dateFormat';
 import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
+import {
+  getStepProgressDescription,
+  getStepScreenTitle,
+  getStepTitle,
+} from '../../../i18n/workflowLabels';
 
+const SCREEN_TYPE = 'workOrder';
 const STEP = 8;
 
 const EMPTY_FORM = {
@@ -41,6 +49,8 @@ const EMPTY_FORM = {
 };
 
 const WorkOrderScreen = ({ navigation }) => {
+  const { t } = useTranslation('workflow');
+
   useWorkflowStepGuard(WORKFLOW_ROUTES.WORK_ORDER, navigation);
 
   const getDraft = useDraftStore((s) => s.getDraft);
@@ -118,13 +128,13 @@ const WorkOrderScreen = ({ navigation }) => {
 
   const handleSave = () => {
     saveAndContinue(form, navigation, {
-      onValidationFail: (m) => Alert.alert('Save Failed', m),
+      onValidationFail: (m) => Alert.alert(t('common.saveFailedTitle'), m),
     });
   };
 
   return (
     <ScreenLayout
-      title="Work Order / Start"
+      title={getStepScreenTitle(SCREEN_TYPE, t)}
       showBack
       showNotification
       scrollable
@@ -139,78 +149,87 @@ const WorkOrderScreen = ({ navigation }) => {
       />
       <ProgressSlot
         step={STEP}
-        title="Work Order"
-        description="Work order issued / Work started"
+        title={getStepTitle(SCREEN_TYPE, t)}
+        description={getStepProgressDescription(SCREEN_TYPE, t)}
         screenType="workOrder"
       />
 
-      <View style={styles.form}>
-        <Inputboxfield
-          label="Work order number"
-          placeholder="DKT 005-2035"
-          type="alphanumeric"
-          value={form.work_order_number}
-          onChangeText={(v) => updateField('work_order_number', v)}
-        />
+      <HelpTooltipScope>
+        <View style={styles.form}>
+          <Inputboxfield
+            label={t('steps.workOrder.fields.orderNumber.label')}
+            placeholder={t('steps.workOrder.fields.orderNumber.placeholder')}
+            helpKey="workflow.workOrder.orderNumber"
+            helpTooltipId="workOrder-orderNumber"
+            type="alphanumeric"
+            value={form.work_order_number}
+            onChangeText={(v) => updateField('work_order_number', v)}
+          />
 
-        <NativeDateField
-          label="Work start date"
-          placeholder="dd/mm/yyyy"
-          value={form.work_start_date}
-          onDateChange={(v) =>
-            updateField('work_start_date', formatDateForStorage(v), { immediate: true })
-          }
-        />
+          <NativeDateField
+            label={t('steps.workOrder.fields.startDate.label')}
+            placeholder={t('steps.workOrder.fields.startDate.placeholder')}
+            helpKey="workflow.workOrder.startDate"
+            helpTooltipId="workOrder-startDate"
+            value={form.work_start_date}
+            onDateChange={(v) =>
+              updateField('work_start_date', formatDateForStorage(v), { immediate: true })
+            }
+          />
 
-        <NativeDateField
-          label="Expected completion"
-          placeholder="dd/mm/yyyy"
-          value={form.expected_completion_date}
-          onDateChange={(v) =>
-            updateField('expected_completion_date', formatDateForStorage(v), { immediate: true })
-          }
-        />
+          <NativeDateField
+            label={t('steps.workOrder.fields.expectedCompletion.label')}
+            placeholder={t('steps.workOrder.fields.expectedCompletion.placeholder')}
+            helpKey="workflow.workOrder.expectedCompletion"
+            helpTooltipId="workOrder-expectedCompletion"
+            value={form.expected_completion_date}
+            onDateChange={(v) =>
+              updateField('expected_completion_date', formatDateForStorage(v), { immediate: true })
+            }
+          />
 
-        <Inputboxfield
-          label="Notes (Optional)"
-          placeholder="Add notes (optional)"
-          value={form.notes}
-          onChangeText={(v) => updateField('notes', v)}
-          multiline
-          numberOfLines={3}
-        />
+          <Inputboxfield
+            label={t('steps.workOrder.fields.notes.label')}
+            placeholder={t('steps.workOrder.fields.notes.placeholder')}
+            helpKey="workflow.workOrder.notes"
+            helpTooltipId="workOrder-notes"
+            value={form.notes}
+            onChangeText={(v) => updateField('notes', v)}
+            multiline
+            numberOfLines={3}
+          />
 
-        <SitePhotosUpload
-          workId={currentWorkId}
-          photos={form.inauguration_photos}
-          onChange={(photos) =>
-            updateField('inauguration_photos', photos, { immediate: true })
-          }
-          sectionLabel="Inauguration Photos"
-          maxPhotos={MAX_INAUGURATION_PHOTOS}
-          storageSubfolder="work_order_inauguration_photos"
-          filePrefix="inauguration_photo"
-          addPhotoLabel="+ Add Photo"
-          removeConfirmTitle="Remove photo"
-          removeConfirmMessage="Remove this inauguration photo?"
-        />
+          <SitePhotosUpload
+            workId={currentWorkId}
+            photos={form.inauguration_photos}
+            onChange={(photos) =>
+              updateField('inauguration_photos', photos, { immediate: true })
+            }
+            sectionLabel={t('steps.workOrder.uploads.inaugurationPhotos')}
+            maxPhotos={MAX_INAUGURATION_PHOTOS}
+            storageSubfolder="work_order_inauguration_photos"
+            filePrefix="inauguration_photo"
+            addPhotoLabel={t('site.addPhotoPlus')}
+            removeConfirmMessage={t('alerts.removeInaugurationPhotoMessage')}
+          />
 
-        <UploadDocument
-          sectionLabel="Documents"
-          documents={[
-            buildUploadDocumentEntry({
-              title: 'Work order document',
-              uploadText: 'Upload work order document',
-              filePath: form.work_order_document_path,
-              onPress: pickWorkOrderDoc,
-              loading: uploadingWorkOrderDoc,
-            }),
-          ]}
-        />
-      </View>
+          <UploadDocument
+            sectionLabel={t('common.documents')}
+            documents={[
+              buildUploadDocumentEntry({
+                title: t('steps.workOrder.uploads.workOrderTitle'),
+                uploadText: t('steps.workOrder.uploads.workOrderUpload'),
+                filePath: form.work_order_document_path,
+                onPress: pickWorkOrderDoc,
+                loading: uploadingWorkOrderDoc,
+              }),
+            ]}
+          />
+        </View>
+      </HelpTooltipScope>
 
       <PrimaryButton
-        title="Save & Continue"
+        title={t('common.saveAndContinue')}
         loading={isSaving}
         fullWidth
         style={styles.cta}

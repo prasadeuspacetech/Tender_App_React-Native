@@ -1,0 +1,6 @@
+{
+  "title": "Work List",
+  "emptyTitle": "No works yet.",
+  "emptyHint": "Add a work from the Add Work tab to get started.",
+  "openWorkAccessibility": "Open work {{name}}"
+}

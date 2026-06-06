@@ -7,11 +7,13 @@
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
 import WorkflowProgress from '../../../components/layouts/Workflowprogress';
 
+import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import FormToggleField from '../../../components/FormToggleField';
 import Inputboxfield from '../../../components/Inputboxfield';
 import NativeDateField from '../../../components/NativeDateField';
@@ -36,6 +38,13 @@ import {
 } from '../../../constants/WorkflowSteps';
 
 import theme from '../../../theme';
+import {
+  getStepProgressDescription,
+  getStepScreenTitle,
+  getStepTitle,
+} from '../../../i18n/workflowLabels';
+
+const SCREEN_TYPE = 'reTender';
 
 const EMPTY_FORM = {
   enable_retender: false,
@@ -46,6 +55,8 @@ const EMPTY_FORM = {
 };
 
 const ReTenderScreen = ({ navigation }) => {
+  const { t } = useTranslation('workflow');
+
   useWorkflowStepGuard(WORKFLOW_ROUTES.RE_TENDER, navigation);
 
   const getDraft = useDraftStore((s) => s.getDraft);
@@ -154,13 +165,13 @@ const ReTenderScreen = ({ navigation }) => {
 
   const handleSave = () => {
     saveAndContinue(form, navigation, {
-      onValidationFail: (m) => Alert.alert('Save Failed', m),
+      onValidationFail: (m) => Alert.alert(t('common.saveFailedTitle'), m),
     });
   };
 
   return (
     <ScreenLayout
-      title="Re-Tender (Optional)"
+      title={getStepScreenTitle(SCREEN_TYPE, t)}
       showBack
       showNotification
       scrollable
@@ -176,63 +187,73 @@ const ReTenderScreen = ({ navigation }) => {
 
       <ProgressSlot
         step={5}
-        title="Re-Tender (Optional)"
-        description="Re-tender if original tender failed"
+        title={getStepTitle(SCREEN_TYPE, t)}
+        description={getStepProgressDescription(SCREEN_TYPE, t)}
         screenType="reTender"
       />
 
-      <View style={styles.form}>
-        <FormToggleField
-          rowLabelOn="Re-tender enabled"
-          rowLabelOff="Re-tender not enabled"
-          value={form.enable_retender}
-          onToggle={handleToggle}
-        />
+      <HelpTooltipScope>
+        <View style={styles.form}>
+          <FormToggleField
+            rowLabelOn={t('steps.reTender.toggles.on')}
+            rowLabelOff={t('steps.reTender.toggles.off')}
+            helpKey="workflow.reTender.enableRetender"
+            helpTooltipId="reTender-enableRetender"
+            value={form.enable_retender}
+            onToggle={handleToggle}
+          />
 
-        {form.enable_retender && (
-          <>
-            <View>
+          {form.enable_retender && (
+            <>
               <Inputboxfield
-                label="Previous tender ref"
-                placeholder="e.g TND-2025-001"
+                label={t('steps.reTender.fields.previousRef.label')}
+                placeholder={t('steps.reTender.fields.previousRef.placeholder')}
+                helpKey="workflow.reTender.previousRef"
+                helpTooltipId="reTender-previousRef"
                 type="alphanumeric"
                 value={form.previous_tender_reference}
                 onChangeText={(v) => updateField('previous_tender_reference', v)}
               />
-            </View>
 
-            <NativeDateField
-              label="New tender date"
-              placeholder="dd/mm/yyyy"
-              value={form.new_tender_date}
-              onDateChange={(date) =>
-                updateField('new_tender_date', formatDateForStorage(date), { immediate: true })
-              }
-            />
+              <NativeDateField
+                label={t('steps.reTender.fields.newDate.label')}
+                placeholder={t('steps.reTender.fields.newDate.placeholder')}
+                helpKey="workflow.reTender.newDate"
+                helpTooltipId="reTender-newDate"
+                value={form.new_tender_date}
+                onDateChange={(date) =>
+                  updateField('new_tender_date', formatDateForStorage(date), { immediate: true })
+                }
+              />
 
-            <Inputboxfield
-              label="New tender amount (₹)"
-              placeholder="₹0.00"
-              value={form.new_tender_amount}
-              type="number"
-              keyboardType="numeric"
-              onChangeText={(v) => updateField('new_tender_amount', v)}
-            />
+              <Inputboxfield
+                label={t('steps.reTender.fields.newAmount.label')}
+                placeholder={t('steps.reTender.fields.newAmount.placeholder')}
+                helpKey="workflow.reTender.newAmount"
+                helpTooltipId="reTender-newAmount"
+                value={form.new_tender_amount}
+                type="number"
+                keyboardType="numeric"
+                onChangeText={(v) => updateField('new_tender_amount', v)}
+              />
 
-            <Inputboxfield
-              label="Re-tender reason"
-              placeholder="Why is this tender re-issued?"
-              value={form.retender_reason}
-              multiline
-              numberOfLines={2}
-              onChangeText={(v) => updateField('retender_reason', v)}
-            />
-          </>
-        )}
-      </View>
+              <Inputboxfield
+                label={t('steps.reTender.fields.reason.label')}
+                placeholder={t('steps.reTender.fields.reason.placeholder')}
+                helpKey="workflow.reTender.reason"
+                helpTooltipId="reTender-reason"
+                value={form.retender_reason}
+                multiline
+                numberOfLines={2}
+                onChangeText={(v) => updateField('retender_reason', v)}
+              />
+            </>
+          )}
+        </View>
+      </HelpTooltipScope>
 
       <PrimaryButton
-        title="Save & Continue"
+        title={t('common.saveAndContinue')}
         onPress={handleSave}
         loading={isSaving}
         fullWidth

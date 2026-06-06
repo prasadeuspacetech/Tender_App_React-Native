@@ -3,7 +3,6 @@
  * Static imports required: dynamic import() breaks Metro native module resolution.
  */
 
-import { Alert } from 'react-native';
 import { getDocumentAsync } from 'expo-document-picker';
 import { Directory, File, Paths } from 'expo-file-system';
 
@@ -25,6 +24,7 @@ import {
   patchWorkOrderDocumentPath,
 } from '../db/repositories/documentPathRepository';
 import { getFileNameFromPath } from '../utils/fileName';
+import { showUploadAlert, tError } from '../i18n/alertMessages';
 
 const ALLOWED_EXTENSIONS = new Set(['pdf', 'jpg', 'jpeg', 'png']);
 
@@ -114,7 +114,7 @@ const validatePickedAsset = (asset) => {
   if (!ext || !ALLOWED_EXTENSIONS.has(ext)) {
     return {
       ok: false,
-      message: 'Only PDF, JPG, JPEG, and PNG files are allowed.',
+      message: tError('upload.unsupportedDocuments'),
     };
   }
 
@@ -123,7 +123,7 @@ const validatePickedAsset = (asset) => {
     if (!mime.includes('pdf') && !mime.includes('jpeg') && !mime.includes('png')) {
       return {
         ok: false,
-        message: 'Only PDF, JPG, JPEG, and PNG files are allowed.',
+        message: tError('upload.unsupportedDocuments'),
       };
     }
   }
@@ -137,7 +137,7 @@ const validatePickedAsset = (asset) => {
  */
 export const pickAndStoreDocument = async (workId, documentType) => {
   if (!workId) {
-    Alert.alert('Upload failed', 'Work ID not found. Save work details first.');
+    showUploadAlert('upload.failedTitle', 'upload.failedNoWorkId');
     return null;
   }
 
@@ -158,12 +158,9 @@ export const pickAndStoreDocument = async (workId, documentType) => {
   } catch (e) {
     console.warn('[documentUploadService] picker error:', e);
     if (isNativeModuleMissing(e)) {
-      Alert.alert(
-        'Rebuild required',
-        'Document upload needs a native build. Stop the app, then run:\n\nnpx expo run:android',
-      );
+      showUploadAlert('upload.rebuildTitle', 'upload.rebuildDocument');
     } else {
-      Alert.alert('Upload failed', 'Could not open the document picker.');
+      showUploadAlert('upload.failedTitle', 'upload.failedPicker');
     }
     return null;
   }
@@ -175,13 +172,13 @@ export const pickAndStoreDocument = async (workId, documentType) => {
   const asset = result.assets[0];
   const validation = validatePickedAsset(asset);
   if (!validation.ok) {
-    Alert.alert('Unsupported file', validation.message);
+    showUploadAlert('upload.unsupportedTitle', 'upload.unsupportedDocuments');
     return null;
   }
 
   const storedFileName = buildStoredFileName(defaultBasename, asset.name, asset.mimeType);
   if (!storedFileName) {
-    Alert.alert('Unsupported file', 'Only PDF, JPG, JPEG, and PNG files are allowed.');
+    showUploadAlert('upload.unsupportedTitle', 'upload.unsupportedDocuments');
     return null;
   }
 
@@ -196,12 +193,9 @@ export const pickAndStoreDocument = async (workId, documentType) => {
   } catch (e) {
     console.warn('[documentUploadService] store error:', e);
     if (isNativeModuleMissing(e)) {
-      Alert.alert(
-        'Rebuild required',
-        'Stop the app, then run:\n\nnpx expo run:android',
-      );
+      showUploadAlert('upload.rebuildTitle', 'upload.rebuildGeneric');
     } else {
-      Alert.alert('Upload failed', 'Could not save the file on this device.');
+      showUploadAlert('upload.failedTitle', 'upload.failedSaveFile');
     }
     return null;
   }

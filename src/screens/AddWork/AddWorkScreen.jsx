@@ -10,6 +10,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import ScreenLayout from '../../components/layouts/Screenlayout';
 import NavigationCard from '../../components/Navigationcard';
@@ -32,8 +33,10 @@ import {
   deriveStepStatus,
   WORKFLOW_ALL_COMPLETE_STEP,
 } from '../../constants/WorkflowSteps';
+import { getStepTitle } from '../../i18n/workflowLabels';
 
 const AddWorkScreen = ({ navigation }) => {
+  const { t } = useTranslation('workflow');
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const { currentWork, currentWorkId, refreshCurrentWork, clearCurrentWork } =
@@ -71,17 +74,17 @@ const AddWorkScreen = ({ navigation }) => {
         scrollable
         onMenuPress={() => setDrawerOpen(true)}
         contentStyle={styles.scrollContent}
-        title="Add Work"
+        title={t('hub.title')}
         headerTitleStyle={styles.heroTitle}
       >
         {currentWorkId ? (
           <TouchableOpacity
             onPress={handleStartNewWork}
             accessibilityRole="button"
-            accessibilityLabel="Start new work"
+            accessibilityLabel={t('hub.startNewWorkAccessibility')}
             style={styles.newWorkButton}
           >
-            <Text style={styles.newWorkText}>Start new work</Text>
+            <Text style={styles.newWorkText}>{t('hub.startNewWork')}</Text>
           </TouchableOpacity>
         ) : null}
 
@@ -94,7 +97,7 @@ const AddWorkScreen = ({ navigation }) => {
             return (
               <NavigationCard
                 key={step.id}
-                title={step.title}
+                title={getStepTitle(step.screenType, t)}
                 disabled={isLocked}
                 emphasis={isPending ? 'pending' : 'none'}
                 onPress={() => handleStepPress(step, status)}

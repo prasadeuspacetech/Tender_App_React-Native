@@ -2,13 +2,16 @@
 // Step 10: Payment Status
 //
 // Payments are a ledger: every Save & Continue with a positive amount appends
-// a new installment row. Summary cards sum across all installments. The form
+// a new installment row. Amount Paid = estimation + sanction + all installments.
+// The form
 // itself is the "next installment" being entered; auto-save keeps it in
 // Zustand draft only — no SQLite write until Save & Continue.
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
+import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import FormToggleField from '../../../components/FormToggleField';
 import Inputboxfield from '../../../components/Inputboxfield';
 import ProgressSlot from '../../../components/layouts/Progressslot';
@@ -36,6 +39,13 @@ import {
   getPaymentSummaryForWork,
 } from '../../../db/repositories/paymentsRepository';
 import theme from '../../../theme';
+import {
+  getStepProgressDescription,
+  getStepScreenTitle,
+  getStepTitle,
+} from '../../../i18n/workflowLabels';
+
+const SCREEN_TYPE = 'paymentStatus';
 
 const formatRupee = (amount) => {
   const n = Number(amount) || 0;
@@ -94,6 +104,8 @@ const EMPTY_FORM = {
 const EMPTY_SUMMARY = { totalBill: 0, amountPaid: 0, pending: 0 };
 
 const BillSubmissionScreen = ({ navigation }) => {
+  const { t } = useTranslation('workflow');
+
   useWorkflowStepGuard(WORKFLOW_ROUTES.PAYMENT_STATUS, navigation);
 
   const getDraft = useDraftStore((s) => s.getDraft);
@@ -166,16 +178,16 @@ const BillSubmissionScreen = ({ navigation }) => {
     return unsubscribe;
   }, [navigation, refreshLedger]);
 
-  // Live preview of summary while user types a new installment amount
+  // Live preview: estimation + sanction + saved installments + amount being typed
   const liveSummary = (() => {
     if (!form.payment_released) return summary;
     const typed = parseAmount(form.amount_paid);
     if (typed <= 0) return summary;
-    const liveAmount = summary.amountPaid + typed;
+    const liveAmountPaid = summary.amountPaid + typed;
     return {
       totalBill: summary.totalBill,
-      amountPaid: liveAmount,
-      pending: Math.max(0, summary.totalBill - liveAmount),
+      amountPaid: liveAmountPaid,
+      pending: Math.max(0, summary.totalBill - liveAmountPaid),
     };
   })();
 
@@ -236,10 +248,8 @@ const BillSubmissionScreen = ({ navigation }) => {
         );
         if (currentSummary.totalBill > 0 && amount > remaining) {
           Alert.alert(
-            'Payment exceeds pending',
-            `Entered amount exceeds pending payment. Please enter ${formatRupee(
-              remaining,
-            )} or less.`,
+            t('alerts.paymentExceedsTitle'),
+            t('alerts.paymentExceedsMessage', { amount: formatRupee(remaining) }),
           );
           return;
         }
@@ -247,13 +257,13 @@ const BillSubmissionScreen = ({ navigation }) => {
     }
 
     saveAndContinue(form, navigation, {
-      onValidationFail: (m) => Alert.alert('Save Failed', m),
+      onValidationFail: (m) => Alert.alert(t('common.saveFailedTitle'), m),
     });
   };
 
   return (
     <ScreenLayout
-      title="Payment Status"
+      title={getStepScreenTitle(SCREEN_TYPE, t)}
       showBack
       showNotification
       scrollable
@@ -268,75 +278,83 @@ const BillSubmissionScreen = ({ navigation }) => {
       />
       <ProgressSlot
         step={10}
-        title="Payment Status"
-        description="Track payment release and amount paid"
+        title={getStepTitle(SCREEN_TYPE, t)}
+        description={getStepProgressDescription(SCREEN_TYPE, t)}
         screenType="paymentStatus"
       />
 
-      <View style={styles.summaryRow}>
-        <SummaryCard
-          label="Total bill amount"
-          value={formatRupee(liveSummary.totalBill)}
-          valueColor={TEXT}
-        />
-        <SummaryCard
-          label="Amount paid"
-          value={formatRupee(liveSummary.amountPaid)}
-          valueColor={PAID}
-        />
-        <SummaryCard
-          label="Pending"
-          value={formatRupee(liveSummary.pending)}
-          valueColor={PENDING}
-        />
-      </View>
-
-      <FormToggleField
-        rowLabelOn="Payment released"
-        rowLabelOff="Payment not released"
-        value={form.payment_released}
-        onToggle={handleToggle}
-      />
-
-      {form.payment_released && (
-        <>
-          <Inputboxfield
-            label="Amount paid (₹)"
-            placeholder="Amount paid (₹)"
-            type="number"
-            keyboardType="numeric"
-            value={form.amount_paid}
-            onChangeText={(v) => updateField('amount_paid', v)}
+      <HelpTooltipScope>
+        <View style={styles.summaryRow}>
+          <SummaryCard
+            label={t('payment.totalBillAmount')}
+            value={formatRupee(liveSummary.totalBill)}
+            valueColor={TEXT}
           />
-
-          <NativeDateField
-            label="Payment date"
-            placeholder="dd/mm/yy"
-            value={form.payment_date}
-            onDateChange={(date) =>
-              updateField('payment_date', formatDateForStorage(date), { immediate: true })
-            }
+          <SummaryCard
+            label={t('payment.amountPaid')}
+            value={formatRupee(liveSummary.amountPaid)}
+            valueColor={PAID}
           />
-
-          <UploadDocument
-            sectionLabel="Documents"
-            documents={[
-              buildUploadDocumentEntry({
-                title: 'Payment PDF',
-                uploadText: 'Upload Payment PDF',
-                filePath: form.payment_pdf_path,
-                onPress: pickPaymentReceipt,
-                loading: uploadingPaymentReceipt,
-              }),
-            ]}
+          <SummaryCard
+            label={t('payment.pending')}
+            value={formatRupee(liveSummary.pending)}
+            valueColor={PENDING}
           />
-        </>
-      )}
+        </View>
 
-      <PaymentHistoryCard installments={installments} />
+        <FormToggleField
+          rowLabelOn={t('steps.paymentStatus.toggles.on')}
+          rowLabelOff={t('steps.paymentStatus.toggles.off')}
+          helpKey="workflow.paymentStatus.paymentReleased"
+          helpTooltipId="paymentStatus-paymentReleased"
+          value={form.payment_released}
+          onToggle={handleToggle}
+        />
+
+        {form.payment_released && (
+          <>
+            <Inputboxfield
+              label={t('steps.paymentStatus.fields.amountPaid.label')}
+              placeholder={t('steps.paymentStatus.fields.amountPaid.placeholder')}
+              helpKey="workflow.paymentStatus.amountPaid"
+              helpTooltipId="paymentStatus-amountPaid"
+              type="number"
+              keyboardType="numeric"
+              value={form.amount_paid}
+              onChangeText={(v) => updateField('amount_paid', v)}
+            />
+
+            <NativeDateField
+              label={t('steps.paymentStatus.fields.paymentDate.label')}
+              placeholder={t('steps.paymentStatus.fields.paymentDate.placeholder')}
+              helpKey="workflow.paymentStatus.paymentDate"
+              helpTooltipId="paymentStatus-paymentDate"
+              value={form.payment_date}
+              onDateChange={(date) =>
+                updateField('payment_date', formatDateForStorage(date), { immediate: true })
+              }
+            />
+
+            <UploadDocument
+              sectionLabel={t('common.documents')}
+              documents={[
+                buildUploadDocumentEntry({
+                  title: t('steps.paymentStatus.uploads.paymentTitle'),
+                  uploadText: t('steps.paymentStatus.uploads.paymentUpload'),
+                  filePath: form.payment_pdf_path,
+                  onPress: pickPaymentReceipt,
+                  loading: uploadingPaymentReceipt,
+                }),
+              ]}
+            />
+          </>
+        )}
+
+        <PaymentHistoryCard installments={installments} />
+      </HelpTooltipScope>
 
       <PrimaryButton
-        title="Save & Continue"
+        title={t('common.saveAndContinue')}
         loading={isSaving}
         fullWidth
         style={styles.cta}

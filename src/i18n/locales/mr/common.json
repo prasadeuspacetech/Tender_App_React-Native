@@ -1,0 +1,21 @@
+{
+  "appName": "टेंडर ट्रॅकिंग",
+  "loading": "लोड होत आहे...",
+  "search": "शोधा",
+  "submit": "सबमिट",
+  "add": "+ जोडा",
+  "date": "दिनांक",
+  "subject": "विषय",
+  "datePlaceholder": "dd/mm/yyyy",
+  "untitledWork": "शीर्षक नसलेले काम",
+  "codePrefix": "कोड : {{code}}",
+  "dash": "—",
+  "status": {
+    "all": "सर्व",
+    "pending": "प्रलंबित",
+    "progress": "प्रगती",
+    "completed": "पूर्ण",
+    "statusAccessibility": "{{label}} स्थिती",
+    "statusLabel": "स्थिती {{label}}"
+  }
+}

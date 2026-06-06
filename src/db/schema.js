@@ -18,6 +18,7 @@ const CREATE_WORKS = `
     department       TEXT,
     sub_department   TEXT,
     officer          TEXT,
+    officer_mobile   TEXT,
     budget           REAL,
     workflow_step    INTEGER DEFAULT 1,
     created_at       TEXT DEFAULT (datetime('now')),
@@ -275,6 +276,8 @@ const runColumnMigrations = (db) => {
   addColumnIfMissing('work_orders', 'inauguration_photos', 'TEXT');
   // v10 — Work Progress completion flag
   addColumnIfMissing('work_progress', 'work_completion', 'INTEGER DEFAULT 0');
+  // v11 — Work Details officer mobile number
+  addColumnIfMissing('works', 'officer_mobile', 'TEXT');
 
   // v6 — UNIQUE indexes (IF NOT EXISTS keeps these silent on every launch).
   const indexStatements = [

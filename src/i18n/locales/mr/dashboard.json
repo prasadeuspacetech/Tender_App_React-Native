@@ -1,0 +1,14 @@
+{
+  "title": "डॅशबोर्ड",
+  "stats": {
+    "totalWork": "एकूण काम",
+    "complete": "पूर्ण",
+    "pending": "प्रलंबित",
+    "budgetUsed": "वापरलेले बजेट"
+  },
+  "budgetUtilisation": "बजेट वापर",
+  "recentWork": "अलीकडील काम",
+  "viewAll": "सर्व पहा",
+  "viewAllAccessibility": "सर्व कामे पहा",
+  "emptyRecent": "अलीकडील काम उपलब्ध नाही"
+}

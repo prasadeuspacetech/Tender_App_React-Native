@@ -1,10 +1,12 @@
 // src/screens/AddWork/workflow/WorkDetailsScreen.jsx
 // Step 1 of 10: Work Details
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import FormDropdown from '../../../components/FormDropdown';
+import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import Inputboxfield from '../../../components/Inputboxfield';
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
@@ -19,9 +21,17 @@ import { getWorkById, upsertWorkDetails } from '../../../db/repositories/worksRe
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import {
+  getStepProgressDescription,
+  getStepScreenTitle,
+  getStepTitle,
+  localizeDropdownOptions,
+} from '../../../i18n/workflowLabels';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
 import theme from '../../../theme';
+
+const SCREEN_TYPE = 'workDetails';
 
 const EMPTY_FORM = {
   work_code: '',
@@ -31,10 +41,17 @@ const EMPTY_FORM = {
   department: '',
   sub_department: '',
   officer: '',
+  officer_mobile: '',
   budget: '',
 };
 
 const WorkDetailsScreen = ({ navigation }) => {
+  const { t } = useTranslation('workflow');
+  const financialYearOptions = useMemo(
+    () => localizeDropdownOptions(FINANCIAL_YEAR_OPTIONS, t),
+    [t],
+  );
+
   useWorkflowStepGuard(WORKFLOW_ROUTES.WORK_DETAILS, navigation);
 
   const getDraft = useDraftStore((s) => s.getDraft);
@@ -71,6 +88,7 @@ const WorkDetailsScreen = ({ navigation }) => {
             department: work.department ?? '',
             sub_department: work.sub_department ?? '',
             officer: work.officer ?? '',
+            officer_mobile: work.officer_mobile ?? '',
             budget: work.budget != null ? String(work.budget) : '',
           };
           setForm(hydrated);
@@ -100,6 +118,7 @@ const WorkDetailsScreen = ({ navigation }) => {
         department: currentWork.department ?? '',
         sub_department: currentWork.sub_department ?? '',
         officer: currentWork.officer ?? '',
+        officer_mobile: currentWork.officer_mobile ?? '',
         budget: currentWork.budget != null ? String(currentWork.budget) : '',
       };
       setForm(hydrated);
@@ -136,13 +155,13 @@ const WorkDetailsScreen = ({ navigation }) => {
 
   const handleSave = () => {
     saveAndContinue(form, navigation, {
-      onValidationFail: (msg) => Alert.alert('Save Failed', msg),
+      onValidationFail: (msg) => Alert.alert(t('common.saveFailedTitle'), msg),
     });
   };
 
   return (
     <ScreenLayout
-      title="Work Details"
+      title={getStepScreenTitle(SCREEN_TYPE, t)}
       showBack
       showNotification
       scrollable
@@ -158,82 +177,111 @@ const WorkDetailsScreen = ({ navigation }) => {
 
       <ProgressSlot
         step={1}
-        title="Work Details"
-        description="Enter basic work information"
+        title={getStepTitle(SCREEN_TYPE, t)}
+        description={getStepProgressDescription(SCREEN_TYPE, t)}
         screenType="workDetails"
       />
 
-      <View style={styles.form}>
-        <Inputboxfield
-          label="Budget Code"
-          placeholder="eg. ERK-2025-0001"
-          type="alphanumeric"
-          value={form.work_code}
-          onChangeText={(v) => updateField('work_code', v)}
-        />
+      <HelpTooltipScope>
+        <View style={styles.form}>
+          <Inputboxfield
+            label={t('steps.workDetails.fields.budgetCode.label')}
+            placeholder={t('steps.workDetails.fields.budgetCode.placeholder')}
+            helpKey="workflow.workDetails.budgetCode"
+            helpTooltipId="workDetails-budgetCode"
+            type="alphanumeric"
+            value={form.work_code}
+            onChangeText={(v) => updateField('work_code', v)}
+          />
 
-        <Inputboxfield
-          label="Work Name"
-          placeholder="Enter the full name"
-          type="textOnly"
-          value={form.work_name}
-          onChangeText={(v) => updateField('work_name', v)}
-        />
+          <Inputboxfield
+            label={t('steps.workDetails.fields.workName.label')}
+            placeholder={t('steps.workDetails.fields.workName.placeholder')}
+            helpKey="workflow.workDetails.workName"
+            helpTooltipId="workDetails-workName"
+            type="textOnly"
+            value={form.work_name}
+            onChangeText={(v) => updateField('work_name', v)}
+          />
 
-        <Inputboxfield
-          label="Budget (₹)"
-          placeholder="₹15,00,000"
-          value={form.budget}
-          type="number"
-          keyboardType="numeric"
-          onChangeText={(v) => updateField('budget', v)}
-        />
+          <Inputboxfield
+            label={t('steps.workDetails.fields.budget.label')}
+            placeholder={t('steps.workDetails.fields.budget.placeholder')}
+            helpKey="workflow.workDetails.budget"
+            helpTooltipId="workDetails-budget"
+            value={form.budget}
+            type="number"
+            keyboardType="numeric"
+            onChangeText={(v) => updateField('budget', v)}
+          />
 
-        <FormDropdown
-          label="Financial Year"
-          placeholder="Select financial year"
-          data={FINANCIAL_YEAR_OPTIONS}
-          value={form.financial_year || null}
-          onChange={(item) =>
-            updateField('financial_year', item.value, { immediate: true })
-          }
-        />
+          <FormDropdown
+            label={t('steps.workDetails.fields.financialYear.label')}
+            placeholder={t('steps.workDetails.fields.financialYear.placeholder')}
+            helpKey="workflow.workDetails.financialYear"
+            helpTooltipId="workDetails-financialYear"
+            data={financialYearOptions}
+            value={form.financial_year || null}
+            onChange={(item) =>
+              updateField('financial_year', item.value, { immediate: true })
+            }
+          />
 
-        <Inputboxfield
-          label="Ward"
-          placeholder="Enter ward"
-          type="alphanumeric"
-          value={form.ward}
-          onChangeText={(v) => updateField('ward', v)}
-        />
+          <Inputboxfield
+            label={t('steps.workDetails.fields.ward.label')}
+            placeholder={t('steps.workDetails.fields.ward.placeholder')}
+            helpKey="workflow.workDetails.ward"
+            helpTooltipId="workDetails-ward"
+            type="alphanumeric"
+            value={form.ward}
+            onChangeText={(v) => updateField('ward', v)}
+          />
 
-        <Inputboxfield
-          label="Department"
-          placeholder="Enter department"
-          type="textOnly"
-          value={form.department}
-          onChangeText={(v) => updateField('department', v)}
-        />
+          <Inputboxfield
+            label={t('steps.workDetails.fields.department.label')}
+            placeholder={t('steps.workDetails.fields.department.placeholder')}
+            helpKey="workflow.workDetails.department"
+            helpTooltipId="workDetails-department"
+            type="textOnly"
+            value={form.department}
+            onChangeText={(v) => updateField('department', v)}
+          />
 
-        <Inputboxfield
-          label="Sub Department"
-          placeholder="Enter sub department"
-          type="textOnly"
-          value={form.sub_department}
-          onChangeText={(v) => updateField('sub_department', v)}
-        />
+          <Inputboxfield
+            label={t('steps.workDetails.fields.subDepartment.label')}
+            placeholder={t('steps.workDetails.fields.subDepartment.placeholder')}
+            helpKey="workflow.workDetails.subDepartment"
+            helpTooltipId="workDetails-subDepartment"
+            type="textOnly"
+            value={form.sub_department}
+            onChangeText={(v) => updateField('sub_department', v)}
+          />
 
-        <Inputboxfield
-          label="Officer"
-          placeholder="Enter officer name"
-          type="textOnly"
-          value={form.officer}
-          onChangeText={(v) => updateField('officer', v)}
-        />
-      </View>
+          <Inputboxfield
+            label={t('steps.workDetails.fields.officer.label')}
+            placeholder={t('steps.workDetails.fields.officer.placeholder')}
+            helpKey="workflow.workDetails.officer"
+            helpTooltipId="workDetails-officer"
+            type="textOnly"
+            value={form.officer}
+            onChangeText={(v) => updateField('officer', v)}
+          />
+
+          <Inputboxfield
+            label={t('steps.workDetails.fields.officerMobile.label')}
+            placeholder={t('steps.workDetails.fields.officerMobile.placeholder')}
+            helpKey="workflow.workDetails.officerMobile"
+            helpTooltipId="workDetails-officerMobile"
+            type="phone"
+            keyboardType="phone-pad"
+            value={form.officer_mobile}
+            onChangeText={(v) => updateField('officer_mobile', v.slice(0, 10))}
+          />
+        </View>
+      </HelpTooltipScope>
 
       <PrimaryButton
-        title="Save & Continue"
+        title={t('common.saveAndContinue')}
         onPress={handleSave}
         loading={isSaving}
         fullWidth

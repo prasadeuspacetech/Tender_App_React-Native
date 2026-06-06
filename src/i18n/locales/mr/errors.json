@@ -1,0 +1,34 @@
+{
+  "saveFailedGeneric": "जतन अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
+  "workIdMissing": "काम आयडी सापडला नाही. प्रथम काम तपशील पूर्ण करा.",
+  "payment": {
+    "amountMustBePositive": "देयक रक्कम शून्यापेक्षा जास्त असणे आवश्यक आहे."
+  },
+  "upload": {
+    "failedTitle": "अपलोड अयशस्वी",
+    "failedNoWorkId": "काम आयडी सापडला नाही. प्रथम काम तपशील जतन करा.",
+    "failedPicker": "दस्तऐवज निवडक उघडता आला नाही.",
+    "failedPhotoPicker": "फोटो निवडक उघडता आला नाही.",
+    "failedSaveFile": "या उपकरणावर फाइल जतन करता आली नाही.",
+    "failedSavePhoto": "या उपकरणावर फोटो जतन करता आला नाही.",
+    "failedSavePdf": "या उपकरणावर PDF जतन करता आला नाही.",
+    "unsupportedTitle": "असमर्थित फाइल",
+    "unsupportedDocuments": "फक्त PDF, JPG, JPEG आणि PNG फाइल्स परवानगी आहेत.",
+    "unsupportedPhotos": "फक्त JPG आणि PNG फोटो परवानगी आहेत.",
+    "unsupportedPdf": "फक्त PDF फाइल्स परवानगी आहेत.",
+    "limitReachedTitle": "मर्यादा गाठली",
+    "limitReachedPhotos": "तुम्ही कमाल {{max}} फोटो अपलोड करू शकता.",
+    "rebuildTitle": "पुन्हा बिल्ड आवश्यक",
+    "rebuildDocument": "दस्तऐवज अपलोडसाठी नेटिव्ह बिल्ड आवश्यक आहे. अॅप थांबवा, नंतर चालवा:\n\nnpx expo run:android",
+    "rebuildGeneric": "अॅप थांबवा, नंतर चालवा:\n\nnpx expo run:android"
+  },
+  "uploadDocument": {
+    "fileUploaded": "फाइल अपलोड केली",
+    "upload": "अपलोड",
+    "accessibilityUploaded": "अपलोड केले: {{name}}",
+    "accessibilityUploadField": "{{title}}, अपलोड"
+  },
+  "accessibility": {
+    "loading": "लोड होत आहे"
+  }
+}

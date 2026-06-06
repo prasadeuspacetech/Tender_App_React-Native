@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { dashboardCardSurfaceStyle } from '../dashboard/dashboardCardBorder';
 
@@ -26,6 +27,7 @@ const ReportBudgetCard = ({
   progressPercent = 0,
   style,
 }) => {
+  const { t } = useTranslation('reports');
   const clamped = Math.min(100, Math.max(0, progressPercent));
   const fillWidth = `${clamped}%`;
 
@@ -33,22 +35,20 @@ const ReportBudgetCard = ({
     <View style={[styles.card, style]}>
       <View style={styles.headerRow}>
         <View style={styles.headerText}>
-          <Text style={styles.title}>Budget</Text>
-          <Text style={styles.subtitle}>
-            How much of each department&apos;s budget has been spent
-          </Text>
+          <Text style={styles.title}>{t('budget.title')}</Text>
+          <Text style={styles.subtitle}>{t('budget.subtitle')}</Text>
         </View>
-        <Text style={styles.unitLabel}>₹ in Lakhs</Text>
+        <Text style={styles.unitLabel}>{t('budget.unitLabel')}</Text>
       </View>
 
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
           <LegendDot color={LEGEND_USED} />
-          <Text style={styles.legendText}>Used so far</Text>
+          <Text style={styles.legendText}>{t('budget.usedSoFar')}</Text>
         </View>
         <View style={styles.legendItem}>
           <LegendDot color={LEGEND_SANCTIONED} />
-          <Text style={styles.legendText}>Sanctioned</Text>
+          <Text style={styles.legendText}>{t('budget.sanctioned')}</Text>
         </View>
       </View>
 
@@ -73,11 +73,11 @@ const ReportBudgetCard = ({
 
       <View style={styles.detailsBlock}>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Total budget</Text>
+          <Text style={styles.detailLabel}>{t('budget.totalBudget')}</Text>
           <Text style={styles.detailValue}>{totalBudgetDetail}</Text>
         </View>
         <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Total used</Text>
+          <Text style={styles.detailLabel}>{t('budget.totalUsed')}</Text>
           <Text style={styles.detailValue}>{totalUsedDetail}</Text>
         </View>
       </View>

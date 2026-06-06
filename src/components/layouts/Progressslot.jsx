@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import theme from '../../theme';
 
 // ─── Status colour tokens ─────────────────────────────────────────────────────
@@ -96,9 +97,13 @@ const ProgressSlot = ({
     (screenType ? SCREEN_STATUS_MAP[screenType] : undefined) ??
     'warning';
 
+  const { t } = useTranslation('workflow');
   const tokens = STATUS_TOKENS[resolvedStatus] ?? STATUS_TOKENS.warning;
 
-  const stepLabel = step != null ? `Step ${step}: ${title}` : title;
+  const stepLabel =
+    step != null
+      ? t('common.stepLabel', { step, title })
+      : title;
 
   return (
     <View

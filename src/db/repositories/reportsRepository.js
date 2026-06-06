@@ -5,6 +5,7 @@
 import { formatRupeesCompact } from '../../utils/currencyFormat';
 import { computeFinalTenderAmount } from '../../utils/finalTenderAmount';
 import { getDB } from '../database';
+import { getPaymentSummaryForWork } from './paymentsRepository';
 
 const toPositiveAmount = (value) => {
   if (value == null || value === '') return null;
@@ -76,9 +77,13 @@ const WORK_BUDGET_ROWS_SQL = `
 `;
 
 /**
- * Budget summary for Reports screen, filtered by financial year (e.g. '2025-26').
+ * Budget summary filtered by financial year (e.g. '2025-26').
+ * @param {{ useTotalAmountPaid?: boolean }} [options]
+ *   When true (Reports budget card), "used" sums Payment Status Total Amount Paid
+ *   per work via getPaymentSummaryForWork. Default false keeps payment-installment sum.
  */
-export const getReportsBudgetSummary = (financialYear) => {
+export const getReportsBudgetSummary = (financialYear, options = {}) => {
+  const { useTotalAmountPaid = false } = options;
   const fy = financialYear == null ? '' : String(financialYear).trim();
   if (!fy) {
     return emptyBudgetSummary();
@@ -92,7 +97,11 @@ export const getReportsBudgetSummary = (financialYear) => {
 
   rows.forEach((row) => {
     totalBudget += getEffectiveBudgetForRow(row);
-    budgetUsed += toPositiveAmount(row.amount_paid) ?? 0;
+    if (useTotalAmountPaid) {
+      budgetUsed += getPaymentSummaryForWork(row.work_id).amountPaid;
+    } else {
+      budgetUsed += toPositiveAmount(row.amount_paid) ?? 0;
+    }
   });
 
   const remaining = Math.max(0, totalBudget - budgetUsed);

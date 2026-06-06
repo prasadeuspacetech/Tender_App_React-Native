@@ -1,27 +1,32 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
 
 import { dashboardCardSurfaceStyle } from '../dashboard/dashboardCardBorder';
 
-const ReportShareCard = ({ style }) => (
-  <Pressable
-    style={[styles.card, style]}
-    accessibilityRole="button"
-    accessibilityLabel="Share via WhatsApp or Email"
-  >
-    <View style={styles.iconCircle}>
-      <Ionicons name="share-social-outline" size={22} color="#062E52" />
-    </View>
+const ReportShareCard = ({ style }) => {
+  const { t } = useTranslation('reports');
 
-    <View style={styles.body}>
-      <Text style={styles.title}>Share via WhatsApp / Email</Text>
-      <Text style={styles.subtitle}>Send report directly to stakeholders</Text>
-    </View>
+  return (
+    <Pressable
+      style={[styles.card, style]}
+      accessibilityRole="button"
+      accessibilityLabel={t('share.accessibility')}
+    >
+      <View style={styles.iconCircle}>
+        <Ionicons name="share-social-outline" size={22} color="#062E52" />
+      </View>
 
-    <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-  </Pressable>
-);
+      <View style={styles.body}>
+        <Text style={styles.title}>{t('share.title')}</Text>
+        <Text style={styles.subtitle}>{t('share.subtitle')}</Text>
+      </View>
+
+      <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+    </Pressable>
+  );
+};
 
 const styles = StyleSheet.create({
   card: {

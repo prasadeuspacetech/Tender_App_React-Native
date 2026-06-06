@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
+import { useTranslation } from 'react-i18next';
 
 import { MAX_SITE_PHOTOS } from '../../db/repositories/workProgressRepository';
 import {
@@ -19,13 +20,12 @@ import {
 
 const PRIMARY = '#062E52';
 const PHOTO_SIZE = 103;
-const PHOTO_LABELS = ['Before', 'Progress'];
 
 const CameraIcon = () => (
   <Feather name="camera" size={22} color="#6B7280" />
 );
 
-const PhotoThumbnail = ({ uri, label, onRemove }) => (
+const PhotoThumbnail = ({ uri, label, onRemove, removeAccessibilityLabel }) => (
   <View style={styles.photoCard}>
     <Image source={{ uri }} style={styles.photoImage} contentFit="cover" />
     {label ? (
@@ -37,7 +37,7 @@ const PhotoThumbnail = ({ uri, label, onRemove }) => (
       style={styles.removeBtn}
       onPress={onRemove}
       accessibilityRole="button"
-      accessibilityLabel="Remove photo"
+      accessibilityLabel={removeAccessibilityLabel}
       hitSlop={8}
     >
       <Feather name="x" size={12} color="#FFFFFF" />
@@ -45,7 +45,7 @@ const PhotoThumbnail = ({ uri, label, onRemove }) => (
   </View>
 );
 
-const AddPhotoCard = ({ onPress, loading, label = 'Add photo' }) => (
+const AddPhotoCard = ({ onPress, loading, label }) => (
   <Pressable
     style={styles.addCard}
     onPress={onPress}
@@ -72,21 +72,36 @@ const SitePhotosUpload = ({
   photos = [],
   onChange,
   style,
-  sectionLabel = 'Site photos',
+  sectionLabel,
   maxPhotos = MAX_SITE_PHOTOS,
   storageSubfolder = 'work_progress_photos',
   filePrefix = 'site_photo',
-  addPhotoLabel = 'Add photo',
-  removeConfirmTitle = 'Remove photo',
-  removeConfirmMessage = 'Remove this photo from site progress?',
+  addPhotoLabel,
+  removeConfirmTitle,
+  removeConfirmMessage,
 }) => {
+  const { t } = useTranslation('workflow');
   const [uploading, setUploading] = useState(false);
   const count = photos.length;
   const canAddMore = count < maxPhotos;
 
+  const resolvedSectionLabel = sectionLabel ?? t('site.photos');
+  const resolvedAddLabel = addPhotoLabel ?? t('site.addPhoto');
+  const resolvedRemoveTitle = removeConfirmTitle ?? t('alerts.removePhotoTitle');
+  const resolvedRemoveMessage =
+    removeConfirmMessage ?? t('alerts.removePhotoMessage');
+
+  const photoLabels = useMemo(
+    () => [t('site.photoBefore'), t('site.photoProgress')],
+    [t],
+  );
+
   const handleAddPhoto = useCallback(async () => {
     if (!workId) {
-      Alert.alert('Upload failed', 'Work ID not found. Save work details first.');
+      Alert.alert(
+        t('alerts.uploadFailedTitle'),
+        t('alerts.uploadFailedNoWorkId'),
+      );
       return;
     }
     if (!canAddMore) return;
@@ -104,15 +119,15 @@ const SitePhotosUpload = ({
     } finally {
       setUploading(false);
     }
-  }, [workId, canAddMore, count, photos, onChange]);
+  }, [workId, canAddMore, count, photos, onChange, maxPhotos, storageSubfolder, filePrefix, t]);
 
   const handleRemove = useCallback(
     (index) => {
       const uri = photos[index];
-      Alert.alert(removeConfirmTitle, removeConfirmMessage, [
-        { text: 'Cancel', style: 'cancel' },
+      Alert.alert(resolvedRemoveTitle, resolvedRemoveMessage, [
+        { text: t('alerts.cancel'), style: 'cancel' },
         {
-          text: 'Remove',
+          text: t('alerts.remove'),
           style: 'destructive',
           onPress: () => {
             deleteSitePhotoFile(uri);
@@ -121,16 +136,18 @@ const SitePhotosUpload = ({
         },
       ]);
     },
-    [photos, onChange],
+    [photos, onChange, resolvedRemoveTitle, resolvedRemoveMessage, t],
   );
 
   return (
     <View style={[styles.section, style]}>
       <View style={styles.headerRow}>
-        <Text style={styles.label}>{sectionLabel}</Text>
+        <Text style={styles.label}>{resolvedSectionLabel}</Text>
         {count > 0 ? (
           <View style={styles.countBadge}>
-            <Text style={styles.countBadgeText}>{count} uploaded</Text>
+            <Text style={styles.countBadgeText}>
+              {t('site.uploadedCount', { count })}
+            </Text>
           </View>
         ) : null}
       </View>
@@ -144,22 +161,23 @@ const SitePhotosUpload = ({
           <PhotoThumbnail
             key={`${uri}-${index}`}
             uri={uri}
-            label={PHOTO_LABELS[index] ?? null}
+            label={photoLabels[index] ?? null}
             onRemove={() => handleRemove(index)}
+            removeAccessibilityLabel={t('site.removePhotoAccessibility')}
           />
         ))}
         {canAddMore ? (
           <AddPhotoCard
             onPress={handleAddPhoto}
             loading={uploading}
-            label={addPhotoLabel}
+            label={resolvedAddLabel}
           />
         ) : null}
       </ScrollView>
 
       <View style={styles.helperRow}>
         <Feather name="info" size={12} color="#9CA3AF" />
-        <Text style={styles.helperText}>Max 10 photos · JPG or PNG</Text>
+        <Text style={styles.helperText}>{t('site.photoHelper')}</Text>
       </View>
     </View>
   );
