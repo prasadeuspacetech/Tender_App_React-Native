@@ -2,17 +2,17 @@
 // Step 10: Payment Status
 //
 // Payments are a ledger: every Save & Continue with a positive amount appends
-// a new installment row. Amount Paid = estimation + sanction + all installments.
+// a new installment row. Amount Paid = SUM(saved installments) only.
 // The form
 // itself is the "next installment" being entered; auto-save keeps it in
 // Zustand draft only — no SQLite write until Save & Continue.
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
-import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import FormToggleField from '../../../components/FormToggleField';
+import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import Inputboxfield from '../../../components/Inputboxfield';
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
@@ -33,17 +33,20 @@ import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
 
 import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
+import { getEstimationByWorkId } from '../../../db/repositories/estimationsRepository';
 import {
   appendPaymentInstallment,
   getPaymentInstallmentsForWork,
   getPaymentSummaryForWork,
 } from '../../../db/repositories/paymentsRepository';
-import theme from '../../../theme';
+import { getSanctionByWorkId } from '../../../db/repositories/sanctionsRepository';
+import { getWorkById } from '../../../db/repositories/worksRepository';
 import {
   getStepProgressDescription,
   getStepScreenTitle,
   getStepTitle,
 } from '../../../i18n/workflowLabels';
+import theme from '../../../theme';
 
 const SCREEN_TYPE = 'paymentStatus';
 
@@ -65,10 +68,17 @@ const WHITE = theme.Colors?.white ?? '#FFFFFF';
 const PENDING = '#C0392B';
 const PAID = '#1D6B43';
 
-const SummaryCard = ({ label, value, valueColor }) => (
+const SummaryCard = ({ label, value, valueColor, numberOfLines }) => (
   <View style={cardStyles.card}>
     <Text style={cardStyles.label}>{label}</Text>
-    <Text style={[cardStyles.value, { color: valueColor ?? TEXT }]}>{value}</Text>
+    <Text
+      style={[cardStyles.value, { color: valueColor ?? TEXT }]}
+      numberOfLines={numberOfLines}
+      adjustsFontSizeToFit={numberOfLines != null}
+      minimumFontScale={0.75}
+    >
+      {value}
+    </Text>
   </View>
 );
 
@@ -102,6 +112,11 @@ const EMPTY_FORM = {
 };
 
 const EMPTY_SUMMARY = { totalBill: 0, amountPaid: 0, pending: 0 };
+const EMPTY_WORK_CONTEXT = {
+  budgetCode: '',
+  estimationCost: 0,
+  sanctionAmount: 0,
+};
 
 const BillSubmissionScreen = ({ navigation }) => {
   const { t } = useTranslation('workflow');
@@ -114,6 +129,7 @@ const BillSubmissionScreen = ({ navigation }) => {
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [summary, setSummary] = useState(EMPTY_SUMMARY);
+  const [workContext, setWorkContext] = useState(EMPTY_WORK_CONTEXT);
   const [installments, setInstallments] = useState([]);
 
   const { bindForm, scheduleDebouncedSave, saveImmediately } =
@@ -126,12 +142,19 @@ const BillSubmissionScreen = ({ navigation }) => {
   const refreshLedger = useCallback(() => {
     if (!currentWorkId) {
       setSummary(EMPTY_SUMMARY);
+      setWorkContext(EMPTY_WORK_CONTEXT);
       setInstallments([]);
       return EMPTY_SUMMARY;
     }
     const nextSummary = getPaymentSummaryForWork(currentWorkId);
     const nextInstallments = getPaymentInstallmentsForWork(currentWorkId);
+    const work = getWorkById(currentWorkId);
     setSummary(nextSummary);
+    setWorkContext({
+      budgetCode: work?.work_code?.trim() ?? '',
+      estimationCost: parseAmount(getEstimationByWorkId(currentWorkId)?.estimated_cost),
+      sanctionAmount: parseAmount(getSanctionByWorkId(currentWorkId)?.sanction_amount),
+    });
     setInstallments(nextInstallments);
     return nextSummary;
   }, [currentWorkId]);
@@ -178,7 +201,7 @@ const BillSubmissionScreen = ({ navigation }) => {
     return unsubscribe;
   }, [navigation, refreshLedger]);
 
-  // Live preview: estimation + sanction + saved installments + amount being typed
+  // Live preview: saved installments + amount currently being typed
   const liveSummary = (() => {
     if (!form.payment_released) return summary;
     const typed = parseAmount(form.amount_paid);
@@ -284,6 +307,25 @@ const BillSubmissionScreen = ({ navigation }) => {
       />
 
       <HelpTooltipScope>
+        <View style={styles.workContextRow}>
+          <SummaryCard
+            label={t('payment.budgetCode')}
+            value={workContext.budgetCode || '—'}
+            valueColor={TEXT}
+            numberOfLines={2}
+          />
+          <SummaryCard
+            label={t('payment.estimationCost')}
+            value={formatRupee(workContext.estimationCost)}
+            valueColor={TEXT}
+          />
+          <SummaryCard
+            label={t('payment.sanctionAmount')}
+            value={formatRupee(workContext.sanctionAmount)}
+            valueColor={TEXT}
+          />
+        </View>
+
         <View style={styles.summaryRow}>
           <SummaryCard
             label={t('payment.totalBillAmount')}
@@ -366,10 +408,16 @@ const BillSubmissionScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   progress: { marginBottom: theme.Spacing?.sm ?? 8 },
-  summaryRow: {
+  workContextRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: theme.Spacing?.sm ?? 8,
+    marginBottom: theme.Spacing?.xs ?? 6,
+    marginHorizontal: -3,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: theme.Spacing?.md ?? 14,
     marginHorizontal: -3,
   },

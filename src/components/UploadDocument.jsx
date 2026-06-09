@@ -1,8 +1,8 @@
 /**
  * Unified document upload UI — single source of truth for all workflow screens.
  *
- * layout="stack"  → each document: [field] then [upload box] (single or sequential groups)
- * layout="grid"   → all fields stacked, then upload boxes in one row (Tender Creation, etc.)
+ * layout="stack"  → each document: [label] then [upload box] OR [uploaded file row]
+ * layout="grid"   → all labels stacked, then upload boxes / uploaded rows in one row
  */
 
 import React from 'react';
@@ -17,14 +17,13 @@ import Feather from '@expo/vector-icons/Feather';
 import { useTranslation } from 'react-i18next';
 import FormFieldLabel from './help/FormFieldLabel';
 import DocumentFileIcon from './DocumentFileIcon';
+import useAttachmentPreview from '../hooks/useAttachmentPreview';
 import theme from '../theme';
 import {
   formFieldStyles,
   FORM_FIELD_FONT_SIZE,
   FORM_FIELD_TEXT_COLOR,
 } from '../theme/formFieldStyles';
-
-// ─── Figma tokens ─────────────────────────────────────────────────────────────
 
 const SECTION = {
   marginTop: 4,
@@ -49,7 +48,6 @@ const UPLOAD_BOX = {
   labelSize: 15,
   labelLineHeight: 15,
   labelColor: 'rgba(0, 0, 0, 0.8)',
-  gap: 6,
   gridGap: 12,
   shadow: {
     shadowColor: '#000000',
@@ -61,71 +59,86 @@ const UPLOAD_BOX = {
 };
 
 const PRIMARY = theme.Colors?.primary ?? '#062E52';
+const SUCCESS = theme.Colors?.status?.success?.icon ?? '#2F5E34';
 
 const defaultUploadText = (title) => `Upload ${title}`;
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
-
-const TickIcon = ({ size = 16, color = '#2F5E34' }) => (
-  <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
-    <View
-      style={{
-        width: size * 0.55,
-        height: size * 0.3,
-        borderLeftWidth: 2,
-        borderBottomWidth: 2,
-        borderColor: color,
-        transform: [{ rotate: '-45deg' }],
-        marginTop: -size * 0.1,
-      }}
-    />
+/** Static document-type label shown before upload. */
+const DocumentTypeLabel = ({ title, style }) => (
+  <View style={[formFieldStyles.control, styles.documentTypeLabel, style]}>
+    <DocumentFileIcon size={18} color="#666666" />
+    <Text style={styles.fieldLabel} numberOfLines={1}>
+      {title}
+    </Text>
   </View>
 );
 
-// ─── Document field (upper row) ─────────────────────────────────────────────
-
-const DocumentField = ({
-  title,
-  displayName,
-  showUploadAction = false,
-  onUploadPress,
+/** Single uploaded-file row — replaces the label + dashed box after upload. */
+const UploadedFileRow = ({
+  fileName,
+  filePath,
+  onPreview,
+  onReplace,
+  showReplace = false,
+  loading = false,
+  inset = true,
+  flex,
   style,
 }) => {
   const { t } = useTranslation('errors');
-  const label = displayName || title;
   const uploadLabel = t('uploadDocument.upload');
 
-  const content = (
-    <>
-      <DocumentFileIcon size={18} color="#666666" />
-      <Text style={styles.fieldLabel} numberOfLines={1}>
-        {label}
-      </Text>
-      {showUploadAction ? (
-        <Text style={styles.fieldUploadAction}>{uploadLabel}</Text>
-      ) : null}
-    </>
-  );
+  const sizeStyle = [
+    inset && styles.uploadedRowInset,
+    flex != null && { flex },
+    !inset && !flex && styles.uploadedRowFull,
+  ];
 
-  if (showUploadAction && onUploadPress) {
-    return (
+  return (
+    <View
+      style={[
+        styles.uploadedRow,
+        UPLOAD_BOX.shadow,
+        sizeStyle,
+        loading && styles.uploadedRowLoading,
+        style,
+      ]}
+    >
       <TouchableOpacity
-        style={[formFieldStyles.control, styles.documentField, style]}
-        onPress={onUploadPress}
+        style={styles.uploadedRowMain}
+        onPress={() => onPreview?.(filePath)}
+        disabled={loading || !filePath}
         activeOpacity={0.75}
         accessibilityRole="button"
-        accessibilityLabel={t('uploadDocument.accessibilityUploadField', { title })}
+        accessibilityLabel={t('uploadDocument.accessibilityPreview', { name: fileName })}
       >
-        {content}
+        <DocumentFileIcon size={20} color={SUCCESS} />
+        <View style={styles.uploadedRowText}>
+          <Text style={styles.uploadedFileName} numberOfLines={1}>
+            {fileName}
+          </Text>
+          <Text style={styles.uploadedHint}>{t('uploadDocument.tapToPreview')}</Text>
+        </View>
       </TouchableOpacity>
-    );
-  }
 
-  return <View style={[formFieldStyles.control, styles.documentField, style]}>{content}</View>;
+      {loading ? (
+        <ActivityIndicator size="small" color={PRIMARY} style={styles.uploadedRowSpinner} />
+      ) : showReplace && onReplace ? (
+        <TouchableOpacity
+          onPress={onReplace}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={uploadLabel}
+          style={styles.replaceButton}
+        >
+          <Text style={styles.fieldUploadAction}>{uploadLabel}</Text>
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
 };
 
-// ─── Dashed upload box (lower row) ────────────────────────────────────────────
-
+/** Dashed upload target — empty state only. */
 const DashedUploadBox = ({
   uploadText,
   onPress,
@@ -133,13 +146,8 @@ const DashedUploadBox = ({
   flex,
   disabled = false,
   loading = false,
-  fileUploaded = false,
-  fileName,
   style,
 }) => {
-  const { t } = useTranslation('errors');
-  const showSuccess = fileUploaded && !loading;
-
   const sizeStyle = [
     inset && styles.uploadBoxInset,
     flex != null && { flex },
@@ -152,35 +160,18 @@ const DashedUploadBox = ({
       onPress={disabled || loading ? undefined : onPress}
       activeOpacity={disabled || loading ? 1 : 0.72}
       accessibilityRole="button"
-      accessibilityLabel={
-        fileUploaded
-          ? t('uploadDocument.accessibilityUploaded', {
-              name: fileName ?? uploadText,
-            })
-          : uploadText
-      }
+      accessibilityLabel={uploadText}
       accessibilityState={{ disabled: disabled || loading, busy: loading }}
       style={[
         styles.uploadBox,
         UPLOAD_BOX.shadow,
         sizeStyle,
-        showSuccess && styles.uploadBoxSuccess,
         disabled && styles.uploadBoxDisabled,
         style,
       ]}
     >
       {loading ? (
         <ActivityIndicator size="small" color={UPLOAD_BOX.borderColor} />
-      ) : showSuccess ? (
-        <View style={styles.uploadInner}>
-          <TickIcon size={16} color={theme.Colors?.status?.success?.icon ?? '#2F5E34'} />
-          <Text style={styles.uploadedLabel}>{t('uploadDocument.fileUploaded')}</Text>
-          {fileName ? (
-            <Text style={styles.fileName} numberOfLines={1}>
-              {fileName}
-            </Text>
-          ) : null}
-        </View>
       ) : (
         <View style={styles.uploadInner}>
           <Feather name="upload" size={UPLOAD_BOX.iconSize} color={UPLOAD_BOX.borderColor} />
@@ -193,26 +184,6 @@ const DashedUploadBox = ({
   );
 };
 
-// ─── Main component ───────────────────────────────────────────────────────────
-
-/**
- * @param {Object} props
- * @param {string} [props.sectionLabel] — e.g. "Documents"
- * @param {Array<{
- *   title: string,
- *   uploadText?: string,
- *   showDocumentField?: boolean,
- *   showUploadAction?: boolean,
- *   onUploadPress?: () => void,
- *   onPress?: () => void,
- *   fileUploaded?: boolean,
- *   displayName?: string,
- *   fileName?: string,
- *   loading?: boolean,
- *   disabled?: boolean,
- * }>} props.documents
- * @param {'stack'|'grid'} [props.layout='stack']
- */
 const UploadDocument = ({
   sectionLabel = 'Documents',
   sectionHelpKey,
@@ -222,7 +193,38 @@ const UploadDocument = ({
   layout = 'stack',
   style,
 }) => {
+  const { previewAttachment, AttachmentPreviewModals } = useAttachmentPreview();
   const isGrid = layout === 'grid' && documents.length > 1;
+
+  const renderDocumentSlot = (doc, { inset = true, flex } = {}) => {
+    const uploadHandler = doc.onPress ?? doc.onUploadPress;
+
+    if (doc.fileUploaded) {
+      return (
+        <UploadedFileRow
+          fileName={doc.fileName}
+          filePath={doc.filePath}
+          onPreview={previewAttachment}
+          onReplace={doc.onUploadPress}
+          showReplace={doc.showUploadAction}
+          loading={doc.loading}
+          inset={inset}
+          flex={flex}
+        />
+      );
+    }
+
+    return (
+      <DashedUploadBox
+        uploadText={doc.uploadText ?? defaultUploadText(doc.title)}
+        onPress={uploadHandler}
+        inset={inset}
+        flex={flex}
+        disabled={doc.disabled}
+        loading={doc.loading}
+      />
+    );
+  };
 
   return (
     <View style={[styles.section, style]}>
@@ -237,59 +239,34 @@ const UploadDocument = ({
         />
       ) : null}
 
-      {isGrid
-        ? documents
+      {isGrid ? (
+        <>
+          {documents
             .filter((doc) => doc.showDocumentField !== false)
             .map((doc, index) => (
-              <DocumentField
-                key={`field-${doc.title}-${index}`}
-                title={doc.title}
-                displayName={doc.displayName}
-                showUploadAction={doc.showUploadAction}
-                onUploadPress={doc.onUploadPress}
-              />
-            ))
-        : null}
-
-      {isGrid ? (
-        <View style={styles.uploadGrid}>
-          {documents.map((doc, index) => (
-            <DashedUploadBox
-              key={`upload-${doc.title}-${index}`}
-              uploadText={doc.uploadText ?? defaultUploadText(doc.title)}
-              onPress={doc.onPress}
-              inset={false}
-              flex={1}
-              disabled={doc.disabled}
-              loading={doc.loading}
-              fileUploaded={doc.fileUploaded}
-              fileName={doc.fileName}
-            />
-          ))}
-        </View>
+              <DocumentTypeLabel key={`field-${doc.title}-${index}`} title={doc.title} />
+            ))}
+          <View style={styles.uploadGrid}>
+            {documents.map((doc, index) => (
+              <React.Fragment key={`upload-${doc.title}-${index}`}>
+                {renderDocumentSlot(doc, { inset: false, flex: 1 })}
+              </React.Fragment>
+            ))}
+          </View>
+        </>
       ) : (
         documents.map((doc, index) => (
           <View key={`group-${doc.title}-${index}`} style={styles.stackGroup}>
-            {layout === 'stack' && doc.showDocumentField !== false ? (
-              <DocumentField
-                title={doc.title}
-                displayName={doc.displayName}
-                showUploadAction={doc.showUploadAction}
-                onUploadPress={doc.onUploadPress}
-              />
+            {!doc.fileUploaded && doc.showDocumentField !== false ? (
+              <DocumentTypeLabel title={doc.title} />
             ) : null}
-            <DashedUploadBox
-              uploadText={doc.uploadText ?? defaultUploadText(doc.title)}
-              onPress={doc.onPress}
-              inset={doc.showDocumentField !== false}
-              disabled={doc.disabled}
-              loading={doc.loading}
-              fileUploaded={doc.fileUploaded}
-              fileName={doc.fileName}
-            />
+            {renderDocumentSlot(doc, {
+              inset: doc.showDocumentField !== false,
+            })}
           </View>
         ))
       )}
+      <AttachmentPreviewModals />
     </View>
   );
 };
@@ -313,7 +290,7 @@ const styles = StyleSheet.create({
   stackGroup: {
     width: '100%',
   },
-  documentField: {
+  documentTypeLabel: {
     gap: DOCUMENT_FIELD_GAP,
     marginBottom: DOCUMENT_FIELD_MARGIN_BOTTOM,
   },
@@ -359,11 +336,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     width: '100%',
   },
-  uploadBoxSuccess: {
-    borderColor: theme.Colors?.status?.success?.icon ?? '#2F5E34',
-    backgroundColor: '#EEF6EF',
-    borderStyle: 'solid',
-  },
   uploadBoxDisabled: {
     opacity: 0.5,
   },
@@ -373,7 +345,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: UPLOAD_BOX.gap,
+    gap: 6,
     paddingHorizontal: 6,
   },
   uploadLabel: {
@@ -384,17 +356,60 @@ const styles = StyleSheet.create({
     color: UPLOAD_BOX.labelColor,
     textAlign: 'center',
   },
-  uploadedLabel: {
-    fontSize: UPLOAD_BOX.labelSize,
-    fontWeight: '600',
-    color: theme.Colors?.status?.success?.icon ?? '#2F5E34',
-    textAlign: 'center',
+  uploadedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: UPLOAD_BOX.height,
+    backgroundColor: '#EEF6EF',
+    borderWidth: 1,
+    borderColor: SUCCESS,
+    borderRadius: UPLOAD_BOX.borderRadius,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: DOCUMENT_FIELD_MARGIN_BOTTOM,
   },
-  fileName: {
-    fontSize: 11,
-    color: theme.Colors?.textSecondary ?? '#555555',
-    textAlign: 'center',
-    maxWidth: '100%',
+  uploadedRowInset: {
+    alignSelf: 'stretch',
+    marginHorizontal: UPLOAD_BOX.horizontalInset,
+  },
+  uploadedRowFull: {
+    alignSelf: 'stretch',
+    width: '100%',
+  },
+  uploadedRowLoading: {
+    opacity: 0.85,
+  },
+  uploadedRowMain: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    minWidth: 0,
+  },
+  uploadedRowText: {
+    flex: 1,
+    minWidth: 0,
+  },
+  uploadedFileName: {
+    fontSize: FORM_FIELD_FONT_SIZE,
+    fontWeight: '600',
+    fontFamily: theme.FontFamily?.regular ?? undefined,
+    color: '#1F2937',
+    lineHeight: 20,
+  },
+  uploadedHint: {
+    marginTop: 2,
+    fontSize: 12,
+    lineHeight: 16,
+    color: theme.Colors?.textSecondary ?? '#6B7280',
+  },
+  replaceButton: {
+    marginLeft: 8,
+    paddingVertical: 4,
+    paddingLeft: 8,
+  },
+  uploadedRowSpinner: {
+    marginLeft: 8,
   },
 });
 

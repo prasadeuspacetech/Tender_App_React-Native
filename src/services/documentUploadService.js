@@ -96,6 +96,14 @@ const getWorkDocumentsDirectory = (workId) => {
   return dir;
 };
 
+const getCorrespondenceDocumentsDirectory = () => {
+  const dir = new Directory(Paths.document, 'app_documents', 'general_correspondence');
+  if (!dir.exists) {
+    dir.create({ intermediates: true });
+  }
+  return dir;
+};
+
 const copyToWorkStorage = (sourceUri, workId, storedFileName) => {
   const workDir = getWorkDocumentsDirectory(workId);
   const source = new File(sourceUri);
@@ -192,6 +200,73 @@ export const pickAndStoreDocument = async (workId, documentType) => {
     return { filePath, fileName };
   } catch (e) {
     console.warn('[documentUploadService] store error:', e);
+    if (isNativeModuleMissing(e)) {
+      showUploadAlert('upload.rebuildTitle', 'upload.rebuildGeneric');
+    } else {
+      showUploadAlert('upload.failedTitle', 'upload.failedSaveFile');
+    }
+    return null;
+  }
+};
+
+/**
+ * Pick a document for General Correspondence (no work_id).
+ * Copies to app_documents/general_correspondence/ and returns the local path.
+ * @returns {Promise<{ filePath: string, fileName: string } | null>}
+ */
+export const pickAndStoreCorrespondenceDocument = async () => {
+  let result;
+  try {
+    result = await getDocumentAsync({
+      type: PICKER_TYPES,
+      copyToCacheDirectory: true,
+      multiple: false,
+    });
+  } catch (e) {
+    console.warn('[documentUploadService] correspondence picker error:', e);
+    if (isNativeModuleMissing(e)) {
+      showUploadAlert('upload.rebuildTitle', 'upload.rebuildDocument');
+    } else {
+      showUploadAlert('upload.failedTitle', 'upload.failedPicker');
+    }
+    return null;
+  }
+
+  if (result.canceled || !result.assets?.length) {
+    return null;
+  }
+
+  const asset = result.assets[0];
+  const validation = validatePickedAsset(asset);
+  if (!validation.ok) {
+    showUploadAlert('upload.unsupportedTitle', 'upload.unsupportedDocuments');
+    return null;
+  }
+
+  const storedFileName = buildStoredFileName('correspondence_document', asset.name, asset.mimeType);
+  if (!storedFileName) {
+    showUploadAlert('upload.unsupportedTitle', 'upload.unsupportedDocuments');
+    return null;
+  }
+
+  const uniqueFileName = `${Date.now()}_${storedFileName}`;
+
+  try {
+    const correspondenceDir = getCorrespondenceDocumentsDirectory();
+    const source = new File(asset.uri);
+    const destination = new File(correspondenceDir, uniqueFileName);
+
+    if (destination.exists) {
+      destination.delete();
+    }
+
+    source.copy(destination);
+    const filePath = destination.uri;
+    const fileName = getFileNameFromPath(filePath);
+
+    return { filePath, fileName };
+  } catch (e) {
+    console.warn('[documentUploadService] correspondence store error:', e);
     if (isNativeModuleMissing(e)) {
       showUploadAlert('upload.rebuildTitle', 'upload.rebuildGeneric');
     } else {

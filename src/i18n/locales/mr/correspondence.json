@@ -4,5 +4,9 @@
   "deleteAccessibility": "पत्रव्यवहार हटवा",
   "emptyTitle": "अद्याप पत्रव्यवहार नाही",
   "emptyHint": "पहिली नोंद तयार करण्यासाठी + जोडा वर टॅप करा.",
-  "modalTitle": "नवीन पत्रव्यवहार"
+  "modalTitle": "नवीन पत्रव्यवहार",
+  "documentUploadTitle": "पत्रव्यवहार कागदपत्र",
+  "documentUploadText": "कागदपत्र अपलोड करा",
+  "documentLabel": "कागदपत्र",
+  "previewDocumentAccessibility": "कागदपत्र पूर्वावलोकन {{name}}"
 }

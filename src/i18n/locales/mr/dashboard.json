@@ -3,10 +3,15 @@
   "stats": {
     "totalWork": "एकूण काम",
     "complete": "पूर्ण",
-    "pending": "प्रलंबित",
+    "inProgress": "प्रगतीत",
     "budgetUsed": "वापरलेले बजेट"
   },
   "budgetUtilisation": "बजेट वापर",
+  "budgetUtilisationRows": {
+    "workCount": "एकूण काम संख्या",
+    "totalBudget": "एकूण बजेट",
+    "totalSpend": "एकूण खर्च"
+  },
   "recentWork": "अलीकडील काम",
   "viewAll": "सर्व पहा",
   "viewAllAccessibility": "सर्व कामे पहा",

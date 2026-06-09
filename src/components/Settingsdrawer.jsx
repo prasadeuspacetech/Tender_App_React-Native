@@ -10,9 +10,12 @@ import {
   Animated,
   StyleSheet,
   Dimensions,
-  Platform,
-  StatusBar,
 } from 'react-native';
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import theme from '../theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -32,20 +35,20 @@ const MENU_ITEMS = [
   { key: 'help',         labelKey: 'drawer.help',         handlerKey: 'onHelpPress' },
 ];
 
-// ─── Component ────────────────────────────────────────────────────────────────
-const SettingsDrawer = ({
-  visible,
+// Renders inside Modal's SafeAreaProvider so insets are available on first open.
+const DrawerPanel = ({
   onClose,
   onBackupPress,
   onRestorePress,
   onSubscriptionPress,
   onHelpPress,
   style,
+  translateX,
+  overlayOpacity,
 }) => {
   const navigation = useNavigation();
   const { t } = useTranslation('navigation');
-  const translateX = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
-  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
 
   const handlers = { onBackupPress, onRestorePress, onSubscriptionPress, onHelpPress };
 
@@ -57,6 +60,75 @@ const SettingsDrawer = ({
       })),
     [t],
   );
+
+  const handleItemPress = (item) => {
+    if (item.route) {
+      navigation.navigate(item.route);
+      onClose?.();
+      return;
+    }
+
+    const handler = handlers[item.handlerKey];
+    if (typeof handler === 'function') {
+      handler();
+    }
+    onClose?.();
+  };
+
+  const headerTopPadding =
+    insets.top + (theme.Spacing?.sm ?? 8);
+
+  return (
+    <>
+      <TouchableWithoutFeedback onPress={onClose} accessible={false}>
+        <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]} />
+      </TouchableWithoutFeedback>
+
+      <Animated.View
+        style={[styles.drawer, { transform: [{ translateX }] }, style]}
+      >
+        <View style={styles.header}>
+          <View style={[styles.headerContent, { paddingTop: headerTopPadding }]}>
+            <Text style={styles.headerTitle}>{t('drawer.title')}</Text>
+            <View style={styles.headerDivider} />
+          </View>
+        </View>
+
+        <View style={styles.menu}>
+          {menuItems.map((item, index) => (
+            <TouchableOpacity
+              key={item.key}
+              style={[
+                styles.menuItem,
+                index < menuItems.length - 1 && styles.menuItemBorder,
+              ]}
+              onPress={() => handleItemPress(item)}
+              activeOpacity={0.65}
+              accessibilityRole="menuitem"
+              accessibilityLabel={item.label}
+            >
+              <Text style={styles.menuLabel}>{item.label}</Text>
+              <Text style={styles.menuChevron}>›</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </Animated.View>
+    </>
+  );
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
+const SettingsDrawer = ({
+  visible,
+  onClose,
+  onBackupPress,
+  onRestorePress,
+  onSubscriptionPress,
+  onHelpPress,
+  style,
+}) => {
+  const translateX = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
@@ -86,21 +158,7 @@ const SettingsDrawer = ({
         }),
       ]).start();
     }
-  }, [visible]);
-
-  const handleItemPress = (item) => {
-    if (item.route) {
-      navigation.navigate(item.route);
-      onClose?.();
-      return;
-    }
-
-    const handler = handlers[item.handlerKey];
-    if (typeof handler === 'function') {
-      handler();
-    }
-    onClose?.();
-  };
+  }, [visible, translateX, overlayOpacity]);
 
   return (
     <Modal
@@ -110,41 +168,23 @@ const SettingsDrawer = ({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      {/* Dim overlay */}
-      <TouchableWithoutFeedback onPress={onClose} accessible={false}>
-        <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]} />
-      </TouchableWithoutFeedback>
-
-      {/* Drawer panel */}
-      <Animated.View
-        style={[styles.drawer, { transform: [{ translateX }] }, style]}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>{t('drawer.title')}</Text>
-          <View style={styles.headerDivider} />
-        </View>
-
-        {/* Menu items */}
-        <View style={styles.menu}>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity
-              key={item.key}
-              style={[
-                styles.menuItem,
-                index < menuItems.length - 1 && styles.menuItemBorder,
-              ]}
-              onPress={() => handleItemPress(item)}
-              activeOpacity={0.65}
-              accessibilityRole="menuitem"
-              accessibilityLabel={item.label}
-            >
-              <Text style={styles.menuLabel}>{item.label}</Text>
-              <Text style={styles.menuChevron}>›</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </Animated.View>
+      {/*
+        Modal renders in a separate native window. A nested SafeAreaProvider with
+        initialWindowMetrics supplies correct insets on the first open — the root
+        provider alone is not reliable inside Modal on iOS.
+      */}
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <DrawerPanel
+          onClose={onClose}
+          onBackupPress={onBackupPress}
+          onRestorePress={onRestorePress}
+          onSubscriptionPress={onSubscriptionPress}
+          onHelpPress={onHelpPress}
+          style={style}
+          translateX={translateX}
+          overlayOpacity={overlayOpacity}
+        />
+      </SafeAreaProvider>
     </Modal>
   );
 };
@@ -153,9 +193,7 @@ const SettingsDrawer = ({
 const HEADER_BG = theme.Colors.primary ?? '#062E52';
 const DRAWER_BG = theme.Colors.primaryDark ?? '#041F38';
 const ITEM_TEXT = theme.Colors.white ?? '#FFFFFF';
-const DIVIDER = 'rgba(255,255,255,0.12)'; 
-const STATUS_BAR_HEIGHT =
-  Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 0;
+const DIVIDER = 'rgba(255,255,255,0.12)';
 
 const styles = StyleSheet.create({
   overlay: {
@@ -169,10 +207,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: DRAWER_WIDTH,
     backgroundColor: DRAWER_BG,
-    paddingTop: STATUS_BAR_HEIGHT,
-    borderTopRightRadius: theme.Radius?.lg ?? 16,        // ✅ was theme.borderRadius?.lg
-    borderBottomRightRadius: theme.Radius?.lg ?? 16,     // ✅ was theme.borderRadius?.lg
-    // Shadow for right edge
+    borderTopRightRadius: theme.Radius?.lg ?? 16,
+    borderBottomRightRadius: theme.Radius?.lg ?? 16,
     shadowColor: '#000000',
     shadowOffset: { width: 4, height: 0 },
     shadowOpacity: 0.22,
@@ -181,35 +217,36 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: HEADER_BG,
-    paddingHorizontal: theme.Spacing?.lg ?? 20,          // ✅ was theme.spacing?.lg
-    paddingTop: theme.Spacing?.xl ?? 28,                 // ✅ was theme.spacing?.xl
-    paddingBottom: theme.Spacing?.md ?? 16,              // ✅ was theme.spacing?.md
-    borderTopRightRadius: theme.Radius?.lg ?? 16,        // ✅ was theme.borderRadius?.lg
+    borderTopRightRadius: theme.Radius?.lg ?? 16,
+  },
+  headerContent: {
+    paddingHorizontal: theme.Spacing?.lg ?? 20,
+    paddingBottom: theme.Spacing?.md ?? 16,
   },
   headerTitle: {
     color: ITEM_TEXT,
-    fontSize: theme.FontSize?.xl ?? 20,                  // ✅ was theme.typography?.sizes?.xl
-    fontWeight: theme.FontWeight?.bold ?? '700',         // ✅ was theme.typography?.weights?.bold
-    fontFamily: theme.FontFamily?.bold ?? undefined,     // ✅ was theme.typography?.fonts?.heading
+    fontSize: theme.FontSize?.xl ?? 20,
+    fontWeight: theme.FontWeight?.bold ?? '700',
+    fontFamily: theme.FontFamily?.bold ?? undefined,
     letterSpacing: 0.3,
-    marginBottom: theme.Spacing?.sm ?? 8,                // ✅ was theme.spacing?.sm
+    marginBottom: theme.Spacing?.sm ?? 8,
   },
   headerDivider: {
     height: 1,
     backgroundColor: DIVIDER,
-    marginTop: theme.Spacing?.xs ?? 4,                   // ✅ was theme.spacing?.xs
+    marginTop: theme.Spacing?.xs ?? 4,
   },
   menu: {
     flex: 1,
-    paddingTop: theme.Spacing?.sm ?? 8,                  // ✅ was theme.spacing?.sm
-    paddingHorizontal: theme.Spacing?.md ?? 16,          // ✅ was theme.spacing?.md
+    paddingTop: theme.Spacing?.sm ?? 8,
+    paddingHorizontal: theme.Spacing?.md ?? 16,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: theme.Spacing?.md ?? 16,            // ✅ was theme.spacing?.md
-    paddingHorizontal: theme.Spacing?.sm ?? 8,           // ✅ was theme.spacing?.sm
+    paddingVertical: theme.Spacing?.md ?? 16,
+    paddingHorizontal: theme.Spacing?.sm ?? 8,
   },
   menuItemBorder: {
     borderBottomWidth: 1,
@@ -217,9 +254,9 @@ const styles = StyleSheet.create({
   },
   menuLabel: {
     color: ITEM_TEXT,
-    fontSize: theme.FontSize?.md ?? 15,                  // ✅ was theme.typography?.sizes?.md
-    fontWeight: theme.FontWeight?.medium ?? '500',       // ✅ was theme.typography?.weights?.medium
-    fontFamily: theme.FontFamily?.regular ?? undefined,  // ✅ was theme.typography?.fonts?.body
+    fontSize: theme.FontSize?.md ?? 15,
+    fontWeight: theme.FontWeight?.medium ?? '500',
+    fontFamily: theme.FontFamily?.regular ?? undefined,
     letterSpacing: 0.2,
   },
   menuChevron: {

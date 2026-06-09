@@ -25,8 +25,21 @@
   "uploadDocument": {
     "fileUploaded": "फाइल अपलोड केली",
     "upload": "अपलोड",
+    "tapToPreview": "पूर्वावलोकनासाठी टॅप करा",
     "accessibilityUploaded": "अपलोड केले: {{name}}",
+    "accessibilityPreview": "{{name}} पूर्वावलोकन",
     "accessibilityUploadField": "{{title}}, अपलोड"
+  },
+  "preview": {
+    "errorTitle": "फाइल उघडता आली नाही",
+    "invalidPath": "हे फाइल पूर्वावलोकनासाठी उपलब्ध नाही.",
+    "fileNotFound": "या उपकरणावर फाइल सापडली नाही. ती कदाचित काढून टाकण्यात आली असेल.",
+    "cannotOpen": "हे फाइल उघडता आले नाही. कृपया पुन्हा प्रयत्न करा.",
+    "sharingUnavailable": "या उपकरणावर दस्तऐवज पूर्वावलोकन उपलब्ध नाही.",
+    "imageTitle": "प्रतिमा पूर्वावलोकन",
+    "documentTitle": "दस्तऐवज",
+    "closeAccessibility": "पूर्वावलोकन बंद करा",
+    "imageAccessibility": "पूर्ण आकार प्रतिमा पूर्वावलोकन"
   },
   "accessibility": {
     "loading": "लोड होत आहे"

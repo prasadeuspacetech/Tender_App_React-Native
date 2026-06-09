@@ -4,5 +4,9 @@
   "deleteAccessibility": "Delete correspondence",
   "emptyTitle": "No correspondence yet",
   "emptyHint": "Tap + Add to create your first entry.",
-  "modalTitle": "New Correspondence"
+  "modalTitle": "New Correspondence",
+  "documentUploadTitle": "Correspondence document",
+  "documentUploadText": "Upload document",
+  "documentLabel": "Document",
+  "previewDocumentAccessibility": "Preview document {{name}}"
 }

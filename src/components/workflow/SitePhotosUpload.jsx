@@ -13,6 +13,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { useTranslation } from 'react-i18next';
 
 import { MAX_SITE_PHOTOS } from '../../db/repositories/workProgressRepository';
+import useAttachmentPreview from '../../hooks/useAttachmentPreview';
 import {
   deleteSitePhotoFile,
   pickAndStoreSitePhoto,
@@ -25,14 +26,28 @@ const CameraIcon = () => (
   <Feather name="camera" size={22} color="#6B7280" />
 );
 
-const PhotoThumbnail = ({ uri, label, onRemove, removeAccessibilityLabel }) => (
+const PhotoThumbnail = ({
+  uri,
+  label,
+  onRemove,
+  onPreview,
+  previewAccessibilityLabel,
+  removeAccessibilityLabel,
+}) => (
   <View style={styles.photoCard}>
-    <Image source={{ uri }} style={styles.photoImage} contentFit="cover" />
-    {label ? (
-      <View style={styles.photoBadge}>
-        <Text style={styles.photoBadgeText}>{label}</Text>
-      </View>
-    ) : null}
+    <Pressable
+      onPress={onPreview}
+      style={styles.photoPressable}
+      accessibilityRole="button"
+      accessibilityLabel={previewAccessibilityLabel}
+    >
+      <Image source={{ uri }} style={styles.photoImage} contentFit="cover" />
+      {label ? (
+        <View style={styles.photoBadge}>
+          <Text style={styles.photoBadgeText}>{label}</Text>
+        </View>
+      ) : null}
+    </Pressable>
     <Pressable
       style={styles.removeBtn}
       onPress={onRemove}
@@ -81,6 +96,7 @@ const SitePhotosUpload = ({
   removeConfirmMessage,
 }) => {
   const { t } = useTranslation('workflow');
+  const { previewAttachment, AttachmentPreviewModals } = useAttachmentPreview();
   const [uploading, setUploading] = useState(false);
   const count = photos.length;
   const canAddMore = count < maxPhotos;
@@ -162,6 +178,8 @@ const SitePhotosUpload = ({
             key={`${uri}-${index}`}
             uri={uri}
             label={photoLabels[index] ?? null}
+            onPreview={() => previewAttachment(uri)}
+            previewAccessibilityLabel={t('site.previewPhotoAccessibility')}
             onRemove={() => handleRemove(index)}
             removeAccessibilityLabel={t('site.removePhotoAccessibility')}
           />
@@ -179,6 +197,8 @@ const SitePhotosUpload = ({
         <Feather name="info" size={12} color="#9CA3AF" />
         <Text style={styles.helperText}>{t('site.photoHelper')}</Text>
       </View>
+
+      <AttachmentPreviewModals />
     </View>
   );
 };
@@ -223,6 +243,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
     borderWidth: 1,
     borderColor: '#E5E7EB',
+  },
+  photoPressable: {
+    width: '100%',
+    height: '100%',
   },
   photoImage: {
     width: '100%',

@@ -2,6 +2,7 @@
   "title": "सेटिंग",
   "sections": {
     "language": "भाषा",
+    "financialYearBudget": "आर्थिक वर्ष बजेट",
     "dataManagement": "डेटा व्यवस्थापन",
     "account": "खाते",
     "support": "मदत",
@@ -12,6 +13,20 @@
     "english": "English",
     "marathi": "मराठी",
     "selected": "निवडले"
+  },
+  "fyBudget": {
+    "subtitle": "प्रत्येक आर्थिक वर्षासाठी एकूण बजेट सेट करा. डॅशबोर्ड बजेट वापर या मूल्याचा वापर करतो.",
+    "financialYearLabel": "आर्थिक वर्ष",
+    "financialYearPlaceholder": "आर्थिक वर्ष निवडा",
+    "amountLabel": "बजेट रक्कम (₹)",
+    "amountPlaceholder": "बजेट रक्कम प्रविष्ट करा",
+    "save": "बजेट जतन करा",
+    "savedTitle": "जतन केले",
+    "savedMessage": "आर्थिक वर्ष बजेट यशस्वीरित्या अद्यतनित केले.",
+    "invalidTitle": "अवैध रक्कम",
+    "invalidMessage": "कृपया वैध बजेट रक्कम प्रविष्ट करा.",
+    "errorTitle": "जतन अयशस्वी",
+    "errorMessage": "बजेट जतन करता आले नाही. कृपया पुन्हा प्रयत्न करा."
   },
   "backup": {
     "title": "डेटा बॅकअप",

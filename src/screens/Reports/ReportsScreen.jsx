@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
@@ -19,8 +19,10 @@ import ReportShareCard from '../../components/reports/ReportShareCard';
 import { translateBudgetSummary } from '../../i18n/reportLabels';
 import {
   emptyBudgetSummary,
+  filterWorksByFinancialYear,
   getReportsBudgetSummary,
 } from '../../db/repositories/reportsRepository';
+import { exportFinancialYearReportPdf } from '../../services/reportsPdfExportService';
 
 const ReportsScreen = () => {
   const { t, i18n } = useTranslation('reports');
@@ -28,6 +30,7 @@ const ReportsScreen = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [fy, setFy] = useState('2025-26');
   const [rawBudgetSummary, setRawBudgetSummary] = useState(() => emptyBudgetSummary());
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   const budgetSummary = useMemo(
     () => translateBudgetSummary(rawBudgetSummary),
@@ -35,11 +38,12 @@ const ReportsScreen = () => {
   );
 
   const workStats = useMemo(() => {
+    const fyWorks = filterWorksByFinancialYear(works, fy);
     let completed = 0;
     let inProgress = 0;
     let pending = 0;
 
-    works.forEach((work) => {
+    fyWorks.forEach((work) => {
       const status = workCompletedToChipStatus(work.work_completed);
       if (status === 'completed') completed += 1;
       else if (status === 'progress') inProgress += 1;
@@ -47,12 +51,12 @@ const ReportsScreen = () => {
     });
 
     return {
-      total: works.length,
+      total: fyWorks.length,
       completed,
       inProgress,
       pending,
     };
-  }, [works]);
+  }, [works, fy]);
 
   const loadBudgetSummary = useCallback(() => {
     try {
@@ -77,6 +81,38 @@ const ReportsScreen = () => {
   const handleFyChange = useCallback((nextFy) => {
     setFy(nextFy);
   }, []);
+
+  const pdfExportLabels = useMemo(
+    () => ({
+      shareTitle: t('export.shareTitle'),
+    }),
+    [t],
+  );
+
+  const handleExportPdf = useCallback(async () => {
+    if (exportingPdf) return;
+
+    setExportingPdf(true);
+    try {
+      const result = await exportFinancialYearReportPdf({
+        financialYear: fy,
+        works,
+        labels: pdfExportLabels,
+      });
+
+      if (result.noData) {
+        Alert.alert(t('export.noDataTitle'), t('export.noDataMessage'));
+        return;
+      }
+
+      Alert.alert(t('export.successTitle'), t('export.successMessage'));
+    } catch (error) {
+      console.error('[ReportsScreen] export PDF failed:', error);
+      Alert.alert(t('export.errorTitle'), t('export.errorMessage'));
+    } finally {
+      setExportingPdf(false);
+    }
+  }, [exportingPdf, fy, works, pdfExportLabels, t]);
 
   return (
     <>
@@ -141,7 +177,10 @@ const ReportsScreen = () => {
           progressPercent={budgetSummary.percent}
         />
 
-        <ReportExportSection />
+        <ReportExportSection
+          onExportPdf={handleExportPdf}
+          exportingPdf={exportingPdf}
+        />
 
         <ReportShareCard />
       </ScreenLayout>

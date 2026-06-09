@@ -1,3 +1,9 @@
+/** Full INR display with grouping (e.g. ₹50,00,000). */
+export const formatRupeesFull = (amount) => {
+  const n = Number(amount) || 0;
+  return `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+};
+
 /** Compact INR display for dashboard/reports (Lakhs / Crore). */
 export const formatRupeesCompact = (amount) => {
   const n = Number(amount) || 0;

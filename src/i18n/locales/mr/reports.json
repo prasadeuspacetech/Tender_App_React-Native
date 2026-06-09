@@ -19,7 +19,7 @@
     "pendingSubtitle": "लक्ष देणे आवश्यक"
   },
   "budget": {
-    "title": "बजेट",
+    "title": "काम अहवाल",
     "subtitle": "प्रत्येक विभागाच्या बजेटपैकी किती खर्च झाले",
     "unitLabel": "₹ लाखांमध्ये",
     "usedSoFar": "आतापर्यंत वापरले",
@@ -33,7 +33,50 @@
   "export": {
     "sectionTitle": "अहवाल निर्यात",
     "pdf": "PDF निर्यात",
-    "excel": "Excel निर्यात"
+    "excel": "Excel निर्यात",
+    "pdfReportTitle": "आर्थिक वर्ष अहवाल",
+    "detailedReportTitle": "सविस्तर आर्थिक वर्ष काम अहवाल",
+    "financialYearLabel": "आर्थिक वर्ष",
+    "generatedOnLabel": "तयार केले",
+    "totalWorkCount": "एकूण काम संख्या",
+    "workSectionTitle": "काम",
+    "correspondenceSection": "सामान्य पत्रव्यवहार",
+    "attachmentsSection": "संलग्नक",
+    "imagesSection": "अपलोड केलेल्या प्रतिमा",
+    "fileNotFound": "(फाइल सापडली नाही)",
+    "shareTitle": "काम अहवाल PDF शेअर करा",
+    "tender": {
+      "aPacket": "A पॅकेट",
+      "bPacket": "B पॅकेट"
+    },
+    "contractor": {
+      "variation": "चढ-उतार (%)"
+    },
+    "payment": {
+      "date": "देयक दिनांक",
+      "amount": "देय रक्कम",
+      "receipt": "पावती कागदपत्र"
+    },
+    "completion": {
+      "sectionTitle": "पूर्णता / समाप्ती",
+      "status": "काम स्थिती",
+      "certificate": "पूर्णता प्रमाणपत्र"
+    },
+    "noDataTitle": "नोंदी नाहीत",
+    "noDataMessage": "निवडलेल्या आर्थिक वर्षासाठी कामाच्या नोंदी सापडल्या नाहीत.",
+    "successTitle": "निर्यात पूर्ण",
+    "successMessage": "PDF यशस्वीरित्या निर्यात केले.",
+    "errorTitle": "निर्यात अयशस्वी",
+    "errorMessage": "PDF तयार करता आले नाही. कृपया पुन्हा प्रयत्न करा.",
+    "fields": {
+      "workName": "कामाचे नाव",
+      "budgetCode": "अंदाजपत्रक कोड",
+      "estimationCost": "अंदाजित खर्च",
+      "sanctionAmount": "मंजूर रक्कम",
+      "finalTenderAmount": "अंतिम निविदा रक्कम",
+      "totalAmountPaid": "एकूण देय रक्कम",
+      "pendingAmount": "प्रलंबित रक्कम"
+    }
   },
   "share": {
     "title": "WhatsApp / ईमेलद्वारे शेअर",

@@ -1,27 +1,53 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 
 import { dashboardCardSurfaceStyle } from '../dashboard/dashboardCardBorder';
 
-const ExportCard = ({ iconName, title }) => (
-  <Pressable style={styles.exportCard} accessibilityRole="button" accessibilityLabel={title}>
-    <View style={styles.exportIconWrap}>
-      <Ionicons name={iconName} size={28} color="#062E52" />
-    </View>
+const ExportCard = ({
+  iconName,
+  title,
+  onPress,
+  loading = false,
+  disabled = false,
+}) => (
+  <Pressable
+    style={[styles.exportCard, (disabled || loading) && styles.exportCardDisabled]}
+    accessibilityRole="button"
+    accessibilityLabel={title}
+    accessibilityState={{ disabled: disabled || loading }}
+    onPress={onPress}
+    disabled={disabled || loading || !onPress}
+  >
+    {loading ? (
+      <ActivityIndicator size="small" color="#062E52" style={styles.exportIconWrap} />
+    ) : (
+      <View style={styles.exportIconWrap}>
+        <Ionicons name={iconName} size={28} color="#062E52" />
+      </View>
+    )}
     <Text style={styles.exportTitle}>{title}</Text>
   </Pressable>
 );
 
-const ReportExportSection = ({ style }) => {
+const ReportExportSection = ({
+  style,
+  onExportPdf,
+  exportingPdf = false,
+}) => {
   const { t } = useTranslation('reports');
 
   return (
     <View style={[styles.section, style]}>
       <Text style={styles.sectionTitle}>{t('export.sectionTitle')}</Text>
       <View style={styles.row}>
-        <ExportCard iconName="document-text-outline" title={t('export.pdf')} />
+        <ExportCard
+          iconName="document-text-outline"
+          title={t('export.pdf')}
+          onPress={onExportPdf}
+          loading={exportingPdf}
+        />
         <View style={styles.gap} />
         <ExportCard iconName="grid-outline" title={t('export.excel')} />
       </View>
@@ -56,8 +82,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 100,
   },
+  exportCardDisabled: {
+    opacity: 0.72,
+  },
   exportIconWrap: {
     marginBottom: 10,
+    minHeight: 28,
+    justifyContent: 'center',
   },
   exportTitle: {
     fontSize: 14,

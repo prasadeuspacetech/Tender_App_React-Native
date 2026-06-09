@@ -13,15 +13,7 @@
 
 import { getDB } from '../database';
 import { getFinalTenderAmountForWork } from './contractorRepository';
-import { getEstimationByWorkId } from './estimationsRepository';
-import { getSanctionByWorkId } from './sanctionsRepository';
 import { getTenderAmountByWorkId } from './tendersRepository';
-
-const parseStoredAmount = (value) => {
-  if (value == null || value === '') return 0;
-  const n = parseFloat(String(value).replace(/[^0-9.]/g, ''));
-  return Number.isFinite(n) && n > 0 ? n : 0;
-};
 
 /** INSERT a new installment row. Returns the new row id. */
 export const appendPaymentInstallment = (workId, data = {}) => {
@@ -164,7 +156,7 @@ export const getPaymentByWorkId = (workId) => {
 };
 
 // Payment Status total bill = Final Tender Amount (then tender → work budget).
-// Amount Paid = Estimation Cost + Sanction Amount + SUM(payment installments).
+// Amount Paid = SUM(payment installments) only.
 export const getPaymentSummaryForWork = (workId) => {
   if (!workId) {
     return { totalBill: 0, amountPaid: 0, pending: 0 };
@@ -190,14 +182,7 @@ export const getPaymentSummaryForWork = (workId) => {
     work?.budget ??
     0;
 
-  const estimationAmount = parseStoredAmount(
-    getEstimationByWorkId(workId)?.estimated_cost,
-  );
-  const sanctionAmount = parseStoredAmount(
-    getSanctionByWorkId(workId)?.sanction_amount,
-  );
-  const paymentLedgerSum = Number(paidRow?.total_paid) || 0;
-  const amountPaid = estimationAmount + sanctionAmount + paymentLedgerSum;
+  const amountPaid = Number(paidRow?.total_paid) || 0;
   const pending = Math.max(0, Number(totalBill) - amountPaid);
 
   return {

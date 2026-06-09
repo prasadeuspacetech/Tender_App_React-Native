@@ -3,10 +3,15 @@
   "stats": {
     "totalWork": "Total Work",
     "complete": "Complete",
-    "pending": "Pending",
+    "inProgress": "In Progress",
     "budgetUsed": "Budget Used"
   },
   "budgetUtilisation": "Budget Utilisation",
+  "budgetUtilisationRows": {
+    "workCount": "Total Work Count",
+    "totalBudget": "Total Budget",
+    "totalSpend": "Total Spend"
+  },
   "recentWork": "Recent Work",
   "viewAll": "View all",
   "viewAllAccessibility": "View all works",

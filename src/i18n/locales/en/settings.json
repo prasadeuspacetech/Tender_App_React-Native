@@ -2,6 +2,7 @@
   "title": "Settings",
   "sections": {
     "language": "Language",
+    "financialYearBudget": "Financial Year Budget",
     "dataManagement": "Data Management",
     "account": "Account",
     "support": "Support",
@@ -12,6 +13,20 @@
     "english": "English",
     "marathi": "मराठी",
     "selected": "Selected"
+  },
+  "fyBudget": {
+    "subtitle": "Set the total budget for each financial year. Dashboard Budget Utilisation uses this value.",
+    "financialYearLabel": "Financial Year",
+    "financialYearPlaceholder": "Select financial year",
+    "amountLabel": "Budget Amount (₹)",
+    "amountPlaceholder": "Enter budget amount",
+    "save": "Save Budget",
+    "savedTitle": "Saved",
+    "savedMessage": "Financial year budget updated successfully.",
+    "invalidTitle": "Invalid amount",
+    "invalidMessage": "Please enter a valid budget amount.",
+    "errorTitle": "Save failed",
+    "errorMessage": "Could not save the budget. Please try again."
   },
   "backup": {
     "title": "Backup Data",

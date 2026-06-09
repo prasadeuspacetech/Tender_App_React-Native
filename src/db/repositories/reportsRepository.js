@@ -5,6 +5,7 @@
 import { formatRupeesCompact } from '../../utils/currencyFormat';
 import { computeFinalTenderAmount } from '../../utils/finalTenderAmount';
 import { getDB } from '../database';
+import { getFinancialYearBudget } from './financialYearBudgetRepository';
 import { getPaymentSummaryForWork } from './paymentsRepository';
 
 const toPositiveAmount = (value) => {
@@ -76,15 +77,32 @@ const WORK_BUDGET_ROWS_SQL = `
   WHERE w.financial_year = ?;
 `;
 
+/** Same FY normalization used by budget SQL (`WHERE w.financial_year = ?`). */
+export const normalizeFinancialYear = (financialYear) =>
+  financialYear == null ? '' : String(financialYear).trim();
+
+/**
+ * Filter in-memory works list to match budget card FY scope.
+ * @param {Array<{ financial_year?: string }>} works
+ */
+export const filterWorksByFinancialYear = (works, financialYear) => {
+  const fy = normalizeFinancialYear(financialYear);
+  if (!fy) return [];
+  return (works ?? []).filter(
+    (work) => normalizeFinancialYear(work.financial_year) === fy,
+  );
+};
+
 /**
  * Budget summary filtered by financial year (e.g. '2025-26').
  * @param {{ useTotalAmountPaid?: boolean }} [options]
- *   When true (Reports budget card), "used" sums Payment Status Total Amount Paid
- *   per work via getPaymentSummaryForWork. Default false keeps payment-installment sum.
+ *   When true (Reports/Dashboard budget card), "used" sums Payment Status Total Amount Paid
+ *   per work via getPaymentSummaryForWork (payment installments only). Default false uses
+ *   the same installment sum from SQL.
  */
 export const getReportsBudgetSummary = (financialYear, options = {}) => {
   const { useTotalAmountPaid = false } = options;
-  const fy = financialYear == null ? '' : String(financialYear).trim();
+  const fy = normalizeFinancialYear(financialYear);
   if (!fy) {
     return emptyBudgetSummary();
   }
@@ -143,6 +161,44 @@ const formatRupeesLakhsDetail = (amount) => {
         ? lakhs.toFixed(0)
         : lakhs.toFixed(1);
   return `₹${value} Lakhs`;
+};
+
+/** Dashboard Budget Utilisation — Settings FY budget + payment installments spend. */
+export const emptyFyBudgetUtilisationSummary = () => ({
+  financialYear: '',
+  workCount: 0,
+  totalBudget: 0,
+  totalSpend: 0,
+  percent: 0,
+});
+
+export const getFyBudgetUtilisationSummary = (financialYear, works) => {
+  const fy = normalizeFinancialYear(financialYear);
+  if (!fy) return emptyFyBudgetUtilisationSummary();
+
+  const fyWorks = filterWorksByFinancialYear(works, fy);
+  let totalSpend = 0;
+
+  fyWorks.forEach((work) => {
+    if (work?.id) {
+      totalSpend += getPaymentSummaryForWork(work.id).amountPaid;
+    }
+  });
+
+  const configuredBudget = getFinancialYearBudget(fy);
+  const totalBudget = configuredBudget?.budget_amount ?? 0;
+  const percent =
+    totalBudget > 0
+      ? Math.min(100, Math.round((totalSpend / totalBudget) * 100))
+      : 0;
+
+  return {
+    financialYear: fy,
+    workCount: fyWorks.length,
+    totalBudget,
+    totalSpend,
+    percent,
+  };
 };
 
 export const emptyBudgetSummary = () => ({

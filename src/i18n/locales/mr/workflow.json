@@ -75,6 +75,9 @@
     "officerC": "अधिकारी क"
   },
   "payment": {
+    "budgetCode": "अंदाजपत्रक कोड",
+    "estimationCost": "अंदाजित खर्च",
+    "sanctionAmount": "मंजूर रक्कम",
     "totalBillAmount": "एकूण बिल रक्कम",
     "amountPaid": "एकूण देय रक्कम",
     "pending": "प्रलंबित",
@@ -89,6 +92,7 @@
     "addPhoto": "फोटो जोडा",
     "addPhotoPlus": "+ फोटो जोडा",
     "removePhotoAccessibility": "फोटो काढा",
+    "previewPhotoAccessibility": "फोटो पूर्वावलोकन",
     "uploadedCount": "{{count}} अपलोड केले",
     "photoHelper": "कमाल १० फोटो · JPG किंवा PNG",
     "photoBefore": "आधी",
@@ -204,7 +208,7 @@
       "progressDescription": "कामासाठी ठेकेदार नियुक्त करा",
       "fields": {
         "contractorName": { "label": "ठेकेदाराचे नाव", "placeholder": "पूर्ण नाव प्रविष्ट करा" },
-        "contactMobile": { "label": "संपर्क व्यक्ती मोबाईल क्र.", "placeholder": "+91 8833557722" },
+        "contactMobile": { "label": "संपर्क व्यक्ती मोबाईल नंबर", "placeholder": "+91 8833557722" },
         "percentRow": "% अंदाजापेक्षा वर / खाली",
         "percentPlaceholder": "0.00",
         "finalTenderAmount": { "label": "अंतिम निविदा रक्कम (₹)", "placeholder": "₹0.00" }
@@ -237,7 +241,7 @@
       "progressDescription": "काम आदेश जारी / काम सुरू झाले",
       "fields": {
         "orderNumber": { "label": "काम आदेश क्रमांक", "placeholder": "DKT 005-2035" },
-        "startDate": { "label": "काम सुरुवात दिनांक", "placeholder": "दि/महि/वर्ष" },
+        "startDate": { "label": "काम आदेश दिनांक", "placeholder": "दि/महि/वर्ष" },
         "expectedCompletion": { "label": "अपेक्षित पूर्णता", "placeholder": "दि/महि/वर्ष" },
         "notes": { "label": "टिपणी (ऐच्छिक)", "placeholder": "टिपणी जोडा (ऐच्छिक)" }
       },

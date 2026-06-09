@@ -18,51 +18,84 @@ import Inputboxfield from '../../components/Inputboxfield';
 import ScreenLayout from '../../components/layouts/Screenlayout';
 import NativeDateField from '../../components/NativeDateField';
 import PrimaryButton from '../../components/PrimaryButton';
+import UploadDocument from '../../components/UploadDocument';
 import {
   createGeneralCorrespondence,
   deleteGeneralCorrespondence,
   getAllGeneralCorrespondence,
 } from '../../db/repositories/generalCorrespondenceRepository';
+import { pickAndStoreCorrespondenceDocument } from '../../services/documentUploadService';
 import theme from '../../theme';
 import { formatDateForStorage } from '../../utils/dateFormat';
+import useAttachmentPreview from '../../hooks/useAttachmentPreview';
+import { buildUploadDocumentEntry } from '../../utils/documentUploadProps';
+import { getFileNameFromPath } from '../../utils/fileName';
 
 const EMPTY_FORM = {
   subject: '',
   date: '',
+  document_path: '',
 };
 
-const CorrespondenceCard = ({ item, onDelete, t }) => (
-  <View style={styles.card}>
-    <View style={styles.cardBody}>
-      <Text style={styles.cardSubject} numberOfLines={2}>
-        {item.subject || t('common:dash')}
-      </Text>
-      <Text style={styles.cardDate} numberOfLines={1}>
-        {formatDateForStorage(item.date) || t('common:dash')}
-      </Text>
+const CorrespondenceCard = ({ item, onDelete, onPreviewDocument, t }) => {
+  const documentName = item.document_path
+    ? getFileNameFromPath(item.document_path)
+    : t('common:dash');
+  const canPreviewDocument = !!item.document_path;
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardBody}>
+        <Text style={styles.cardSubject} numberOfLines={2}>
+          {item.subject || t('common:dash')}
+        </Text>
+        <Text style={styles.cardDate} numberOfLines={1}>
+          {formatDateForStorage(item.date) || t('common:dash')}
+        </Text>
+        {canPreviewDocument ? (
+          <TouchableOpacity
+            onPress={() => onPreviewDocument(item.document_path)}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={t('correspondence:previewDocumentAccessibility', {
+              name: documentName,
+            })}
+          >
+            <Text style={[styles.cardDocument, styles.cardDocumentPreview]} numberOfLines={1}>
+              {t('correspondence:documentLabel')}: {documentName}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <Text style={styles.cardDocument} numberOfLines={1}>
+            {t('correspondence:documentLabel')}: {documentName}
+          </Text>
+        )}
+      </View>
+      <TouchableOpacity
+        onPress={() => onDelete(item.id)}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        accessibilityRole="button"
+        accessibilityLabel={t('correspondence:deleteAccessibility')}
+        style={styles.deleteButton}
+      >
+        <Ionicons
+          name="trash-outline"
+          size={22}
+          color={theme.Colors?.textSecondary ?? '#666666'}
+        />
+      </TouchableOpacity>
     </View>
-    <TouchableOpacity
-      onPress={() => onDelete(item.id)}
-      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      accessibilityRole="button"
-      accessibilityLabel={t('correspondence:deleteAccessibility')}
-      style={styles.deleteButton}
-    >
-      <Ionicons
-        name="trash-outline"
-        size={22}
-        color={theme.Colors?.textSecondary ?? '#666666'}
-      />
-    </TouchableOpacity>
-  </View>
-);
+  );
+};
 
 const GeneralCorrespondenceScreen = ({ navigation }) => {
   const { t } = useTranslation(['correspondence', 'common']);
+  const { previewAttachment, AttachmentPreviewModals } = useAttachmentPreview();
   const [entries, setEntries] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingDocument, setUploadingDocument] = useState(false);
 
   const refreshList = useCallback(() => {
     try {
@@ -89,6 +122,18 @@ const GeneralCorrespondenceScreen = ({ navigation }) => {
     setForm(EMPTY_FORM);
   };
 
+  const pickDocument = useCallback(async () => {
+    setUploadingDocument(true);
+    try {
+      const result = await pickAndStoreCorrespondenceDocument();
+      if (result?.filePath) {
+        setForm((prev) => ({ ...prev, document_path: result.filePath }));
+      }
+    } finally {
+      setUploadingDocument(false);
+    }
+  }, []);
+
   const handleSubmit = () => {
     if (submitting) return;
 
@@ -97,6 +142,7 @@ const GeneralCorrespondenceScreen = ({ navigation }) => {
       createGeneralCorrespondence({
         subject: form.subject,
         date: form.date,
+        document_path: form.document_path,
       });
       closeModal();
       refreshList();
@@ -143,7 +189,12 @@ const GeneralCorrespondenceScreen = ({ navigation }) => {
           data={entries}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
-            <CorrespondenceCard item={item} onDelete={handleDelete} t={t} />
+            <CorrespondenceCard
+              item={item}
+              onDelete={handleDelete}
+              onPreviewDocument={previewAttachment}
+              t={t}
+            />
           )}
           contentContainerStyle={[
             styles.listContent,
@@ -192,6 +243,19 @@ const GeneralCorrespondenceScreen = ({ navigation }) => {
             }
           />
 
+          <UploadDocument
+            sectionLabel={t('common:documents')}
+            documents={[
+              buildUploadDocumentEntry({
+                title: t('correspondence:documentUploadTitle'),
+                uploadText: t('correspondence:documentUploadText'),
+                filePath: form.document_path,
+                onPress: pickDocument,
+                loading: uploadingDocument,
+              }),
+            ]}
+          />
+
           <PrimaryButton
             title={t('common:submit')}
             fullWidth
@@ -201,6 +265,8 @@ const GeneralCorrespondenceScreen = ({ navigation }) => {
           />
         </View>
       </Modal>
+
+      <AttachmentPreviewModals />
     </>
   );
 };
@@ -256,6 +322,17 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#444444',
     lineHeight: 18,
+    marginBottom: 4,
+  },
+  cardDocument: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#444444',
+    lineHeight: 18,
+  },
+  cardDocumentPreview: {
+    color: theme.Colors?.primary ?? '#062E52',
+    textDecorationLine: 'underline',
   },
   deleteButton: {
     justifyContent: 'center',

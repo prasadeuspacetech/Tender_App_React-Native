@@ -25,8 +25,21 @@
   "uploadDocument": {
     "fileUploaded": "File Uploaded",
     "upload": "Upload",
+    "tapToPreview": "Tap to preview",
     "accessibilityUploaded": "Uploaded: {{name}}",
+    "accessibilityPreview": "Preview {{name}}",
     "accessibilityUploadField": "{{title}}, upload"
+  },
+  "preview": {
+    "errorTitle": "Cannot open file",
+    "invalidPath": "This file is not available for preview.",
+    "fileNotFound": "The file could not be found on this device. It may have been removed.",
+    "cannotOpen": "This file could not be opened. Please try again.",
+    "sharingUnavailable": "Document preview is not available on this device.",
+    "imageTitle": "Image preview",
+    "documentTitle": "Document",
+    "closeAccessibility": "Close preview",
+    "imageAccessibility": "Full size image preview"
   },
   "accessibility": {
     "loading": "Loading"

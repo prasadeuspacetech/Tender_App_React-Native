@@ -14,6 +14,8 @@ import SettingsDrawer from '../../components/Settingsdrawer';
 import { workCompletedToChipStatus } from '../../components/Statuschip';
 import {
   emptyBudgetSummary,
+  filterWorksByFinancialYear,
+  getFyBudgetUtilisationSummary,
   getReportsBudgetSummary,
 } from '../../db/repositories/reportsRepository';
 import useWorkStore from '../../store/useWorkStore';
@@ -46,7 +48,7 @@ const DashboardScreen = () => {
 
   const loadBudgetSummary = useCallback(() => {
     try {
-      setRawBudgetSummary(getReportsBudgetSummary(fy));
+      setRawBudgetSummary(getReportsBudgetSummary(fy, { useTotalAmountPaid: true }));
     } catch (error) {
       console.error('[Dashboard] getReportsBudgetSummary failed:', error);
       setRawBudgetSummary(emptyBudgetSummary());
@@ -65,27 +67,33 @@ const DashboardScreen = () => {
   }, [loadBudgetSummary]);
 
   const dashboardStats = useMemo(() => {
-    const total = works.length;
+    const fyWorks = filterWorksByFinancialYear(works, fy);
+    const total = fyWorks.length;
     let complete = 0;
-    let pending = 0;
+    let inProgress = 0;
 
-    works.forEach((work) => {
+    fyWorks.forEach((work) => {
       const status = workCompletedToChipStatus(work.work_completed);
       if (status === 'completed') complete += 1;
-      else if (status === 'pending') pending += 1;
+      else if (status === 'progress') inProgress += 1;
     });
 
     return {
       total,
       complete,
-      pending,
+      inProgress,
       totalPercent: total > 0 ? 100 : 0,
       completePercent: ringPercent(complete, total),
-      pendingPercent: ringPercent(pending, total),
+      inProgressPercent: ringPercent(inProgress, total),
       budgetPercent: rawBudgetSummary.percent,
       budgetDisplay: formatBudgetUsed(rawBudgetSummary.budgetUsed),
     };
-  }, [works, rawBudgetSummary]);
+  }, [works, fy, rawBudgetSummary]);
+
+  const budgetUtilisation = useMemo(
+    () => getFyBudgetUtilisationSummary(fy, works),
+    [fy, works],
+  );
 
   const recentWorks = useMemo(
     () => works.slice(0, RECENT_WORK_LIMIT),
@@ -134,9 +142,9 @@ const DashboardScreen = () => {
 
         <View style={styles.statsRow}>
           <DashboardStatCard
-            label={t('dashboard:stats.pending')}
-            value={String(dashboardStats.pending)}
-            percent={dashboardStats.pendingPercent}
+            label={t('dashboard:stats.inProgress')}
+            value={String(dashboardStats.inProgress)}
+            percent={dashboardStats.inProgressPercent}
             ringColor="#FF5D00"
             trackColor="#FF5D00"
           />
@@ -152,8 +160,14 @@ const DashboardScreen = () => {
         </View>
 
         <BudgetUtilisationCard
-          percent={rawBudgetSummary.percent}
+          percent={budgetUtilisation.percent}
           title={t('dashboard:budgetUtilisation')}
+          workCountLabel={t('dashboard:budgetUtilisationRows.workCount')}
+          totalBudgetLabel={t('dashboard:budgetUtilisationRows.totalBudget')}
+          totalSpendLabel={t('dashboard:budgetUtilisationRows.totalSpend')}
+          workCount={budgetUtilisation.workCount}
+          totalBudget={budgetUtilisation.totalBudget}
+          totalSpend={budgetUtilisation.totalSpend}
         />
 
         <View style={styles.sectionHeader}>

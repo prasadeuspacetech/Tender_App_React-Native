@@ -75,6 +75,9 @@
     "officerC": "Officer C"
   },
   "payment": {
+    "budgetCode": "Budget Code",
+    "estimationCost": "Estimation Cost",
+    "sanctionAmount": "Sanction Amount",
     "totalBillAmount": "Total bill amount",
     "amountPaid": "Total Amount Paid",
     "pending": "Pending",
@@ -89,6 +92,7 @@
     "addPhoto": "Add photo",
     "addPhotoPlus": "+ Add Photo",
     "removePhotoAccessibility": "Remove photo",
+    "previewPhotoAccessibility": "Preview photo",
     "uploadedCount": "{{count}} uploaded",
     "photoHelper": "Max 10 photos · JPG or PNG",
     "photoBefore": "Before",
@@ -204,7 +208,7 @@
       "progressDescription": "Assign contractor for the work",
       "fields": {
         "contractorName": { "label": "Contractor name", "placeholder": "Enter full name" },
-        "contactMobile": { "label": "Contract person mobile no.", "placeholder": "+91 8833557722" },
+        "contactMobile": { "label": "Contact Person Mobile Number", "placeholder": "+91 8833557722" },
         "percentRow": "% above / below estimate",
         "percentPlaceholder": "0.00",
         "finalTenderAmount": { "label": "Final tender amount (₹)", "placeholder": "₹0.00" }
@@ -237,7 +241,7 @@
       "progressDescription": "Work order issued / Work started",
       "fields": {
         "orderNumber": { "label": "Work order number", "placeholder": "DKT 005-2035" },
-        "startDate": { "label": "Work start date", "placeholder": "dd/mm/yyyy" },
+        "startDate": { "label": "Work Order Date", "placeholder": "dd/mm/yyyy" },
         "expectedCompletion": { "label": "Expected completion", "placeholder": "dd/mm/yyyy" },
         "notes": { "label": "Notes (Optional)", "placeholder": "Add notes (optional)" }
       },

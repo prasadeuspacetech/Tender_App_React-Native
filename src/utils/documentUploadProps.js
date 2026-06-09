@@ -7,22 +7,28 @@ export const buildUploadDocumentEntry = ({
   filePath,
   onPress,
   loading = false,
-  showUploadAction = false,
+  showUploadAction,
   onUploadPress,
   showDocumentField,
 }) => {
   const displayName = filePath ? getFileNameFromPath(filePath) : undefined;
+  const hasFile = !!filePath;
+
+  const resolvedOnUploadPress = onUploadPress ?? (onPress ? onPress : undefined);
+  const resolvedShowUploadAction =
+    showUploadAction ?? (hasFile && resolvedOnUploadPress ? true : false);
 
   return {
     title,
     uploadText,
     displayName,
     showDocumentField,
-    showUploadAction,
-    onUploadPress,
-    fileUploaded: !!filePath,
+    showUploadAction: resolvedShowUploadAction,
+    onUploadPress: resolvedOnUploadPress,
+    fileUploaded: hasFile,
     fileName: displayName,
-    onPress,
+    filePath: filePath || undefined,
+    onPress: hasFile ? undefined : onPress,
     loading,
   };
 };

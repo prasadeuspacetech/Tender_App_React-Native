@@ -1,10 +1,10 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet, Text, View } from 'react-native';
 
-import FormFieldLabel from '../help/FormFieldLabel';
 import theme from '../../theme';
 import { parseStoredDate } from '../../utils/dateFormat';
+import FormFieldLabel from '../help/FormFieldLabel';
 
 const TEXT = theme.Colors?.text ?? '#1A1A1A';
 const SECONDARY = theme.Colors?.secondary ?? '#777777';

@@ -24,7 +24,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { Platform } from 'react-native';
 
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+} from 'react-native-safe-area-context';
 import ActivationScreen from '../screens/splash/Activationscreen';
 import GradientSplashScreen from '../screens/splash/Gradientsplashscreen';
 import LoaderSplashScreen from '../screens/splash/Loadersplashscreen';
@@ -35,7 +38,7 @@ import { Colors } from '../theme';
 const Root = createNativeStackNavigator();
 
 const RootNavigator = () => (
-  <SafeAreaProvider>
+  <SafeAreaProvider initialMetrics={initialWindowMetrics}>
     <Root.Navigator
       screenOptions={{
         headerShown: false,

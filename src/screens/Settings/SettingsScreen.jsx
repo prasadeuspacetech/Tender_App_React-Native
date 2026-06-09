@@ -5,8 +5,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 
-import HelpTooltipDemo from '../../components/help/HelpTooltipDemo';
 import LanguagePicker from '../../components/LanguagePicker';
+import FinancialYearBudgetSection from '../../components/settings/FinancialYearBudgetSection';
 import ScreenLayout from '../../components/layouts/Screenlayout';
 import NavigationCard from '../../components/Navigationcard';
 import SettingsDrawer from '../../components/Settingsdrawer';
@@ -54,11 +54,11 @@ const SettingsScreen = () => {
           <Text style={styles.languageHint}>{t('language.subtitle')}</Text>
           <LanguagePicker />
         </SettingsSection>
-
+        
         <View style={styles.sectionDivider} />
 
-        <SettingsSection title={t('sections.tooltipDemo')}>
-          <HelpTooltipDemo />
+        <SettingsSection title={t('sections.financialYearBudget')}>
+          <FinancialYearBudgetSection />
         </SettingsSection>
 
         <View style={styles.sectionDivider} />

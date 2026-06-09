@@ -10,6 +10,7 @@
   "untitledWork": "Untitled work",
   "codePrefix": "Code : {{code}}",
   "dash": "—",
+  "documents": "Documents",
   "status": {
     "all": "All",
     "pending": "Pending",

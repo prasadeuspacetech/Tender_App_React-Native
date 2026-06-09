@@ -19,7 +19,7 @@
     "pendingSubtitle": "Needs attention"
   },
   "budget": {
-    "title": "Budget",
+    "title": "Work Report",
     "subtitle": "How much of each department's budget has been spent",
     "unitLabel": "₹ in Lakhs",
     "usedSoFar": "Used so far",
@@ -33,7 +33,50 @@
   "export": {
     "sectionTitle": "Export Report",
     "pdf": "Export PDF",
-    "excel": "Export Excel"
+    "excel": "Export Excel",
+    "pdfReportTitle": "Financial Year Report",
+    "detailedReportTitle": "Detailed Financial Year Work Report",
+    "financialYearLabel": "Financial Year",
+    "generatedOnLabel": "Generated On",
+    "totalWorkCount": "Total Work Count",
+    "workSectionTitle": "Work",
+    "correspondenceSection": "General Correspondence",
+    "attachmentsSection": "Attachments",
+    "imagesSection": "Uploaded Images",
+    "fileNotFound": "(file not found)",
+    "shareTitle": "Share Work Report PDF",
+    "tender": {
+      "aPacket": "A Packet",
+      "bPacket": "B Packet"
+    },
+    "contractor": {
+      "variation": "Variation (%)"
+    },
+    "payment": {
+      "date": "Payment Date",
+      "amount": "Amount Paid",
+      "receipt": "Receipt Document"
+    },
+    "completion": {
+      "sectionTitle": "Completion / Closure",
+      "status": "Work Status",
+      "certificate": "Completion Certificate"
+    },
+    "noDataTitle": "No records",
+    "noDataMessage": "No work records found for selected financial year.",
+    "successTitle": "Export complete",
+    "successMessage": "PDF exported successfully.",
+    "errorTitle": "Export failed",
+    "errorMessage": "Could not generate the PDF. Please try again.",
+    "fields": {
+      "workName": "Work Name",
+      "budgetCode": "Budget Code",
+      "estimationCost": "Estimation Cost",
+      "sanctionAmount": "Sanction Amount",
+      "finalTenderAmount": "Final Tender Amount",
+      "totalAmountPaid": "Total Amount Paid",
+      "pendingAmount": "Pending Amount"
+    }
   },
   "share": {
     "title": "Share via WhatsApp / Email",

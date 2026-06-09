@@ -216,6 +216,16 @@ const CREATE_GENERAL_CORRESPONDENCE = `
   );
 `;
 
+const CREATE_FINANCIAL_YEAR_BUDGETS = `
+  CREATE TABLE IF NOT EXISTS financial_year_budgets (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    financial_year  TEXT NOT NULL UNIQUE,
+    budget_amount   REAL NOT NULL DEFAULT 0,
+    created_at      TEXT DEFAULT (datetime('now')),
+    updated_at      TEXT DEFAULT (datetime('now'))
+  );
+`;
+
 // ─── All migrations in order ──────────────────────────────────────────────────
 // Each entry runs once. To add columns in future: add a new ALTER TABLE entry.
 const MIGRATIONS = [
@@ -233,6 +243,7 @@ const MIGRATIONS = [
   CREATE_BILL_SUBMISSIONS,
   CREATE_COMPLETION_CLOSURE,
   CREATE_GENERAL_CORRESPONDENCE,
+  CREATE_FINANCIAL_YEAR_BUDGETS,
 ];
 
 // ─── Additive column migrations (run after table creation) ────────────────────
@@ -278,6 +289,8 @@ const runColumnMigrations = (db) => {
   addColumnIfMissing('work_progress', 'work_completion', 'INTEGER DEFAULT 0');
   // v11 — Work Details officer mobile number
   addColumnIfMissing('works', 'officer_mobile', 'TEXT');
+  // v12 — General Correspondence document path
+  addColumnIfMissing('general_correspondence', 'document_path', 'TEXT');
 
   // v6 — UNIQUE indexes (IF NOT EXISTS keeps these silent on every launch).
   const indexStatements = [
