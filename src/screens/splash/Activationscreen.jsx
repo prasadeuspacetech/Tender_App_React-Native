@@ -1,7 +1,4 @@
-// src/screens/splash/ActivationScreen.jsx
-
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -11,291 +8,274 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import {
-  Colors,
-  FontFamily,
-  FontWeight,
-  Spacing,
-  Radius,
-  Shadow,
-  Layout,
-  Typography,
-  Input as InputTheme,
-} from '../../theme';
+import { useNavigation } from '@react-navigation/native';
+import { db } from '../../services/firebase';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Figma measurements (375px design frame)
-//   Card    : width 286 | height 408 | radius 39 | border 0.7px
-//   Avatar  : width 74  | height 75  | top −21 relative to card | right −30
-//   Curves  : two large circle arcs, top-right and bottom-left
-// ─────────────────────────────────────────────────────────────────────────────
+// Theme constants (matching your existing theme)
+const Colors = {
+  primary: '#062E52',
+  surface: '#FFFFFF',
+  textInverse: '#FFFFFF',
+  textPlaceholder: '#9CA3AF',
+  textPrimary: '#1F2937',
+  textSecondary: '#6B7280',
+  border: '#E5E7EB',
+  error: '#EF4444',
+  success: '#10B981',
+  warning: '#F59E0B',
+};
 
-const DESIGN_FRAME = 375;
-const s = (n) => (Layout.screenWidth / DESIGN_FRAME) * n;
-
-const CARD_WIDTH   = s(286);
-const CARD_RADIUS  = s(39);
-const AVATAR_SIZE  = s(74);
-const AVATAR_TOP   = s(-21);   // avatar sits 21px above card top
-const AVATAR_RIGHT = s(-30);   // avatar overflows 30px beyond card right edge
-
-// Decorative arc sizes
-const ARC_LG = Layout.screenWidth * 1.55;
-const ARC_MD = Layout.screenWidth * 1.25;
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-const ActivationScreen = ({ navigation }) => {
-  const { t } = useTranslation('auth');
+const ActivationScreen = () => {
+  const navigation = useNavigation();
   const [mobileNumber, setMobileNumber] = useState('');
   const [subscriptionKey, setSubscriptionKey] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Strip non-numeric chars and cap at 10 digits
+  // Check if subscription is expired
+  const isSubscriptionExpired = (expiresAt) => {
+    return new Date(expiresAt) < new Date();
+  };
+
+  // Format remaining time
+  const getRemainingTime = (expiresAt) => {
+    const now = new Date();
+    const expiry = new Date(expiresAt);
+    const diffMs = expiry - now;
+    
+    if (diffMs <= 0) return { expired: true, text: 'Expired' };
+    
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffDays > 0) return { expired: false, text: `${diffDays} day${diffDays > 1 ? 's' : ''} left` };
+    if (diffHours > 0) return { expired: false, text: `${diffHours} hour${diffHours > 1 ? 's' : ''} left` };
+    if (diffMins > 0) return { expired: false, text: `${diffMins} minute${diffMins > 1 ? 's' : ''} left` };
+    return { expired: false, text: 'Less than a minute left' };
+  };
+
   const handleMobileChange = (text) => {
     const numeric = text.replace(/[^0-9]/g, '').slice(0, 10);
     setMobileNumber(numeric);
   };
 
-  const handleActivate = () => {
+  const handleActivate = async () => {
+    // Validation
     if (mobileNumber.length !== 10) {
-      Alert.alert(
-        t('invalidMobileTitle'),
-        t('invalidMobileMessage'),
-        [{ text: t('ok') }],
-      );
+      Alert.alert('Invalid Mobile', 'Please enter a valid 10-digit mobile number');
       return;
     }
-    // Mock auth — navigate directly to Dashboard (no API, no token)
-    navigation.replace('MainApp');
+    
+    if (!subscriptionKey || subscriptionKey.length !== 15) {
+      Alert.alert('Invalid Key', 'Please enter a valid 15-character access key');
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      // Query user by mobile number from Firebase
+      const snapshot = await db.ref('users')
+        .orderByChild('mobile')
+        .equalTo(mobileNumber)
+        .once('value');
+      
+      const users = snapshot.val();
+      
+      if (!users) {
+        Alert.alert('Error', 'No account found with this mobile number');
+        setLoading(false);
+        return;
+      }
+      
+      // Get the user (first match)
+      const userId = Object.keys(users)[0];
+      const user = users[userId];
+      
+      // Verify subscription key
+      if (!user.subscription || user.subscription.key !== subscriptionKey) {
+        Alert.alert('Error', 'Invalid access key');
+        setLoading(false);
+        return;
+      }
+      
+      // Check if expired
+      if (isSubscriptionExpired(user.subscription.expiresAt)) {
+        Alert.alert(
+          'Subscription Expired',
+          'Your access has expired. Please contact your administrator to renew.',
+          [{ text: 'OK' }]
+        );
+        setLoading(false);
+        return;
+      }
+      
+      // Calculate remaining time
+      const remaining = getRemainingTime(user.subscription.expiresAt);
+      
+      // Navigate to Main App with user data
+      navigation.replace('MainApp', {
+        userData: user,
+        subscription: user.subscription,
+        remainingTime: remaining.text,
+      });
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
-
-      {/* ── Decorative background arc — top-right ──────────────────────────── */}
-      <View style={styles.arcTopRight} />
-
-      {/* ── Decorative background arc — bottom-left ────────────────────────── */}
-      <View style={styles.arcBottomLeft} />
-
-      {/* ── Main content — keyboard-aware centered layout ───────────────────── */}
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        {/*
-          cardWrapper is a relative container so the avatar can be positioned
-          absolutely relative to it, overlapping the card corner.
-        */}
-        <View style={styles.cardWrapper}>
+        <View style={styles.card}>
+          <Text style={styles.title}>Tender Portal</Text>
+          <Text style={styles.subtitle}>Enter your credentials to access tenders</Text>
 
-          {/* ── Glass card ──────────────────────────────────────────────────── */}
-          <View style={styles.card}>
-
-            <Text style={styles.welcomeText}>{t('welcome')}</Text>
-
-            {/* Mobile Number field */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>{t('mobileNumber')}</Text>
-              <TextInput
-                style={styles.input}
-                value={mobileNumber}
-                onChangeText={handleMobileChange}
-                keyboardType="phone-pad"
-                maxLength={10}
-                returnKeyType="next"
-                placeholderTextColor={Colors.textPlaceholder}
-              />
-            </View>
-
-            {/* Subscription Key field */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>{t('subscriptionKey')}</Text>
-              <TextInput
-                style={styles.input}
-                value={subscriptionKey}
-                onChangeText={setSubscriptionKey}
-                keyboardType="default"
-                returnKeyType="done"
-                onSubmitEditing={handleActivate}
-                placeholderTextColor={Colors.textPlaceholder}
-              />
-            </View>
-
-            {/* Activate App button */}
-            <TouchableOpacity
-              style={styles.activateButton}
-              onPress={handleActivate}
-              activeOpacity={0.82}
-            >
-              <Text style={styles.activateButtonText}>{t('activateApp')}</Text>
-            </TouchableOpacity>
-
-          </View>
-          {/* ── END card ──────────────────────────────────────────────────── */}
-
-          {/* ── Avatar — overlaps card top-right corner ─────────────────────
-              Positioned absolute relative to cardWrapper.
-              Matches Figma Group 35: 74×75, top −21, right −30 (scaled).
-          ─────────────────────────────────────────────────────────────────── */}
-          {/* <View style={styles.avatarCircle}>
-            <Ionicons
-              name="person"
-              size={AVATAR_SIZE * 0.52}
-              color={Colors.primary}
+          {/* Mobile Number Field */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Mobile Number</Text>
+            <TextInput
+              style={styles.input}
+              value={mobileNumber}
+              onChangeText={handleMobileChange}
+              keyboardType="phone-pad"
+              maxLength={10}
+              placeholder="Enter 10-digit mobile number"
+              placeholderTextColor={Colors.textPlaceholder}
+              editable={!loading}
+              returnKeyType="next"
             />
-          </View> */}
+          </View>
 
+          {/* Access Key Field */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Access Key</Text>
+            <TextInput
+              style={styles.input}
+              value={subscriptionKey}
+              onChangeText={setSubscriptionKey}
+              placeholder="15-character access key"
+              autoCapitalize="characters"
+              maxLength={15}
+              placeholderTextColor={Colors.textPlaceholder}
+              editable={!loading}
+              returnKeyType="done"
+              onSubmitEditing={handleActivate}
+            />
+          </View>
+
+          {/* Activate Button */}
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleActivate}
+            activeOpacity={0.8}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color={Colors.surface} />
+            ) : (
+              <Text style={styles.buttonText}>Access Tenders</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Hint Text */}
+          <Text style={styles.hint}>
+            Enter the 15-character key provided by your administrator
+          </Text>
         </View>
-        {/* ── END cardWrapper ─────────────────────────────────────────────── */}
-
       </KeyboardAvoidingView>
-
     </View>
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Styles
-// ─────────────────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-
-  // ── Full-screen navy container ──────────────────────────────────────────────
   container: {
     flex: 1,
-    backgroundColor: Colors.primary,   // #062E52
-    overflow: 'hidden',
+    backgroundColor: Colors.primary,
   },
-
-  // ── Background decorative arcs ─────────────────────────────────────────────
-  //    Large circles placed partially off-screen, stroke only, low opacity.
-  //    Matches the curved lines visible in Figma login screen.
-  arcTopRight: {
-    position:     'absolute',
-    width:        ARC_LG,
-    height:       ARC_LG,
-    borderRadius: ARC_LG / 2,
-    borderWidth:  1,
-    borderColor:  'rgba(255, 255, 255, 0.14)',
-    top:          -(ARC_LG * 0.42),
-    right:        -(ARC_LG * 0.38),
-  },
-
-  arcBottomLeft: {
-    position:     'absolute',
-    width:        ARC_MD,
-    height:       ARC_MD,
-    borderRadius: ARC_MD / 2,
-    borderWidth:  1,
-    borderColor:  'rgba(255, 255, 255, 0.09)',
-    bottom:       -(ARC_MD * 0.52),
-    left:         -(ARC_MD * 0.28),
-  },
-
-  // ── Keyboard-aware flex wrapper ─────────────────────────────────────────────
   keyboardAvoid: {
     flex: 1,
     justifyContent: 'center',
-    alignItems:     'center',
-    paddingVertical: Spacing.xxl,
+    alignItems: 'center',
+    padding: 20,
   },
-
-  // ── Card wrapper (relative so avatar can use absolute positioning) ──────────
-  cardWrapper: {
-    width:    CARD_WIDTH,
-    position: 'relative',
-    // Extra top margin so the avatar (which sits above the card) is visible
-    marginTop: AVATAR_SIZE / 2,
-  },
-
-  // ── Semi-transparent glass card ─────────────────────────────────────────────
-  //    Figma: fill #EBECED at 20% opacity, border 0.7px gradient #062E52→#FFFFFF
-  //    RN can't do gradient borders natively → approximate with white at 35% alpha
   card: {
-    width:            '100%',
-    borderRadius:     CARD_RADIUS,
-    backgroundColor:  'rgba(235, 236, 237, 0.18)',  // #EBECED at ~18–20%
-    borderWidth:      0.7,
-    borderColor:      'rgba(255, 255, 255, 0.35)',
-    paddingHorizontal: Spacing.lg,
-    paddingTop:        Spacing.xxl,                 // headroom for "Welcome" text
-    paddingBottom:     Spacing.xl,
-    alignItems:        'center',
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
-
-  // ── Welcome title ───────────────────────────────────────────────────────────
-  welcomeText: {
-    fontFamily:  FontFamily.bold,
-    fontWeight:  FontWeight.bold,
-    fontSize:    Typography.h3.fontSize,            // 28 — closest to Figma
-    lineHeight:  Typography.h3.lineHeight,
-    color:       Colors.textInverse,                // white
-    textAlign:   'center',
-    marginBottom: Spacing.lg,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    marginBottom: 8,
   },
-
-  // ── Input field group ───────────────────────────────────────────────────────
+  subtitle: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
   fieldGroup: {
-    width:        '100%',
-    marginBottom:  Spacing.md,
+    width: '100%',
+    marginBottom: 16,
   },
-
-  fieldLabel: {
-    fontFamily:   FontFamily.regular,
-    fontSize:     Typography.bodySm.fontSize,       // 12
-    color:        Colors.textInverse,               // white
-    marginBottom:  Spacing.xs,
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.textPrimary,
+    marginBottom: 6,
   },
-
   input: {
-    width:            '100%',
-    height:            InputTheme.heightSm,          // 44
-    backgroundColor:   Colors.surface,              // white fill
-    borderRadius:      Radius.input,                // 10
-    borderWidth:       InputTheme.borderWidth,       // 1.5
-    borderColor:       Colors.borderDefault,
-    paddingHorizontal: InputTheme.paddingH,          // 12
-    fontFamily:        FontFamily.regular,
-    fontSize:          Typography.inputText.fontSize,
-    color:             Colors.inputText,
+    width: '100%',
+    height: 48,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: 14,
+    fontSize: 14,
+    color: Colors.textPrimary,
   },
-
-  // ── Activate App button — white capsule ────────────────────────────────────
-  activateButton: {
-    marginTop:      Spacing.lg,
-    width:          '100%',
-    height:          Layout.buttonHeight,            // 48
-    borderRadius:    Radius.full,                   // full capsule — 9999
-    backgroundColor: Colors.surface,               // white
-    alignItems:      'center',
-    justifyContent:  'center',
-    ...Shadow.button,
+  button: {
+    width: '100%',
+    height: 50,
+    backgroundColor: Colors.primary,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
   },
-
-  activateButtonText: {
-    fontFamily:  FontFamily.semiBold,
-    fontWeight:  FontWeight.semiBold,
-    fontSize:    Typography.buttonText.fontSize,    // 14
-    letterSpacing: Typography.buttonText.letterSpacing,
-    color:       Colors.primary,                    // navy text on white button
+  buttonDisabled: {
+    opacity: 0.7,
   },
-
-  // ── Avatar circle — overlaps card top-right corner ─────────────────────────
-  //    Figma: 74×75, fill #D8CCB6 at 50% — warm beige/tan
-  avatarCircle: {
-    position:        'absolute',
-    top:              AVATAR_TOP,
-    right:            AVATAR_RIGHT,
-    width:            AVATAR_SIZE,
-    height:           AVATAR_SIZE,
-    borderRadius:     Radius.avatar,               // full circle — 9999
-    backgroundColor:  'rgba(216, 204, 182, 0.85)', // #D8CCB6 at ~50%
-    alignItems:       'center',
-    justifyContent:   'center',
+  buttonText: {
+    color: Colors.surface,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  hint: {
+    fontSize: 11,
+    color: Colors.textPlaceholder,
+    textAlign: 'center',
+    marginTop: 16,
   },
 });
 
