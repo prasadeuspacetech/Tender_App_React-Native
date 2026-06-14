@@ -28,7 +28,7 @@ import {
   initialWindowMetrics,
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
-import ActivationScreen from '../screens/splash/Activationscreen';
+import ActivationScreen from '../screens/ActivationScreen';
 import GradientSplashScreen from '../screens/splash/Gradientsplashscreen';
 import LoaderSplashScreen from '../screens/splash/Loadersplashscreen';
 import BottomTabNavigator from './BottomTabNavigator';
