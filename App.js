@@ -1,43 +1,53 @@
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+
+import SubscriptionExpiryHandler from './src/components/auth/SubscriptionExpiryHandler';
 import { initDatabase } from './src/db/database';
-import ActivationScreen from './src/screens/ActivationScreen';
-import DashboardScreen from './src/screens/Dashboard/DashboardScreen';
+import { initI18n } from './src/i18n';
+import { configureIosEdgeToEdge } from './src/navigation/configureIosEdgeToEdge';
+import { navigationRef } from './src/navigation/navigationRef';
+import RootNavigator from './src/navigation/RootNavigator';
 
-const Stack = createNativeStackNavigator();
-
+/**
+ * Production app entry (expo/AppEntry → App.js).
+ * React Navigation root — not expo-router file-based routing.
+ */
 export default function App() {
-  const [dbReady, setDbReady] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const setupDatabase = async () => {
-      try {
-        await initDatabase();
-        console.log('Database initialized');
-      } catch (error) {
-        console.error('Database error:', error);
-      }
-      setDbReady(true);
-    };
-    setupDatabase();
+    Promise.all([initDatabase(), initI18n()])
+      .then(() => {
+        configureIosEdgeToEdge();
+        setReady(true);
+      })
+      .catch((error) => {
+        console.error('[App] Startup failed:', error);
+        configureIosEdgeToEdge();
+        setReady(true);
+      });
   }, []);
 
-  if (!dbReady) {
+  if (!ready) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Initializing...</Text>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#FFFFFF',
+        }}
+      >
+        <ActivityIndicator size="large" color="#062E52" />
       </View>
     );
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Activation" component={ActivationScreen} />
-        <Stack.Screen name="Dashboard" component={DashboardScreen} />
-      </Stack.Navigator>
+    <NavigationContainer ref={navigationRef}>
+      <RootNavigator />
+      <SubscriptionExpiryHandler />
     </NavigationContainer>
   );
 }

@@ -6,11 +6,12 @@ import {
   View,
   Text,
   TouchableOpacity,
-  TouchableWithoutFeedback,
+  Pressable,
   Animated,
   StyleSheet,
   Dimensions,
 } from 'react-native';
+import { FigmaMenuIcon, FIGMA_HEADER_ICON_SIZE } from './icons/HeaderIcons';
 import {
   initialWindowMetrics,
   SafeAreaProvider,
@@ -79,17 +80,30 @@ const DrawerPanel = ({
     insets.top + (theme.Spacing?.sm ?? 8);
 
   return (
-    <>
-      <TouchableWithoutFeedback onPress={onClose} accessible={false}>
-        <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]} />
-      </TouchableWithoutFeedback>
+    <View style={styles.modalRoot}>
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.overlay, { opacity: overlayOpacity }]}
+      />
 
       <Animated.View
         style={[styles.drawer, { transform: [{ translateX }] }, style]}
       >
         <View style={styles.header}>
           <View style={[styles.headerContent, { paddingTop: headerTopPadding }]}>
-            <Text style={styles.headerTitle}>{t('drawer.title')}</Text>
+            <View style={styles.headerTitleRow}>
+              <TouchableOpacity
+                onPress={onClose}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                activeOpacity={0.65}
+                accessibilityRole="button"
+                accessibilityLabel={t('accessibility.closeMenu')}
+                style={styles.headerMenuButton}
+              >
+                <FigmaMenuIcon color={ITEM_TEXT} size={FIGMA_HEADER_ICON_SIZE} />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>{t('drawer.title')}</Text>
+            </View>
             <View style={styles.headerDivider} />
           </View>
         </View>
@@ -113,7 +127,18 @@ const DrawerPanel = ({
           ))}
         </View>
       </Animated.View>
-    </>
+
+      {/* Touch layer above drawer — flex row so Android gets a real hit target */}
+      <View style={styles.dismissLayer} pointerEvents="box-none">
+        <View style={styles.dismissDrawerSpacer} pointerEvents="none" />
+        <Pressable
+          style={styles.dismissPressable}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel={t('accessibility.closeMenu')}
+        />
+      </View>
+    </View>
   );
 };
 
@@ -173,7 +198,7 @@ const SettingsDrawer = ({
         initialWindowMetrics supplies correct insets on the first open — the root
         provider alone is not reliable inside Modal on iOS.
       */}
-      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <SafeAreaProvider style={styles.modalRoot} initialMetrics={initialWindowMetrics}>
         <DrawerPanel
           onClose={onClose}
           onBackupPress={onBackupPress}
@@ -196,6 +221,23 @@ const ITEM_TEXT = theme.Colors.white ?? '#FFFFFF';
 const DIVIDER = 'rgba(255,255,255,0.12)';
 
 const styles = StyleSheet.create({
+  modalRoot: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  dismissLayer: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: 'row',
+    zIndex: 20,
+    elevation: 20,
+  },
+  dismissDrawerSpacer: {
+    width: DRAWER_WIDTH,
+  },
+  dismissPressable: {
+    flex: 1,
+  },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.45)',
@@ -223,13 +265,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.Spacing?.lg ?? 20,
     paddingBottom: theme.Spacing?.md ?? 16,
   },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.Spacing?.sm ?? 8,
+  },
+  headerMenuButton: {
+    marginRight: theme.Spacing?.sm ?? 8,
+  },
   headerTitle: {
     color: ITEM_TEXT,
     fontSize: theme.FontSize?.xl ?? 20,
     fontWeight: theme.FontWeight?.bold ?? '700',
     fontFamily: theme.FontFamily?.bold ?? undefined,
     letterSpacing: 0.3,
-    marginBottom: theme.Spacing?.sm ?? 8,
   },
   headerDivider: {
     height: 1,

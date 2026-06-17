@@ -3,21 +3,16 @@ import { Platform, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Dropdown as ElementDropdown } from 'react-native-element-dropdown';
 
+import { FINANCIAL_YEAR_HEADER_OPTIONS } from '../../constants/dropdownOptions';
 import {
   dismissKeyboardAfterClose,
   dismissKeyboardBeforeOverlay,
 } from '../../utils/keyboardDismiss';
 
-const DEFAULT_OPTIONS = [
-  { label: 'FY 2025-26', value: '2025-26' },
-  { label: 'FY 2024-25', value: '2024-25' },
-  { label: 'FY 2023-24', value: '2023-24' },
-];
-
 const FinancialYearDropdown = ({
   value = '2025-26',
   onChange,
-  options = DEFAULT_OPTIONS,
+  options = FINANCIAL_YEAR_HEADER_OPTIONS,
   style,
 }) => {
   const [isOpen, setIsOpen] = useState(false);

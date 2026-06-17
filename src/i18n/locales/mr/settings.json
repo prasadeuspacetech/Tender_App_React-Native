@@ -25,6 +25,8 @@
     "savedMessage": "आर्थिक वर्ष बजेट यशस्वीरित्या अद्यतनित केले.",
     "invalidTitle": "अवैध रक्कम",
     "invalidMessage": "कृपया वैध बजेट रक्कम प्रविष्ट करा.",
+    "selectYearTitle": "आर्थिक वर्ष निवडा",
+    "selectYearMessage": "जतन करण्यापूर्वी कृपया आर्थिक वर्ष निवडा.",
     "errorTitle": "जतन अयशस्वी",
     "errorMessage": "बजेट जतन करता आले नाही. कृपया पुन्हा प्रयत्न करा."
   },
@@ -39,7 +41,18 @@
   "subscription": {
     "title": "सदस्यता स्थिती",
     "active": "सक्रिय",
-    "expires": "जून २०२६ पर्यंत वैध"
+    "inactive": "सक्रिय नाही",
+    "expiresOn": "{{date}} पर्यंत वैध",
+    "expiredOn": "{{date}} रोजी कालबाह्य",
+    "timeLeft": "{{time}}"
+  },
+  "logout": {
+    "title": "लॉग आउट",
+    "subtitle": "या डिव्हाइसवरील सत्र समाप्त करा",
+    "confirmTitle": "लॉग आउट",
+    "confirmMessage": "तुम्हाला खात्रीने लॉग आउट करायचे आहे का?",
+    "confirmButton": "लॉग आउट",
+    "cancel": "रद्द करा"
   },
   "help": {
     "title": "मदत आणि मार्गदर्शक",

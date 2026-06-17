@@ -28,11 +28,11 @@ import {
   initialWindowMetrics,
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
-import ActivationScreen from '../screens/ActivationScreen';
+import ActivationScreen from '../screens/splash/ActivationScreen';
 import GradientSplashScreen from '../screens/splash/Gradientsplashscreen';
 import LoaderSplashScreen from '../screens/splash/Loadersplashscreen';
-import BottomTabNavigator from './BottomTabNavigator';
-import GeneralCorrespondenceScreen from '../screens/GeneralCorrespondence/GeneralCorrespondenceScreen';
+import ProtectedGeneralCorrespondence from './ProtectedGeneralCorrespondence';
+import ProtectedMainApp from './ProtectedMainApp';
 import { Colors } from '../theme';
 
 const Root = createNativeStackNavigator();
@@ -55,7 +55,7 @@ const RootNavigator = () => (
       {/* ── Main app ────────────────────────────────────────────────────────── */}
       <Root.Screen
         name="MainApp"
-        component={BottomTabNavigator}
+        component={ProtectedMainApp}
         options={
           Platform.OS === 'ios'
             ? {
@@ -69,7 +69,7 @@ const RootNavigator = () => (
 
       <Root.Screen
         name="GeneralCorrespondence"
-        component={GeneralCorrespondenceScreen}
+        component={ProtectedGeneralCorrespondence}
         options={{ animation: 'slide_from_right' }}
       />
     </Root.Navigator>

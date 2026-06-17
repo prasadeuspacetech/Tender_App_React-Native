@@ -15,6 +15,7 @@
     "help": "Help"
   },
   "accessibility": {
-    "openMenu": "Open menu"
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   }
 }

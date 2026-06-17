@@ -14,18 +14,36 @@ import {
 import { localizeDropdownOptions } from '../../i18n/workflowLabels';
 import theme from '../../theme';
 
+/** Neutral default — not stored in SQLite. */
+const FY_NONE = '';
+
+const FY_PLACEHOLDER_OPTION = { label: '-', value: FY_NONE };
+
 const FinancialYearBudgetSection = () => {
   const { t } = useTranslation(['settings', 'workflow']);
-  const [financialYear, setFinancialYear] = useState('2025-26');
+  const [financialYear, setFinancialYear] = useState(FY_NONE);
   const [budgetAmount, setBudgetAmount] = useState('');
   const [saving, setSaving] = useState(false);
 
   const fyOptions = useMemo(
-    () => localizeDropdownOptions(FINANCIAL_YEAR_OPTIONS, t),
+    () => [
+      FY_PLACEHOLDER_OPTION,
+      ...localizeDropdownOptions(FINANCIAL_YEAR_OPTIONS, t),
+    ],
     [t],
   );
 
+  const resetToDefault = useCallback(() => {
+    setFinancialYear(FY_NONE);
+    setBudgetAmount('');
+  }, []);
+
   const loadBudgetForYear = useCallback((fy) => {
+    if (!fy) {
+      setBudgetAmount('');
+      return;
+    }
+
     try {
       const row = getFinancialYearBudget(fy);
       setBudgetAmount(
@@ -41,17 +59,26 @@ const FinancialYearBudgetSection = () => {
 
   useFocusEffect(
     useCallback(() => {
-      loadBudgetForYear(financialYear);
-    }, [financialYear, loadBudgetForYear]),
+      resetToDefault();
+    }, [resetToDefault]),
   );
 
   const handleYearChange = (value) => {
-    setFinancialYear(value);
-    loadBudgetForYear(value);
+    const nextYear = value ?? FY_NONE;
+    setFinancialYear(nextYear);
+    loadBudgetForYear(nextYear);
   };
 
   const handleSave = () => {
     if (saving) return;
+
+    if (!financialYear) {
+      Alert.alert(
+        t('settings:fyBudget.selectYearTitle'),
+        t('settings:fyBudget.selectYearMessage'),
+      );
+      return;
+    }
 
     const amount = parseFloat(String(budgetAmount).replace(/[^0-9.]/g, ''));
     if (!Number.isFinite(amount) || amount < 0) {
@@ -63,6 +90,7 @@ const FinancialYearBudgetSection = () => {
     try {
       upsertFinancialYearBudget(financialYear, amount);
       Alert.alert(t('settings:fyBudget.savedTitle'), t('settings:fyBudget.savedMessage'));
+      resetToDefault();
     } catch (error) {
       console.error('[FinancialYearBudgetSection] save failed:', error);
       Alert.alert(t('settings:fyBudget.errorTitle'), t('settings:fyBudget.errorMessage'));

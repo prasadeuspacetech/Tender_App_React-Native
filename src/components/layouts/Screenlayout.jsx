@@ -10,7 +10,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import BackButton from '../../components/Backbutton';
 import NotificationButton from '../../components/Notificationbutton';
 import { FigmaMenuIcon, FIGMA_HEADER_ICON_SIZE } from '../../components/icons/HeaderIcons';
@@ -50,7 +50,6 @@ const ScreenLayout = ({
   contentStyle,
 }) => {
   const { t } = useTranslation('navigation');
-  const insets = useSafeAreaInsets();
 
   // ─── Header ───────────────────────────────────────────────────────────────
   const renderHeader = () => {
@@ -161,25 +160,6 @@ const ScreenLayout = ({
   ) : (
     rootContent
   );
-
-  // iOS: extend navy wrapper into the status-bar inset (parent nav leaves white above).
-  // marginTop pulls layout up; paddingTop keeps header content below Dynamic Island.
-  // Android: unchanged SafeAreaView top inset behaviour.
-  if (safeArea && Platform.OS === 'ios') {
-    return (
-      <View
-        style={[
-          styles.flex,
-          styles.safeArea,
-          // Keep edge-to-edge navy behind the status area, but don't over-shift header
-          // content down by the full safe-area inset.
-          { marginTop: -insets.top, paddingTop: Math.max(0, insets.top - 8) },
-        ]}
-      >
-        {withKeyboard}
-      </View>
-    );
-  }
 
   if (safeArea) {
     return (

@@ -25,6 +25,8 @@
     "savedMessage": "Financial year budget updated successfully.",
     "invalidTitle": "Invalid amount",
     "invalidMessage": "Please enter a valid budget amount.",
+    "selectYearTitle": "Select financial year",
+    "selectYearMessage": "Please select a financial year before saving.",
     "errorTitle": "Save failed",
     "errorMessage": "Could not save the budget. Please try again."
   },
@@ -39,7 +41,18 @@
   "subscription": {
     "title": "Subscription Status",
     "active": "Active",
-    "expires": "Expires Jun 2026"
+    "inactive": "Not activated",
+    "expiresOn": "Expires {{date}}",
+    "expiredOn": "Expired on {{date}}",
+    "timeLeft": "{{time}}"
+  },
+  "logout": {
+    "title": "Log Out",
+    "subtitle": "End this session on this device",
+    "confirmTitle": "Log Out",
+    "confirmMessage": "Are you sure you want to log out?",
+    "confirmButton": "Log Out",
+    "cancel": "Cancel"
   },
   "help": {
     "title": "Help & Guide",

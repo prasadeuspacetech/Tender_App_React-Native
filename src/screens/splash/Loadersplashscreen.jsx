@@ -7,6 +7,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import useAuthStore from '../../store/useAuthStore';
 import {
   Colors,
   FontFamily,
@@ -36,11 +37,33 @@ const LoaderSplashScreen = ({ navigation }) => {
   const { t } = useTranslation('auth');
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigation.replace('Activation');   // ← goes to ActivationScreen next
-    }, 1500);
+    let cancelled = false;
 
-    return () => clearTimeout(timer);
+    const navigateNext = () => {
+      if (cancelled) return;
+      const isValid = useAuthStore.getState().isSessionValid();
+      navigation.replace(isValid ? 'MainApp' : 'Activation');
+    };
+
+    const waitForHydration = () =>
+      new Promise((resolve) => {
+        if (useAuthStore.persist.hasHydrated()) {
+          resolve();
+          return;
+        }
+        const unsub = useAuthStore.persist.onFinishHydration(() => {
+          unsub();
+          resolve();
+        });
+      });
+
+    const minSplash = new Promise((resolve) => setTimeout(resolve, 1500));
+
+    Promise.all([minSplash, waitForHydration()]).then(navigateNext);
+
+    return () => {
+      cancelled = true;
+    };
   }, [navigation]);
 
   return (

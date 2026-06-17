@@ -15,6 +15,7 @@
     "help": "मदत"
   },
   "accessibility": {
-    "openMenu": "मेनू उघडा"
+    "openMenu": "मेनू उघडा",
+    "closeMenu": "मेनू बंद करा"
   }
 }

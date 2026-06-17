@@ -121,7 +121,13 @@ export const FINANCIAL_YEAR_OPTIONS = [
   { label: '2024-25', value: '2024-25' },
   { label: '2025-26', value: '2025-26' },
   { label: '2026-27', value: '2026-27' },
+  { label: '2027-28', value: '2027-28' },
 ];
+
+/** Dashboard / Reports header dropdown — newest FY first, display prefix only. */
+export const FINANCIAL_YEAR_HEADER_OPTIONS = [...FINANCIAL_YEAR_OPTIONS]
+  .reverse()
+  .map((opt) => ({ label: `FY ${opt.value}`, value: opt.value }));
 
 export const WARD_OPTIONS = [
   { label: 'Ward 1',  value: 'Ward 1'  },

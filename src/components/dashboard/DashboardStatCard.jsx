@@ -1,14 +1,17 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 
 import { dashboardCardBorderStyle } from './dashboardCardBorder';
 
+const RING_SIZE = 72;
+
 const ProgressRing = ({
   percent = 0,
-  size = 72,
+  size = RING_SIZE,
   strokeWidth = 7,
   color = '#9CA3AF',
   trackColor = '#E5E7EB',
+  children,
 }) => {
   const half = size / 2;
   const deg = (Math.min(Math.max(percent, 0), 100) / 100) * 360;
@@ -77,6 +80,14 @@ const ProgressRing = ({
           />
         </View>
       )}
+      {children ? (
+        <View
+          pointerEvents="none"
+          style={[styles.centerSlot, { width: size, height: size }]}
+        >
+          {children}
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -91,25 +102,22 @@ const DashboardStatCard = ({
   style,
 }) => (
   <View style={[styles.card, style]}>
-    <View style={styles.ringWrap}>
-      <ProgressRing
-        percent={percent}
-        size={72}
-        strokeWidth={7}
-        color={ringColor}
-        trackColor={trackColor}
-      />
-      <View style={styles.valueOverlay}>
-        <Text
-          style={[styles.value, { fontSize: valueFontSize }]}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.65}
-        >
-          {value}
-        </Text>
-      </View>
-    </View>
+    <ProgressRing
+      percent={percent}
+      size={RING_SIZE}
+      strokeWidth={7}
+      color={ringColor}
+      trackColor={trackColor}
+    >
+      <Text
+        style={[styles.value, { fontSize: valueFontSize }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.65}
+      >
+        {value}
+      </Text>
+    </ProgressRing>
     <Text style={styles.label} numberOfLines={1}>
       {label}
     </Text>
@@ -128,14 +136,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  ringWrap: {
-    width: 72,
-    height: 72,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  valueOverlay: {
-    ...StyleSheet.absoluteFillObject,
+  centerSlot: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 2,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
@@ -144,6 +149,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1A1A1A',
     textAlign: 'center',
+    ...(Platform.OS === 'android' ? { includeFontPadding: false } : null),
   },
   label: {
     fontSize: 13,

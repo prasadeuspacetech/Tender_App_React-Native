@@ -1,7 +1,7 @@
 // General Correspondence — standalone module (SQLite-backed list + add/delete)
 
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -88,7 +88,8 @@ const CorrespondenceCard = ({ item, onDelete, onPreviewDocument, t }) => {
   );
 };
 
-const GeneralCorrespondenceScreen = ({ navigation }) => {
+const GeneralCorrespondenceScreen = () => {
+  const navigation = useNavigation();
   const { t } = useTranslation(['correspondence', 'common']);
   const { previewAttachment, AttachmentPreviewModals } = useAttachmentPreview();
   const [entries, setEntries] = useState([]);
@@ -181,7 +182,11 @@ const GeneralCorrespondenceScreen = ({ navigation }) => {
         showBack
         showNotification={false}
         scrollable={false}
-        onBackPress={() => navigation.goBack()}
+        onBackPress={() => {
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          }
+        }}
         headerRight={renderAddButton()}
         contentStyle={styles.screenContent}
       >
