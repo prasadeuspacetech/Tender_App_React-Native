@@ -1,7 +1,7 @@
 // src/screens/AddWork/workflow/ContractorAssignmentScreen.jsx
 // Step 6 of 10: Contractor Assignment
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
@@ -24,20 +24,20 @@ import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
 // ─── State & data ─────────────────────────────────────────────────────────────
 import { CONTRACTOR_ESTIMATE_OPTIONS } from '../../../constants/dropdownOptions';
 import {
-  getContractorByWorkId,
-  mapContractorRowToForm,
-  normalizeEstimateType,
-  upsertContractorAssignment,
+    getContractorByWorkId,
+    mapContractorRowToForm,
+    normalizeEstimateType,
+    upsertContractorAssignment,
 } from '../../../db/repositories/contractorRepository';
 import { getTenderAmountByWorkId } from '../../../db/repositories/tendersRepository';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import {
-  getStepProgressDescription,
-  getStepScreenTitle,
-  getStepTitle,
-  localizeDropdownOptions,
+    getStepProgressDescription,
+    getStepScreenTitle,
+    getStepTitle,
+    localizeDropdownOptions,
 } from '../../../i18n/workflowLabels';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -47,8 +47,8 @@ const SCREEN_TYPE = 'contractorAssignment';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 import {
-  TOTAL_WORKFLOW_STEPS,
-  WORKFLOW_ROUTES,
+    TOTAL_WORKFLOW_STEPS,
+    WORKFLOW_ROUTES,
 } from '../../../constants/WorkflowSteps';
 
 import theme from '../../../theme';
@@ -220,21 +220,21 @@ const ContractorAssignmentScreen = ({ navigation }) => {
       keyboardAware
       onBackPress={() => navigation.goBack()}
     >
-      <WorkflowProgress
-        currentStep={6}
-        totalSteps={TOTAL_WORKFLOW_STEPS}
-        showPercentage
-        style={styles.progress}
-      />
-
-      <ProgressSlot
-        step={6}
-        title={getStepTitle(SCREEN_TYPE, t)}
-        description={getStepProgressDescription(SCREEN_TYPE, t)}
-        screenType="contractorAssignment"
-      />
-
       <HelpTooltipScope>
+        <WorkflowProgress
+          currentStep={6}
+          totalSteps={TOTAL_WORKFLOW_STEPS}
+          showPercentage
+          style={styles.progress}
+        />
+
+        <ProgressSlot
+          step={6}
+          title={getStepTitle(SCREEN_TYPE, t)}
+          description={getStepProgressDescription(SCREEN_TYPE, t)}
+          screenType="contractorAssignment"
+        />
+
         <View style={styles.form}>
 
           <Inputboxfield
@@ -317,15 +317,15 @@ const ContractorAssignmentScreen = ({ navigation }) => {
           />
 
         </View>
-      </HelpTooltipScope>
 
-      <PrimaryButton
-        title={t('common.saveAndContinue')}
-        onPress={handleSave}
-        loading={isSaving}
-        fullWidth
-        style={styles.cta}
-      />
+        <PrimaryButton
+          title={t('common.saveAndContinue')}
+          onPress={handleSave}
+          loading={isSaving}
+          fullWidth
+          style={styles.cta}
+        />
+      </HelpTooltipScope>
 
     </ScreenLayout>
   );

@@ -1,8 +1,8 @@
 // Step 11: Bill Submission (final workflow step)
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Alert, StyleSheet, View } from 'react-native';
 
 import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import Inputboxfield from '../../../components/Inputboxfield';
@@ -14,9 +14,9 @@ import PrimaryButton from '../../../components/PrimaryButton';
 import BillDocumentUpload from '../../../components/workflow/BillDocumentUpload';
 import BillSubmissionToggle from '../../../components/workflow/BillSubmissionToggle';
 import {
-  getStepByRoute,
-  TOTAL_WORKFLOW_STEPS,
-  WORKFLOW_ROUTES,
+    getStepByRoute,
+    TOTAL_WORKFLOW_STEPS,
+    WORKFLOW_ROUTES,
 } from '../../../constants/WorkflowSteps';
 import {
     getBillSubmissionByWorkId,
@@ -26,15 +26,15 @@ import {
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import {
+    getStepProgressDescription,
+    getStepScreenTitle,
+    getStepTitle,
+} from '../../../i18n/workflowLabels';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
 import theme from '../../../theme';
 import { formatDateForStorage } from '../../../utils/dateFormat';
-import {
-  getStepProgressDescription,
-  getStepScreenTitle,
-  getStepTitle,
-} from '../../../i18n/workflowLabels';
 
 const SCREEN_TYPE = 'billSubmission';
 const STEP = getStepByRoute(WORKFLOW_ROUTES.BILL_SUBMISSION)?.id ?? 11;
@@ -144,21 +144,21 @@ const BillSubmissionWorkflowScreen = ({ navigation }) => {
       keyboardAware
       onBackPress={() => navigation.goBack()}
     >
-      <WorkflowProgress
-        currentStep={STEP}
-        totalSteps={TOTAL_WORKFLOW_STEPS}
-        showPercentage
-        style={styles.progress}
-      />
-      <ProgressSlot
-        step={STEP}
-        title={getStepTitle(SCREEN_TYPE, t)}
-        description={getStepProgressDescription(SCREEN_TYPE, t)}
-        screenType="billSubmission"
-        statusType="error"
-      />
-
       <HelpTooltipScope>
+        <WorkflowProgress
+          currentStep={STEP}
+          totalSteps={TOTAL_WORKFLOW_STEPS}
+          showPercentage
+          style={styles.progress}
+        />
+        <ProgressSlot
+          step={STEP}
+          title={getStepTitle(SCREEN_TYPE, t)}
+          description={getStepProgressDescription(SCREEN_TYPE, t)}
+          screenType="billSubmission"
+          statusType="error"
+        />
+
         <View style={styles.form}>
           <BillSubmissionToggle
             value={form.bill_submitted}
@@ -197,15 +197,15 @@ const BillSubmissionWorkflowScreen = ({ navigation }) => {
             onChange={(path) => updateField('bill_document', path, { immediate: true })}
           />
         </View>
-      </HelpTooltipScope>
 
-      <PrimaryButton
-        title={t('common.submit')}
-        loading={isSaving}
-        fullWidth
-        style={styles.cta}
-        onPress={handleSubmit}
-      />
+        <PrimaryButton
+          title={t('common.submit')}
+          loading={isSaving}
+          fullWidth
+          style={styles.cta}
+          onPress={handleSubmit}
+        />
+      </HelpTooltipScope>
     </ScreenLayout>
   );
 };

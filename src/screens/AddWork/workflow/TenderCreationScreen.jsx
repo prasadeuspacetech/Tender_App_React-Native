@@ -1,7 +1,7 @@
 // src/screens/AddWork/workflow/TenderCreationScreen.jsx
 // Step 4 of 10: Tender Creation
 
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
@@ -22,9 +22,9 @@ import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import {
-  getStepProgressDescription,
-  getStepScreenTitle,
-  getStepTitle,
+    getStepProgressDescription,
+    getStepScreenTitle,
+    getStepTitle,
 } from '../../../i18n/workflowLabels';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -155,20 +155,20 @@ const TenderCreationScreen = ({ navigation }) => {
       keyboardAware
       onBackPress={() => navigation.goBack()}
     >
-      <WorkflowProgress
-        currentStep={4}
-        totalSteps={TOTAL_WORKFLOW_STEPS}
-        showPercentage
-        style={styles.progress}
-      />
-      <ProgressSlot
-        step={4}
-        title={getStepTitle(SCREEN_TYPE, t)}
-        description={getStepProgressDescription(SCREEN_TYPE, t)}
-        screenType="tenderCreation"
-      />
-
       <HelpTooltipScope>
+        <WorkflowProgress
+          currentStep={4}
+          totalSteps={TOTAL_WORKFLOW_STEPS}
+          showPercentage
+          style={styles.progress}
+        />
+        <ProgressSlot
+          step={4}
+          title={getStepTitle(SCREEN_TYPE, t)}
+          description={getStepProgressDescription(SCREEN_TYPE, t)}
+          screenType="tenderCreation"
+        />
+
         <View style={styles.form}>
 
           <Inputboxfield
@@ -252,15 +252,15 @@ const TenderCreationScreen = ({ navigation }) => {
           />
 
         </View>
-      </HelpTooltipScope>
 
-      <PrimaryButton
-        title={t('common.saveAndContinue')}
-        loading={isSaving}
-        fullWidth
-        style={styles.cta}
-        onPress={handleSave}
-      />
+        <PrimaryButton
+          title={t('common.saveAndContinue')}
+          loading={isSaving}
+          fullWidth
+          style={styles.cta}
+          onPress={handleSave}
+        />
+      </HelpTooltipScope>
     </ScreenLayout>
   );
 };

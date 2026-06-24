@@ -1,6 +1,6 @@
 // Step 9: Work Progress Tracking
 
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, View } from 'react-native';
 
@@ -14,17 +14,17 @@ import SiteNotes from '../../../components/workflow/SiteNotes';
 import SitePhotosUpload from '../../../components/workflow/SitePhotosUpload';
 import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
 import {
-  getWorkProgressByWorkId,
-  mapWorkProgressRowToForm,
-  upsertWorkProgress,
+    getWorkProgressByWorkId,
+    mapWorkProgressRowToForm,
+    upsertWorkProgress,
 } from '../../../db/repositories/workProgressRepository';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import {
-  getStepProgressDescription,
-  getStepScreenTitle,
-  getStepTitle,
+    getStepProgressDescription,
+    getStepScreenTitle,
+    getStepTitle,
 } from '../../../i18n/workflowLabels';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -131,20 +131,20 @@ const WorkProgressTrackingScreen = ({ navigation }) => {
       keyboardAware
       onBackPress={() => navigation.goBack()}
     >
-      <WorkflowProgress
-        currentStep={STEP}
-        totalSteps={TOTAL_WORKFLOW_STEPS}
-        showPercentage
-        style={styles.progress}
-      />
-      <ProgressSlot
-        step={STEP}
-        title={getStepTitle(SCREEN_TYPE, t)}
-        description={getStepProgressDescription(SCREEN_TYPE, t)}
-        screenType="workProgress"
-      />
-
       <HelpTooltipScope>
+        <WorkflowProgress
+          currentStep={STEP}
+          totalSteps={TOTAL_WORKFLOW_STEPS}
+          showPercentage
+          style={styles.progress}
+        />
+        <ProgressSlot
+          step={STEP}
+          title={getStepTitle(SCREEN_TYPE, t)}
+          description={getStepProgressDescription(SCREEN_TYPE, t)}
+          screenType="workProgress"
+        />
+
         <View style={styles.content}>
 
           <FormToggleField
@@ -172,15 +172,15 @@ const WorkProgressTrackingScreen = ({ navigation }) => {
             onChange={(photos) => updateField('site_photos', photos, { immediate: true })}
           />
         </View>
-      </HelpTooltipScope>
 
-      <PrimaryButton
-        title={t('common.saveAndContinue')}
-        loading={isSaving}
-        fullWidth
-        style={styles.cta}
-        onPress={handleSave}
-      />
+        <PrimaryButton
+          title={t('common.saveAndContinue')}
+          loading={isSaving}
+          fullWidth
+          style={styles.cta}
+          onPress={handleSave}
+        />
+      </HelpTooltipScope>
     </ScreenLayout>
   );
 };

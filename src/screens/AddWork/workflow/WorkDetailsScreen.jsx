@@ -1,7 +1,7 @@
 // src/screens/AddWork/workflow/WorkDetailsScreen.jsx
 // Step 1 of 10: Work Details
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, View } from 'react-native';
 
@@ -14,18 +14,18 @@ import WorkflowProgress from '../../../components/layouts/Workflowprogress';
 import PrimaryButton from '../../../components/PrimaryButton';
 import { FINANCIAL_YEAR_OPTIONS } from '../../../constants/dropdownOptions';
 import {
-  TOTAL_WORKFLOW_STEPS,
-  WORKFLOW_ROUTES,
+    TOTAL_WORKFLOW_STEPS,
+    WORKFLOW_ROUTES,
 } from '../../../constants/WorkflowSteps';
 import { getWorkById, upsertWorkDetails } from '../../../db/repositories/worksRepository';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import {
-  getStepProgressDescription,
-  getStepScreenTitle,
-  getStepTitle,
-  localizeDropdownOptions,
+    getStepProgressDescription,
+    getStepScreenTitle,
+    getStepTitle,
+    localizeDropdownOptions,
 } from '../../../i18n/workflowLabels';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
@@ -168,21 +168,21 @@ const WorkDetailsScreen = ({ navigation }) => {
       keyboardAware
       onBackPress={() => navigation.goBack()}
     >
-      <WorkflowProgress
-        currentStep={1}
-        totalSteps={TOTAL_WORKFLOW_STEPS}
-        showPercentage
-        style={styles.progress}
-      />
-
-      <ProgressSlot
-        step={1}
-        title={getStepTitle(SCREEN_TYPE, t)}
-        description={getStepProgressDescription(SCREEN_TYPE, t)}
-        screenType="workDetails"
-      />
-
       <HelpTooltipScope>
+        <WorkflowProgress
+          currentStep={1}
+          totalSteps={TOTAL_WORKFLOW_STEPS}
+          showPercentage
+          style={styles.progress}
+        />
+
+        <ProgressSlot
+          step={1}
+          title={getStepTitle(SCREEN_TYPE, t)}
+          description={getStepProgressDescription(SCREEN_TYPE, t)}
+          screenType="workDetails"
+        />
+
         <View style={styles.form}>
           <Inputboxfield
             label={t('steps.workDetails.fields.budgetCode.label')}
@@ -275,18 +275,18 @@ const WorkDetailsScreen = ({ navigation }) => {
             type="phone"
             keyboardType="phone-pad"
             value={form.officer_mobile}
-            onChangeText={(v) => updateField('officer_mobile', v.slice(0, 10))}
+            onChangeText={(v) => updateField('officer_mobile', v)}
           />
         </View>
-      </HelpTooltipScope>
 
-      <PrimaryButton
-        title={t('common.saveAndContinue')}
-        onPress={handleSave}
-        loading={isSaving}
-        fullWidth
-        style={styles.cta}
-      />
+        <PrimaryButton
+          title={t('common.saveAndContinue')}
+          onPress={handleSave}
+          loading={isSaving}
+          fullWidth
+          style={styles.cta}
+        />
+      </HelpTooltipScope>
     </ScreenLayout>
   );
 };

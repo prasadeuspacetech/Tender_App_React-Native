@@ -88,6 +88,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   fakeField: {
+    ...formFieldStyles.controlShell,
     ...formFieldStyles.control,
     justifyContent: 'center',
     backgroundColor: '#FAFAFA',

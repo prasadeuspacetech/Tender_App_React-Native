@@ -16,6 +16,8 @@ export const FORM_FIELD_H_PADDING = theme.Spacing?.lg ?? 16;
 export const FORM_FIELD_MARGIN_BOTTOM = 18;
 export const FORM_FIELD_LABEL_MARGIN_BOTTOM = 7;
 export const FORM_FIELD_FONT_SIZE = 15;
+/** Comfortable line height for Latin + Devanagari in form controls */
+export const FORM_FIELD_TEXT_LINE_HEIGHT = 22;
 export const FORM_FIELD_LABEL_FONT_SIZE = 14;
 export const FORM_FIELD_LABEL_FONT_WEIGHT = '500';
 export const FORM_FIELD_BG = '#FFFFFF';
@@ -43,18 +45,28 @@ export const formFieldStyles = StyleSheet.create({
     color: FORM_FIELD_BORDER_COLOR_ERROR,
   },
 
-  /** Outer box — text input, dropdown, calendar row, toggle row, document row */
-  control: {
+  /** Shared bordered row shell — fixed height applied via `control` or `minHeight` via variants */
+  controlShell: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: FORM_FIELD_HEIGHT,
     borderRadius: FORM_FIELD_BORDER_RADIUS,
     borderWidth: FORM_FIELD_BORDER_WIDTH,
     borderColor: FORM_FIELD_BORDER_COLOR,
     backgroundColor: FORM_FIELD_BG,
     paddingHorizontal: FORM_FIELD_H_PADDING,
-    overflow: 'hidden',
     width: '100%',
+  },
+
+  /** Outer box — text input, dropdown, calendar row, document row */
+  control: {
+    height: FORM_FIELD_HEIGHT,
+    overflow: 'hidden',
+  },
+
+  /** Multi-line-safe bordered row (toggle labels, document type labels) */
+  controlAutoHeight: {
+    minHeight: FORM_FIELD_HEIGHT,
+    overflow: 'visible',
   },
 
   controlError: {
@@ -85,17 +97,26 @@ export const formFieldStyles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  /** Toggle field row — label left, switch right, vertically centered */
+  /** Toggle field row — label left, switch right; grows for long translations */
   toggleControl: {
     justifyContent: 'space-between',
-    alignItems: 'center',
+    minHeight: FORM_FIELD_HEIGHT,
+    paddingVertical: 10,
+    overflow: 'visible',
+  },
+
+  toggleLabelWrap: {
+    flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    marginRight: FORM_FIELD_ICON_GAP,
+    justifyContent: 'center',
   },
 
   toggleLabel: {
-    flex: 1,
-    flexShrink: 1,
-    marginRight: FORM_FIELD_ICON_GAP,
-    lineHeight: FORM_FIELD_FONT_SIZE + 6,
+    fontSize: FORM_FIELD_FONT_SIZE,
+    fontFamily: theme.FontFamily?.regular ?? undefined,
+    lineHeight: FORM_FIELD_TEXT_LINE_HEIGHT,
     textAlignVertical: 'center',
     includeFontPadding: false,
   },

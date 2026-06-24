@@ -9,7 +9,7 @@
 //   + Real upsertSanction wired to useSaveAndContinue (stub removed)
 //   + Validation for required fields
 
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, View } from 'react-native';
 
@@ -24,9 +24,9 @@ import UploadDocument from '../../../components/UploadDocument';
 import { DOCUMENT_TYPES } from '../../../constants/documentTypes';
 import useDocumentUpload from '../../../hooks/useDocumentUpload';
 import {
-  getStepProgressDescription,
-  getStepScreenTitle,
-  getStepTitle,
+    getStepProgressDescription,
+    getStepScreenTitle,
+    getStepTitle,
 } from '../../../i18n/workflowLabels';
 import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
 
@@ -40,9 +40,9 @@ import useWorkStore from '../../../store/useWorkStore';
 
 import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
 import {
-  getSanctionByWorkId,
-  mapSanctionRowToForm,
-  upsertSanction,
+    getSanctionByWorkId,
+    mapSanctionRowToForm,
+    upsertSanction,
 } from '../../../db/repositories/sanctionsRepository';
 import theme from '../../../theme';
 import { formatDateForStorage } from '../../../utils/dateFormat';
@@ -152,20 +152,20 @@ const SanctionApprovalScreen = ({ navigation }) => {
       keyboardAware
       onBackPress={() => navigation.goBack()}
     >
-      <WorkflowProgress
-        currentStep={7}
-        totalSteps={TOTAL_WORKFLOW_STEPS}
-        showPercentage
-        style={styles.progress}
-      />
-      <ProgressSlot
-        step={7}
-        title={getStepTitle(SCREEN_TYPE, t)}
-        description={getStepProgressDescription(SCREEN_TYPE, t)}
-        screenType="sanctionApproval"
-      />
-
       <HelpTooltipScope>
+        <WorkflowProgress
+          currentStep={7}
+          totalSteps={TOTAL_WORKFLOW_STEPS}
+          showPercentage
+          style={styles.progress}
+        />
+        <ProgressSlot
+          step={7}
+          title={getStepTitle(SCREEN_TYPE, t)}
+          description={getStepProgressDescription(SCREEN_TYPE, t)}
+          screenType="sanctionApproval"
+        />
+
         <View style={styles.form}>
 
           <Inputboxfield
@@ -223,15 +223,15 @@ const SanctionApprovalScreen = ({ navigation }) => {
           />
 
         </View>
-      </HelpTooltipScope>
 
-      <PrimaryButton
-        title={t('common.saveAndContinue')}
-        loading={isSaving}
-        fullWidth
-        style={styles.cta}
-        onPress={handleSave}
-      />
+        <PrimaryButton
+          title={t('common.saveAndContinue')}
+          loading={isSaving}
+          fullWidth
+          style={styles.cta}
+          onPress={handleSave}
+        />
+      </HelpTooltipScope>
     </ScreenLayout>
   );
 };

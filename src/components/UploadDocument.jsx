@@ -23,13 +23,14 @@ import {
   formFieldStyles,
   FORM_FIELD_FONT_SIZE,
   FORM_FIELD_TEXT_COLOR,
+  FORM_FIELD_TEXT_LINE_HEIGHT,
 } from '../theme/formFieldStyles';
 
 const SECTION = {
   marginTop: 4,
   marginBottom: 10,
   fontSize: 15,
-  lineHeight: 15,
+  lineHeight: FORM_FIELD_TEXT_LINE_HEIGHT,
   fontWeight: '400',
   color: '#000000',
 };
@@ -42,11 +43,11 @@ const UPLOAD_BOX = {
   borderColor: '#666565',
   borderWidth: 2,
   borderRadius: 5,
-  height: 71,
+  minHeight: 71,
   horizontalInset: 10,
   iconSize: 18,
   labelSize: 15,
-  labelLineHeight: 15,
+  labelLineHeight: FORM_FIELD_TEXT_LINE_HEIGHT,
   labelColor: 'rgba(0, 0, 0, 0.8)',
   gridGap: 12,
   shadow: {
@@ -65,9 +66,16 @@ const defaultUploadText = (title) => `Upload ${title}`;
 
 /** Static document-type label shown before upload. */
 const DocumentTypeLabel = ({ title, style }) => (
-  <View style={[formFieldStyles.control, styles.documentTypeLabel, style]}>
+  <View
+    style={[
+      formFieldStyles.controlShell,
+      formFieldStyles.controlAutoHeight,
+      styles.documentTypeLabel,
+      style,
+    ]}
+  >
     <DocumentFileIcon size={18} color="#666666" />
-    <Text style={styles.fieldLabel} numberOfLines={1}>
+    <Text style={styles.fieldLabel} numberOfLines={2}>
       {title}
     </Text>
   </View>
@@ -152,7 +160,7 @@ const DashedUploadBox = ({
     inset && styles.uploadBoxInset,
     flex != null && { flex },
     !inset && !flex && styles.uploadBoxFull,
-    { height: UPLOAD_BOX.height, minHeight: UPLOAD_BOX.height },
+    { minHeight: UPLOAD_BOX.minHeight },
   ];
 
   return (
@@ -175,9 +183,7 @@ const DashedUploadBox = ({
       ) : (
         <View style={styles.uploadInner}>
           <Feather name="upload" size={UPLOAD_BOX.iconSize} color={UPLOAD_BOX.borderColor} />
-          <Text style={styles.uploadLabel} numberOfLines={2}>
-            {uploadText}
-          </Text>
+          <Text style={styles.uploadLabel}>{uploadText}</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -293,11 +299,13 @@ const styles = StyleSheet.create({
   documentTypeLabel: {
     gap: DOCUMENT_FIELD_GAP,
     marginBottom: DOCUMENT_FIELD_MARGIN_BOTTOM,
+    paddingVertical: 10,
   },
   fieldLabel: {
     flex: 1,
+    minWidth: 0,
     fontSize: FORM_FIELD_FONT_SIZE,
-    lineHeight: FORM_FIELD_FONT_SIZE,
+    lineHeight: FORM_FIELD_TEXT_LINE_HEIGHT,
     fontWeight: '400',
     fontFamily: theme.FontFamily?.regular ?? undefined,
     color: FORM_FIELD_TEXT_COLOR,
@@ -323,9 +331,8 @@ const styles = StyleSheet.create({
     borderRadius: UPLOAD_BOX.borderRadius,
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
-    paddingHorizontal: 8,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
     marginBottom: DOCUMENT_FIELD_MARGIN_BOTTOM,
   },
   uploadBoxInset: {
@@ -340,13 +347,12 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   uploadInner: {
-    flex: 1,
     width: '100%',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingHorizontal: 6,
+    gap: 8,
+    paddingHorizontal: 4,
   },
   uploadLabel: {
     fontSize: UPLOAD_BOX.labelSize,
@@ -355,11 +361,12 @@ const styles = StyleSheet.create({
     fontFamily: theme.FontFamily?.regular ?? undefined,
     color: UPLOAD_BOX.labelColor,
     textAlign: 'center',
+    flexShrink: 1,
   },
   uploadedRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: UPLOAD_BOX.height,
+    minHeight: UPLOAD_BOX.minHeight,
     backgroundColor: '#EEF6EF',
     borderWidth: 1,
     borderColor: SUCCESS,

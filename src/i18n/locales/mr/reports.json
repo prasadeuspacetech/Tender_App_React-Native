@@ -35,10 +35,17 @@
     "pdf": "PDF निर्यात",
     "excel": "Excel निर्यात",
     "pdfReportTitle": "आर्थिक वर्ष अहवाल",
+    "hybridReportTitle": "PMC टेंडर ट्रॅकर — आर्थिक वर्ष अहवाल",
     "detailedReportTitle": "सविस्तर आर्थिक वर्ष काम अहवाल",
     "financialYearLabel": "आर्थिक वर्ष",
     "generatedOnLabel": "तयार केले",
     "totalWorkCount": "एकूण काम संख्या",
+    "budgetOverview": "बजेट विहंगावलोकन",
+    "budgetRemaining": "शिल्लक बजेट",
+    "budgetUtilisation": "बजेट वापर",
+    "allStepsComplete": "सर्व कार्यप्रवाह पायऱ्या पूर्ण",
+    "detailAppendixTitle": "काम तपशील",
+    "correspondenceFyNote": "पत्रव्यवहार निवडलेल्या आर्थिक वर्षानुसार दिनांकाद्वारे गाळला आहे.",
     "workSectionTitle": "काम",
     "correspondenceSection": "सामान्य पत्रव्यवहार",
     "attachmentsSection": "संलग्नक",
@@ -74,8 +81,25 @@
       "estimationCost": "अंदाजित खर्च",
       "sanctionAmount": "मंजूर रक्कम",
       "finalTenderAmount": "अंतिम निविदा रक्कम",
+      "effectiveBudget": "प्रभावी बजेट",
       "totalAmountPaid": "एकूण देय रक्कम",
       "pendingAmount": "प्रलंबित रक्कम"
+    },
+    "groups": {
+      "identity": "काम ओळख",
+      "financial": "आर्थिक सारांश",
+      "timeline": "महत्त्वाचे दिनांक",
+      "workflow": "कार्यप्रवाह तपशील"
+    },
+    "index": {
+      "title": "काम निर्देशिका",
+      "workName": "कामाचे नाव",
+      "ward": "प्रभाग",
+      "department": "विभाग",
+      "budget": "बजेट",
+      "paid": "देय",
+      "status": "स्थिती",
+      "stage": "सध्याचा टप्पा"
     }
   },
   "share": {

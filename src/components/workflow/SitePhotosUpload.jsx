@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -28,7 +28,6 @@ const CameraIcon = () => (
 
 const PhotoThumbnail = ({
   uri,
-  label,
   onRemove,
   onPreview,
   previewAccessibilityLabel,
@@ -42,11 +41,6 @@ const PhotoThumbnail = ({
       accessibilityLabel={previewAccessibilityLabel}
     >
       <Image source={{ uri }} style={styles.photoImage} contentFit="cover" />
-      {label ? (
-        <View style={styles.photoBadge}>
-          <Text style={styles.photoBadgeText}>{label}</Text>
-        </View>
-      ) : null}
     </Pressable>
     <Pressable
       style={styles.removeBtn}
@@ -106,11 +100,6 @@ const SitePhotosUpload = ({
   const resolvedRemoveTitle = removeConfirmTitle ?? t('alerts.removePhotoTitle');
   const resolvedRemoveMessage =
     removeConfirmMessage ?? t('alerts.removePhotoMessage');
-
-  const photoLabels = useMemo(
-    () => [t('site.photoBefore'), t('site.photoProgress')],
-    [t],
-  );
 
   const handleAddPhoto = useCallback(async () => {
     if (!workId) {
@@ -177,7 +166,6 @@ const SitePhotosUpload = ({
           <PhotoThumbnail
             key={`${uri}-${index}`}
             uri={uri}
-            label={photoLabels[index] ?? null}
             onPreview={() => previewAttachment(uri)}
             previewAccessibilityLabel={t('site.previewPhotoAccessibility')}
             onRemove={() => handleRemove(index)}
@@ -251,21 +239,6 @@ const styles = StyleSheet.create({
   photoImage: {
     width: '100%',
     height: '100%',
-  },
-  photoBadge: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#1D6B43',
-    paddingVertical: 4,
-    alignItems: 'center',
-  },
-  photoBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    lineHeight: 14,
   },
   removeBtn: {
     position: 'absolute',

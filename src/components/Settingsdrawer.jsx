@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Modal,
@@ -10,6 +10,7 @@ import {
   Animated,
   StyleSheet,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { FigmaMenuIcon, FIGMA_HEADER_ICON_SIZE } from './icons/HeaderIcons';
 import {
@@ -19,9 +20,12 @@ import {
 } from 'react-native-safe-area-context';
 import theme from '../theme';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const DRAWER_WIDTH = Math.min(260, SCREEN_WIDTH * 0.72);
+/** Remaining width available for outside-tap dismiss (SCREEN_WIDTH - DRAWER_WIDTH). */
+const OUTSIDE_TAP_WIDTH = SCREEN_WIDTH - DRAWER_WIDTH;
 const ANIMATION_DURATION = 280;
+const CLOSE_ANIMATION_DURATION = ANIMATION_DURATION - 30;
 
 // ─── Menu item definitions (labels resolved via i18n) ─────────────────────────
 const MENU_ITEMS = [
@@ -30,10 +34,10 @@ const MENU_ITEMS = [
     labelKey: 'drawer.generalCorrespondence',
     route: 'GeneralCorrespondence',
   },
-  { key: 'backup',       labelKey: 'drawer.backup',       handlerKey: 'onBackupPress' },
-  { key: 'restore',      labelKey: 'drawer.restore',      handlerKey: 'onRestorePress' },
+  { key: 'backup', labelKey: 'drawer.backup', handlerKey: 'onBackupPress' },
+  { key: 'restore', labelKey: 'drawer.restore', handlerKey: 'onRestorePress' },
   { key: 'subscription', labelKey: 'drawer.subscription', handlerKey: 'onSubscriptionPress' },
-  { key: 'help',         labelKey: 'drawer.help',         handlerKey: 'onHelpPress' },
+  { key: 'help', labelKey: 'drawer.help', handlerKey: 'onHelpPress' },
 ];
 
 // Renders inside Modal's SafeAreaProvider so insets are available on first open.
@@ -76,63 +80,60 @@ const DrawerPanel = ({
     onClose?.();
   };
 
-  const headerTopPadding =
-    insets.top + (theme.Spacing?.sm ?? 8);
+  const headerTopPadding = insets.top + (theme.Spacing?.sm ?? 8);
 
   return (
-    <View style={styles.modalRoot}>
+    <View style={styles.modalRoot} collapsable={false}>
       <Animated.View
         pointerEvents="none"
-        style={[styles.overlay, { opacity: overlayOpacity }]}
+        style={[styles.backdropVisual, { opacity: overlayOpacity }]}
       />
 
-      <Animated.View
-        style={[styles.drawer, { transform: [{ translateX }] }, style]}
-      >
-        <View style={styles.header}>
-          <View style={[styles.headerContent, { paddingTop: headerTopPadding }]}>
-            <View style={styles.headerTitleRow}>
-              <TouchableOpacity
-                onPress={onClose}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                activeOpacity={0.65}
-                accessibilityRole="button"
-                accessibilityLabel={t('accessibility.closeMenu')}
-                style={styles.headerMenuButton}
-              >
-                <FigmaMenuIcon color={ITEM_TEXT} size={FIGMA_HEADER_ICON_SIZE} />
-              </TouchableOpacity>
-              <Text style={styles.headerTitle}>{t('drawer.title')}</Text>
+      <View style={styles.touchRow} collapsable={false}>
+        <Animated.View
+          style={[styles.drawer, { transform: [{ translateX }] }, style]}
+        >
+          <View style={styles.header}>
+            <View style={[styles.headerContent, { paddingTop: headerTopPadding }]}>
+              <View style={styles.headerTitleRow}>
+                <TouchableOpacity
+                  onPress={onClose}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  activeOpacity={0.65}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('accessibility.closeMenu')}
+                  style={styles.headerMenuButton}
+                >
+                  <FigmaMenuIcon color={ITEM_TEXT} size={FIGMA_HEADER_ICON_SIZE} />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>{t('drawer.title')}</Text>
+              </View>
+              <View style={styles.headerDivider} />
             </View>
-            <View style={styles.headerDivider} />
           </View>
-        </View>
 
-        <View style={styles.menu}>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity
-              key={item.key}
-              style={[
-                styles.menuItem,
-                index < menuItems.length - 1 && styles.menuItemBorder,
-              ]}
-              onPress={() => handleItemPress(item)}
-              activeOpacity={0.65}
-              accessibilityRole="menuitem"
-              accessibilityLabel={item.label}
-            >
-              <Text style={styles.menuLabel}>{item.label}</Text>
-              <Text style={styles.menuChevron}>›</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </Animated.View>
+          <View style={styles.menu}>
+            {menuItems.map((item, index) => (
+              <TouchableOpacity
+                key={item.key}
+                style={[
+                  styles.menuItem,
+                  index < menuItems.length - 1 && styles.menuItemBorder,
+                ]}
+                onPress={() => handleItemPress(item)}
+                activeOpacity={0.65}
+                accessibilityRole="menuitem"
+                accessibilityLabel={item.label}
+              >
+                <Text style={styles.menuLabel}>{item.label}</Text>
+                <Text style={styles.menuChevron}>›</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Animated.View>
 
-      {/* Touch layer above drawer — flex row so Android gets a real hit target */}
-      <View style={styles.dismissLayer} pointerEvents="box-none">
-        <View style={styles.dismissDrawerSpacer} pointerEvents="none" />
         <Pressable
-          style={styles.dismissPressable}
+          style={styles.outsidePressable}
           onPress={onClose}
           accessibilityRole="button"
           accessibilityLabel={t('accessibility.closeMenu')}
@@ -152,11 +153,57 @@ const SettingsDrawer = ({
   onHelpPress,
   style,
 }) => {
+  const [modalVisible, setModalVisible] = useState(false);
   const translateX = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const isAnimatingRef = useRef(false);
+  const wasVisibleRef = useRef(false);
+
+  const runCloseAnimation = useCallback(
+    (onFinished) => {
+      isAnimatingRef.current = true;
+
+      Animated.parallel([
+        Animated.timing(translateX, {
+          toValue: -DRAWER_WIDTH,
+          duration: CLOSE_ANIMATION_DURATION,
+          useNativeDriver: true,
+        }),
+        Animated.timing(overlayOpacity, {
+          toValue: 0,
+          duration: CLOSE_ANIMATION_DURATION,
+          useNativeDriver: true,
+        }),
+      ]).start(({ finished }) => {
+        isAnimatingRef.current = false;
+
+        if (finished) {
+          setModalVisible(false);
+          onFinished?.();
+        }
+      });
+    },
+    [overlayOpacity, translateX],
+  );
+
+  const handleCloseRequest = useCallback(() => {
+    if (!modalVisible || isAnimatingRef.current) return;
+
+    runCloseAnimation(() => {
+      onClose?.();
+    });
+  }, [modalVisible, onClose, runCloseAnimation]);
 
   useEffect(() => {
-    if (visible) {
+    const wasVisible = wasVisibleRef.current;
+    wasVisibleRef.current = visible;
+
+    if (visible && !wasVisible) {
+      setModalVisible(true);
+      translateX.setValue(-DRAWER_WIDTH);
+      overlayOpacity.setValue(0);
+      isAnimatingRef.current = true;
+
       Animated.parallel([
         Animated.timing(translateX, {
           toValue: 0,
@@ -168,30 +215,21 @@ const SettingsDrawer = ({
           duration: ANIMATION_DURATION,
           useNativeDriver: true,
         }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(translateX, {
-          toValue: -DRAWER_WIDTH,
-          duration: ANIMATION_DURATION - 30,
-          useNativeDriver: true,
-        }),
-        Animated.timing(overlayOpacity, {
-          toValue: 0,
-          duration: ANIMATION_DURATION - 30,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      ]).start(({ finished }) => {
+        if (finished) {
+          isAnimatingRef.current = false;
+        }
+      });
     }
-  }, [visible, translateX, overlayOpacity]);
+  }, [visible, overlayOpacity, translateX]);
 
   return (
     <Modal
       transparent
-      visible={visible}
+      visible={modalVisible}
       animationType="none"
       statusBarTranslucent
-      onRequestClose={onClose}
+      onRequestClose={handleCloseRequest}
     >
       {/*
         Modal renders in a separate native window. A nested SafeAreaProvider with
@@ -200,7 +238,7 @@ const SettingsDrawer = ({
       */}
       <SafeAreaProvider style={styles.modalRoot} initialMetrics={initialWindowMetrics}>
         <DrawerPanel
-          onClose={onClose}
+          onClose={handleCloseRequest}
           onBackupPress={onBackupPress}
           onRestorePress={onRestorePress}
           onSubscriptionPress={onSubscriptionPress}
@@ -222,31 +260,25 @@ const DIVIDER = 'rgba(255,255,255,0.12)';
 
 const styles = StyleSheet.create({
   modalRoot: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
   },
-  dismissLayer: {
-    ...StyleSheet.absoluteFillObject,
-    flexDirection: 'row',
-    zIndex: 20,
-    elevation: 20,
-  },
-  dismissDrawerSpacer: {
-    width: DRAWER_WIDTH,
-  },
-  dismissPressable: {
-    flex: 1,
-  },
-  overlay: {
+  backdropVisual: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.45)',
   },
+  touchRow: {
+    flex: 1,
+    flexDirection: 'row',
+    width: '100%',
+  },
+  outsidePressable: {
+    flex: 1,
+    // Android ignores fully transparent Pressables — use near-transparent alpha.
+    backgroundColor: 'rgba(0,0,0,0.01)',
+    minWidth: OUTSIDE_TAP_WIDTH,
+  },
   drawer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
     width: DRAWER_WIDTH,
     backgroundColor: DRAWER_BG,
     borderTopRightRadius: theme.Radius?.lg ?? 16,
@@ -255,7 +287,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 4, height: 0 },
     shadowOpacity: 0.22,
     shadowRadius: 12,
-    elevation: 12,
+    ...Platform.select({
+      android: { elevation: 12 },
+      default: {},
+    }),
   },
   header: {
     backgroundColor: HEADER_BG,

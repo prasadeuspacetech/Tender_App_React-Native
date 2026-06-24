@@ -1,15 +1,15 @@
-import React, { useCallback, useId, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useCallback, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
 
+import { dismissKeyboardAfterClose, dismissKeyboardBeforeOverlay } from '../../utils/keyboardDismiss';
 import HelpTooltipContent, {
   HELP_TOOLTIP_MAX_BODY_HEIGHT,
 } from './HelpTooltipContent';
 import HelpTooltipOverlay from './HelpTooltipOverlay';
-import { computeHelpTooltipLayout } from './helpTooltipLayout';
+import { computeScopedHelpTooltipLayout } from './helpTooltipLayout';
 import { useHelpTooltipRegistration } from './helpTooltipScope';
-import { dismissKeyboardAfterClose, dismissKeyboardBeforeOverlay } from '../../utils/keyboardDismiss';
 
 const ICON_SIZE = 18;
 const ICON_COLOR = '#6B7280';
@@ -17,6 +17,32 @@ const HIT_SLOP = { top: 10, bottom: 10, left: 10, right: 10 };
 const POPOVER_MIN_WIDTH = 260;
 const ANCHOR_GAP = 6;
 const CONTENT_HEIGHT = HELP_TOOLTIP_MAX_BODY_HEIGHT + 8;
+
+const measureInWindowAsync = (node) => new Promise((resolve) => {
+  if (!node?.measureInWindow) {
+    resolve(null);
+    return;
+  }
+
+  node.measureInWindow((x, y, width, height) => {
+    resolve({ x, y, width, height });
+  });
+});
+
+const measureLayoutAsync = (node, relativeTo) => new Promise((resolve) => {
+  if (!node?.measureLayout || !relativeTo) {
+    resolve(null);
+    return;
+  }
+
+  node.measureLayout(
+    relativeTo,
+    (x, y, width, height) => {
+      resolve({ x, y, width, height });
+    },
+    () => resolve(null),
+  );
+});
 
 /**
  * Reusable contextual help trigger (ⓘ) + anchored popover.
@@ -37,8 +63,10 @@ const FieldHelpTooltip = ({
   const registration = useHelpTooltipRegistration(tooltipId);
 
   const triggerRef = useRef(null);
+  const localScopeRef = useRef(null);
   const [localVisible, setLocalVisible] = useState(false);
-  const [anchor, setAnchor] = useState(null);
+  const [localAnchor, setLocalAnchor] = useState(null);
+  const [localScopeSize, setLocalScopeSize] = useState(null);
 
   const resolvedText = useMemo(() => {
     const explicit = text?.trim();
@@ -50,39 +78,81 @@ const FieldHelpTooltip = ({
   const useScope = Boolean(registration);
   const visible = useScope ? registration.isOpen : localVisible;
 
-  const layout = useMemo(() => {
-    if (!visible || !anchor) return null;
-    return computeHelpTooltipLayout(anchor, CONTENT_HEIGHT, {
+  const localLayout = useMemo(() => {
+    if (!localVisible || !localAnchor || !localScopeSize) return null;
+    const safeScopeSize = {
+      width: localScopeSize.width || Dimensions.get('window').width,
+      height: localScopeSize.height || Dimensions.get('window').height,
+    };
+    return computeScopedHelpTooltipLayout(localAnchor, CONTENT_HEIGHT, safeScopeSize, {
       minWidth: POPOVER_MIN_WIDTH,
       gap: ANCHOR_GAP,
     });
-  }, [visible, anchor]);
+  }, [localVisible, localAnchor, localScopeSize]);
+
+  const syncTriggerBounds = useCallback(() => {
+    measureInWindowAsync(triggerRef.current).then((bounds) => {
+      if (bounds) {
+        registration?.registerTriggerBounds(bounds);
+      }
+    });
+  }, [registration]);
 
   const close = useCallback(() => {
     if (useScope) {
       registration.close();
     } else {
       setLocalVisible(false);
+      setLocalAnchor(null);
     }
-    setAnchor(null);
     dismissKeyboardAfterClose();
   }, [registration, useScope]);
 
-  const open = useCallback(() => {
-    if (!resolvedText) return;
+  const measureAndOpen = useCallback(async () => {
+    const scopeNode = useScope ? registration.scopeRef.current : localScopeRef.current;
+    const triggerNode = triggerRef.current;
 
-    dismissKeyboardBeforeOverlay();
+    if (!scopeNode || !triggerNode) return;
+
+    const layoutAnchor = await measureLayoutAsync(triggerNode, scopeNode);
+    const scopeWindow = await measureInWindowAsync(scopeNode);
+    const triggerWindow = await measureInWindowAsync(triggerNode);
+
+    if (!scopeWindow || !triggerWindow) return;
+
+    const anchor = layoutAnchor ?? {
+      x: triggerWindow.x - scopeWindow.x,
+      y: triggerWindow.y - scopeWindow.y,
+      width: triggerWindow.width,
+      height: triggerWindow.height,
+    };
+
+    const scopeSize = {
+      width: scopeWindow.width,
+      height: scopeWindow.height,
+    };
 
     if (useScope) {
-      registration.open();
-    } else {
-      setLocalVisible(true);
+      registration.registerTriggerBounds(triggerWindow);
+      registration.open({
+        text: resolvedText,
+        anchor,
+        scopeSize,
+        scopeWindow: { x: scopeWindow.x, y: scopeWindow.y },
+      });
+      return;
     }
 
-    triggerRef.current?.measureInWindow((x, y, width, height) => {
-      setAnchor({ x, y, width, height });
-    });
+    setLocalScopeSize(scopeSize);
+    setLocalAnchor(anchor);
+    setLocalVisible(true);
   }, [registration, resolvedText, useScope]);
+
+  const open = useCallback(() => {
+    if (!resolvedText) return;
+    dismissKeyboardBeforeOverlay();
+    void measureAndOpen();
+  }, [measureAndOpen, resolvedText]);
 
   const handleToggle = useCallback(() => {
     if (visible) {
@@ -102,18 +172,21 @@ const FieldHelpTooltip = ({
     return null;
   }
 
-  return (
-    <>
+  const trigger = (
+    <View
+      ref={triggerRef}
+      collapsable={false}
+      style={[styles.triggerWrap, style]}
+      onLayout={syncTriggerBounds}
+    >
       <Pressable
-        ref={triggerRef}
-        collapsable={false}
         onPress={handleToggle}
         hitSlop={HIT_SLOP}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         accessibilityHint={accessibilityHint}
         accessibilityState={{ expanded: visible }}
-        style={[styles.trigger, style]}
+        style={styles.triggerPressable}
       >
         <Ionicons
           name="information-circle-outline"
@@ -121,21 +194,39 @@ const FieldHelpTooltip = ({
           color={iconColor}
         />
       </Pressable>
+    </View>
+  );
 
-      <HelpTooltipOverlay visible={visible} layout={layout} onClose={close}>
+  if (useScope) {
+    return trigger;
+  }
+
+  return (
+    <View ref={localScopeRef} collapsable={false} style={styles.localScope}>
+      {trigger}
+      <HelpTooltipOverlay visible={localVisible} layout={localLayout}>
         <HelpTooltipContent text={resolvedText} />
       </HelpTooltipOverlay>
-    </>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  trigger: {
+  triggerWrap: {
     minWidth: 28,
     minHeight: 28,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 4,
+  },
+  triggerPressable: {
+    minWidth: 28,
+    minHeight: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  localScope: {
+    position: 'relative',
   },
 });
 

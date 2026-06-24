@@ -1,8 +1,8 @@
 // Step 8: Work Order / Start
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Alert, StyleSheet, View } from 'react-native';
 
 import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import Inputboxfield from '../../../components/Inputboxfield';
@@ -11,30 +11,28 @@ import ScreenLayout from '../../../components/layouts/Screenlayout';
 import WorkflowProgress from '../../../components/layouts/Workflowprogress';
 import NativeDateField from '../../../components/NativeDateField';
 import PrimaryButton from '../../../components/PrimaryButton';
-import SitePhotosUpload from '../../../components/workflow/SitePhotosUpload';
 import UploadDocument from '../../../components/UploadDocument';
-import { MAX_INAUGURATION_PHOTOS } from '../../../db/repositories/workOrdersRepository';
+import SitePhotosUpload from '../../../components/workflow/SitePhotosUpload';
 import { DOCUMENT_TYPES } from '../../../constants/documentTypes';
 import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
 import {
     getWorkOrderByWorkId,
-    mapWorkOrderRowToForm,
-    upsertWorkOrder,
+    mapWorkOrderRowToForm, MAX_INAUGURATION_PHOTOS, upsertWorkOrder
 } from '../../../db/repositories/workOrdersRepository';
 import useDocumentUpload from '../../../hooks/useDocumentUpload';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import {
+    getStepProgressDescription,
+    getStepScreenTitle,
+    getStepTitle,
+} from '../../../i18n/workflowLabels';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
 import theme from '../../../theme';
 import { formatDateForStorage } from '../../../utils/dateFormat';
 import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
-import {
-  getStepProgressDescription,
-  getStepScreenTitle,
-  getStepTitle,
-} from '../../../i18n/workflowLabels';
 
 const SCREEN_TYPE = 'workOrder';
 const STEP = 8;
@@ -141,20 +139,20 @@ const WorkOrderScreen = ({ navigation }) => {
       keyboardAware
       onBackPress={() => navigation.goBack()}
     >
-      <WorkflowProgress
-        currentStep={STEP}
-        totalSteps={TOTAL_WORKFLOW_STEPS}
-        showPercentage
-        style={styles.progress}
-      />
-      <ProgressSlot
-        step={STEP}
-        title={getStepTitle(SCREEN_TYPE, t)}
-        description={getStepProgressDescription(SCREEN_TYPE, t)}
-        screenType="workOrder"
-      />
-
       <HelpTooltipScope>
+        <WorkflowProgress
+          currentStep={STEP}
+          totalSteps={TOTAL_WORKFLOW_STEPS}
+          showPercentage
+          style={styles.progress}
+        />
+        <ProgressSlot
+          step={STEP}
+          title={getStepTitle(SCREEN_TYPE, t)}
+          description={getStepProgressDescription(SCREEN_TYPE, t)}
+          screenType="workOrder"
+        />
+
         <View style={styles.form}>
           <Inputboxfield
             label={t('steps.workOrder.fields.orderNumber.label')}
@@ -226,15 +224,15 @@ const WorkOrderScreen = ({ navigation }) => {
             ]}
           />
         </View>
-      </HelpTooltipScope>
 
-      <PrimaryButton
-        title={t('common.saveAndContinue')}
-        loading={isSaving}
-        fullWidth
-        style={styles.cta}
-        onPress={handleSave}
-      />
+        <PrimaryButton
+          title={t('common.saveAndContinue')}
+          loading={isSaving}
+          fullWidth
+          style={styles.cta}
+          onPress={handleSave}
+        />
+      </HelpTooltipScope>
     </ScreenLayout>
   );
 };

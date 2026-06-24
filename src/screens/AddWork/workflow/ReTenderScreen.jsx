@@ -5,16 +5,16 @@
 // Toggle ON   → fields shown, persisted in `retenders` per work_id.
 
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Alert, StyleSheet, View } from 'react-native';
 
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
 import WorkflowProgress from '../../../components/layouts/Workflowprogress';
 
-import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import FormToggleField from '../../../components/FormToggleField';
+import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import Inputboxfield from '../../../components/Inputboxfield';
 import NativeDateField from '../../../components/NativeDateField';
 import PrimaryButton from '../../../components/PrimaryButton';
@@ -37,12 +37,12 @@ import {
     WORKFLOW_ROUTES,
 } from '../../../constants/WorkflowSteps';
 
-import theme from '../../../theme';
 import {
-  getStepProgressDescription,
-  getStepScreenTitle,
-  getStepTitle,
+    getStepProgressDescription,
+    getStepScreenTitle,
+    getStepTitle,
 } from '../../../i18n/workflowLabels';
+import theme from '../../../theme';
 
 const SCREEN_TYPE = 'reTender';
 
@@ -178,21 +178,21 @@ const ReTenderScreen = ({ navigation }) => {
       keyboardAware
       onBackPress={() => navigation.goBack()}
     >
-      <WorkflowProgress
-        currentStep={5}
-        totalSteps={TOTAL_WORKFLOW_STEPS}
-        showPercentage
-        style={styles.progress}
-      />
-
-      <ProgressSlot
-        step={5}
-        title={getStepTitle(SCREEN_TYPE, t)}
-        description={getStepProgressDescription(SCREEN_TYPE, t)}
-        screenType="reTender"
-      />
-
       <HelpTooltipScope>
+        <WorkflowProgress
+          currentStep={5}
+          totalSteps={TOTAL_WORKFLOW_STEPS}
+          showPercentage
+          style={styles.progress}
+        />
+
+        <ProgressSlot
+          step={5}
+          title={getStepTitle(SCREEN_TYPE, t)}
+          description={getStepProgressDescription(SCREEN_TYPE, t)}
+          screenType="reTender"
+        />
+
         <View style={styles.form}>
           <FormToggleField
             rowLabelOn={t('steps.reTender.toggles.on')}
@@ -250,15 +250,15 @@ const ReTenderScreen = ({ navigation }) => {
             </>
           )}
         </View>
-      </HelpTooltipScope>
 
-      <PrimaryButton
-        title={t('common.saveAndContinue')}
-        onPress={handleSave}
-        loading={isSaving}
-        fullWidth
-        style={styles.cta}
-      />
+        <PrimaryButton
+          title={t('common.saveAndContinue')}
+          onPress={handleSave}
+          loading={isSaving}
+          fullWidth
+          style={styles.cta}
+        />
+      </HelpTooltipScope>
     </ScreenLayout>
   );
 };

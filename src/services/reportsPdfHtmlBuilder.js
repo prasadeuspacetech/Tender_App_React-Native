@@ -1,4 +1,5 @@
-import { formatRupeesFull } from '../utils/currencyFormat';
+import { getStatusLabel } from '../i18n/statusLabels';
+import { formatRupeesCompact, formatRupeesFull } from '../utils/currencyFormat';
 import { formatDateForStorage } from '../utils/dateFormat';
 import { getFileNameFromPath } from '../utils/fileName';
 
@@ -9,12 +10,14 @@ const escapeHtml = (value) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
-const formatGeneratedDate = () => {
+const formatGeneratedTimestamp = () => {
   const d = new Date();
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return `${day}/${month}/${year}, ${hours}:${minutes}`;
 };
 
 const tw = (i18n, key) => i18n.t(key, { ns: 'workflow' });
@@ -47,14 +50,16 @@ const fieldRowsHtml = (rows) =>
     )
     .join('');
 
-const sectionHtml = (title, rows) => {
+const sectionHtml = (title, rows, { className = 'step-section' } = {}) => {
   if (!rows.length) return '';
   return `
-    <section class="step-section">
+    <section class="${className}">
       <h3>${escapeHtml(title)}</h3>
       <table class="field-table">${fieldRowsHtml(rows)}</table>
     </section>`;
 };
+
+const groupSectionHtml = (title, rows) => sectionHtml(title, rows, { className: 'group-section' });
 
 const documentLabelForType = (i18n, type) => {
   if (type.startsWith('payment_receipt_')) {
@@ -79,6 +84,11 @@ const documentLabelForType = (i18n, type) => {
 
 const tCommonField = (i18n, key) => i18n.t(key, { ns: 'common' });
 
+const statusBadgeHtml = (statusKey, i18n) => {
+  const label = getStatusLabel(statusKey);
+  return `<span class="status-badge status-${escapeHtml(statusKey)}">${escapeHtml(label)}</span>`;
+};
+
 const imagesHtml = (imagePaths, imageCache, i18n) => {
   if (!imagePaths?.length) return '';
 
@@ -98,7 +108,7 @@ const imagesHtml = (imagePaths, imageCache, i18n) => {
   if (!items) return '';
 
   return `
-    <section class="step-section">
+    <section class="group-section">
       <h3>${escapeHtml(tr(i18n, 'export.imagesSection'))}</h3>
       <div class="thumb-grid">${items}</div>
     </section>`;
@@ -114,21 +124,67 @@ const attachmentsHtml = (documentRefs, i18n) => {
     return [label, `${fileName}${suffix}`];
   });
 
-  return sectionHtml(tr(i18n, 'export.attachmentsSection'), rows);
+  return groupSectionHtml(tr(i18n, 'export.attachmentsSection'), rows);
 };
 
-const buildWorkDetailsSection = (work, i18n) =>
-  sectionHtml(tw(i18n, 'steps.workDetails.title'), [
+const buildIdentitySection = (work, i18n) =>
+  groupSectionHtml(tr(i18n, 'export.groups.identity'), [
     [tw(i18n, 'steps.workDetails.fields.budgetCode.label'), displayText(work.work_code, i18n)],
     [tw(i18n, 'steps.workDetails.fields.workName.label'), displayText(work.work_name, i18n)],
-    [tw(i18n, 'steps.workDetails.fields.financialYear.label'), displayText(work.financial_year, i18n)],
     [tw(i18n, 'steps.workDetails.fields.ward.label'), displayText(work.ward, i18n)],
     [tw(i18n, 'steps.workDetails.fields.department.label'), displayText(work.department, i18n)],
     [tw(i18n, 'steps.workDetails.fields.subDepartment.label'), displayText(work.sub_department, i18n)],
     [tw(i18n, 'steps.workDetails.fields.officer.label'), displayText(work.officer, i18n)],
     [tw(i18n, 'steps.workDetails.fields.officerMobile.label'), displayText(work.officer_mobile, i18n)],
-    [tw(i18n, 'steps.workDetails.fields.budget.label'), displayMoney(work.budget, i18n)],
   ]);
+
+const buildFinancialSummarySection = (payload, i18n) => {
+  const { work, estimation, tender, retender, contractor, sanction, paymentSummary, effectiveBudget } =
+    payload;
+
+  const rows = [
+    [tw(i18n, 'steps.workDetails.fields.budget.label'), displayMoney(work.budget, i18n)],
+    [tr(i18n, 'export.fields.estimationCost'), displayMoney(estimation?.estimated_cost, i18n)],
+    [tw(i18n, 'steps.tenderCreation.fields.tenderAmount.label'), displayMoney(tender?.tender_amount, i18n)],
+  ];
+
+  if (retender?.enable_retender) {
+    rows.push([
+      tw(i18n, 'steps.reTender.fields.newAmount.label'),
+      displayMoney(retender.new_tender_amount, i18n),
+    ]);
+  }
+
+  rows.push(
+    [tr(i18n, 'export.fields.finalTenderAmount'), displayMoney(contractor?.final_tender_amount, i18n)],
+    [tr(i18n, 'export.fields.effectiveBudget'), displayMoney(effectiveBudget, i18n)],
+    [tr(i18n, 'export.fields.sanctionAmount'), displayMoney(sanction?.sanction_amount, i18n)],
+    [tr(i18n, 'export.fields.totalAmountPaid'), displayMoney(paymentSummary?.amountPaid, i18n)],
+    [tr(i18n, 'export.fields.pendingAmount'), displayMoney(paymentSummary?.pending, i18n)],
+  );
+
+  return groupSectionHtml(tr(i18n, 'export.groups.financial'), rows);
+};
+
+const buildTimelineSection = (payload, i18n) => {
+  const { approval, estimation, tender, retender, sanction, workOrder, billSubmission } = payload;
+
+  const rows = [
+    [tw(i18n, 'steps.pmcApproval.fields.approvalDate.label'), displayDate(approval?.approval_date, i18n)],
+    [tw(i18n, 'steps.estimation.fields.estimationDate.label'), displayDate(estimation?.estimation_date, i18n)],
+    [tw(i18n, 'steps.tenderCreation.fields.advertisementDate.label'), displayDate(tender?.tender_date, i18n)],
+    [tw(i18n, 'steps.reTender.fields.newDate.label'), displayDate(retender?.new_tender_date, i18n)],
+    [tw(i18n, 'steps.sanctionApproval.fields.sanctionDate.label'), displayDate(sanction?.sanction_date, i18n)],
+    [tw(i18n, 'steps.workOrder.fields.startDate.label'), displayDate(workOrder?.work_start_date, i18n)],
+    [
+      tw(i18n, 'steps.workOrder.fields.expectedCompletion.label'),
+      displayDate(workOrder?.expected_completion_date, i18n),
+    ],
+    [tw(i18n, 'steps.billSubmission.fields.billDate.label'), displayDate(billSubmission?.bill_date, i18n)],
+  ].filter(([, value]) => value && value !== tCommon(i18n));
+
+  return rows.length ? groupSectionHtml(tr(i18n, 'export.groups.timeline'), rows) : '';
+};
 
 const buildPmcSection = (approval, i18n) => {
   if (!approval) return '';
@@ -144,7 +200,6 @@ const buildPmcSection = (approval, i18n) => {
         'steps.pmcApproval.toggles.financeOff',
       ),
     ],
-    [tw(i18n, 'steps.pmcApproval.fields.approvalDate.label'), displayDate(approval.approval_date, i18n)],
     [
       tw(i18n, 'steps.pmcApproval.fields.financeApprovalStatus.label'),
       displayText(approval.finance_status, i18n),
@@ -164,8 +219,6 @@ const buildEstimationSection = (estimation, i18n) => {
         'steps.estimation.toggles.off',
       ),
     ],
-    [tw(i18n, 'steps.estimation.fields.estimationDate.label'), displayDate(estimation.estimation_date, i18n)],
-    [tw(i18n, 'steps.estimation.fields.estimatedCost.label'), displayMoney(estimation.estimated_cost, i18n)],
     [tw(i18n, 'steps.estimation.fields.natureOfWorks.label'), displayText(estimation.notes, i18n)],
   ]);
 };
@@ -175,8 +228,6 @@ const buildTenderSection = (tender, i18n) => {
   return sectionHtml(tw(i18n, 'steps.tenderCreation.title'), [
     [tw(i18n, 'steps.tenderCreation.fields.tenderName.label'), displayText(tender.tender_name, i18n)],
     [tw(i18n, 'steps.tenderCreation.fields.tenderNumber.label'), displayText(tender.tender_number, i18n)],
-    [tw(i18n, 'steps.tenderCreation.fields.advertisementDate.label'), displayDate(tender.tender_date, i18n)],
-    [tw(i18n, 'steps.tenderCreation.fields.tenderAmount.label'), displayMoney(tender.tender_amount, i18n)],
     [
       tr(i18n, 'export.tender.aPacket'),
       displayBool(tender.a_packet_open, i18n, 'steps.tenderCreation.toggles.aPacketOn', 'steps.tenderCreation.toggles.aPacketOff'),
@@ -197,8 +248,6 @@ const buildReTenderSection = (retender, i18n) => {
       displayBool(retender.enable_retender, i18n, 'steps.reTender.toggles.on', 'steps.reTender.toggles.off'),
     ],
     [tw(i18n, 'steps.reTender.fields.previousRef.label'), displayText(retender.previous_tender_reference, i18n)],
-    [tw(i18n, 'steps.reTender.fields.newDate.label'), displayDate(retender.new_tender_date, i18n)],
-    [tw(i18n, 'steps.reTender.fields.newAmount.label'), displayMoney(retender.new_tender_amount, i18n)],
     [tw(i18n, 'steps.reTender.fields.reason.label'), displayText(retender.retender_reason, i18n)],
   ]);
 };
@@ -213,10 +262,6 @@ const buildContractorSection = (contractor, i18n) => {
       tr(i18n, 'export.contractor.variation'),
       contractor.percentage_variation != null ? String(contractor.percentage_variation) : tCommon(i18n),
     ],
-    [
-      tw(i18n, 'steps.contractorAssignment.fields.finalTenderAmount.label'),
-      displayMoney(contractor.final_tender_amount, i18n),
-    ],
   ]);
 };
 
@@ -224,8 +269,6 @@ const buildSanctionSection = (sanction, i18n) => {
   if (!sanction) return '';
   return sectionHtml(tw(i18n, 'steps.sanctionApproval.title'), [
     [tw(i18n, 'steps.sanctionApproval.fields.docketNumber.label'), displayText(sanction.docket_number, i18n)],
-    [tw(i18n, 'steps.sanctionApproval.fields.sanctionDate.label'), displayDate(sanction.sanction_date, i18n)],
-    [tw(i18n, 'steps.sanctionApproval.fields.sanctionAmount.label'), displayMoney(sanction.sanction_amount, i18n)],
     [tw(i18n, 'steps.sanctionApproval.fields.sanctionAuthority.label'), displayText(sanction.sanction_authority, i18n)],
   ]);
 };
@@ -234,11 +277,6 @@ const buildWorkOrderSection = (workOrder, i18n) => {
   if (!workOrder) return '';
   return sectionHtml(tw(i18n, 'steps.workOrder.title'), [
     [tw(i18n, 'steps.workOrder.fields.orderNumber.label'), displayText(workOrder.work_order_number, i18n)],
-    [tw(i18n, 'steps.workOrder.fields.startDate.label'), displayDate(workOrder.work_start_date, i18n)],
-    [
-      tw(i18n, 'steps.workOrder.fields.expectedCompletion.label'),
-      displayDate(workOrder.expected_completion_date, i18n),
-    ],
     [tw(i18n, 'steps.workOrder.fields.notes.label'), displayText(workOrder.notes, i18n)],
   ]);
 };
@@ -260,12 +298,6 @@ const buildWorkProgressSection = (workProgress, i18n) => {
 };
 
 const buildPaymentSection = (paymentSummary, paymentInstallments, i18n) => {
-  const summaryRows = [
-    [tw(i18n, 'payment.totalBillAmount'), displayMoney(paymentSummary.totalBill, i18n)],
-    [tw(i18n, 'payment.amountPaid'), displayMoney(paymentSummary.amountPaid, i18n)],
-    [tw(i18n, 'payment.pending'), displayMoney(paymentSummary.pending, i18n)],
-  ];
-
   let historyHtml = '';
   if (paymentInstallments?.length) {
     const header = `
@@ -291,10 +323,11 @@ const buildPaymentSection = (paymentSummary, paymentInstallments, i18n) => {
       <table class="history-table">${header}${body}</table>`;
   }
 
+  if (!historyHtml) return '';
+
   return `
     <section class="step-section">
       <h3>${escapeHtml(tw(i18n, 'steps.paymentStatus.title'))}</h3>
-      <table class="field-table">${fieldRowsHtml(summaryRows)}</table>
       ${historyHtml}
     </section>`;
 };
@@ -312,7 +345,6 @@ const buildBillSection = (billSubmission, i18n) => {
       ),
     ],
     [tw(i18n, 'steps.billSubmission.fields.billNumber.label'), displayText(billSubmission.bill_number, i18n)],
-    [tw(i18n, 'steps.billSubmission.fields.billDate.label'), displayDate(billSubmission.bill_date, i18n)],
   ]);
 };
 
@@ -323,28 +355,138 @@ const buildCompletionSection = (completion, i18n) => {
   ]);
 };
 
-const buildWorkBlockHtml = (workPayload, index, imageCache, i18n) => {
-  const { work } = workPayload;
-  const workTitle = displayText(work.work_name, i18n);
+const buildWorkflowDetailsSection = (payload, i18n) => {
+  const blocks = [
+    buildPmcSection(payload.approval, i18n),
+    buildEstimationSection(payload.estimation, i18n),
+    buildTenderSection(payload.tender, i18n),
+    buildReTenderSection(payload.retender, i18n),
+    buildContractorSection(payload.contractor, i18n),
+    buildSanctionSection(payload.sanction, i18n),
+    buildWorkOrderSection(payload.workOrder, i18n),
+    buildWorkProgressSection(payload.workProgress, i18n),
+    buildPaymentSection(payload.paymentSummary, payload.paymentInstallments, i18n),
+    buildBillSection(payload.billSubmission, i18n),
+    buildCompletionSection(payload.completion, i18n),
+  ].filter(Boolean);
+
+  if (!blocks.length) return '';
 
   return `
-    <section class="work-block">
-      <h2>${escapeHtml(tr(i18n, 'export.workSectionTitle'))} ${index + 1}: ${escapeHtml(workTitle)}</h2>
+    <section class="group-section">
+      <h3>${escapeHtml(tr(i18n, 'export.groups.workflow'))}</h3>
+      ${blocks.join('')}
+    </section>`;
+};
+
+const buildWorkDetailHtml = (workPayload, index, indexRow, imageCache, i18n) => {
+  const { work } = workPayload;
+  const workTitle = displayText(work.work_name, i18n);
+  const statusBadge = statusBadgeHtml(indexRow.statusKey, i18n);
+
+  return `
+    <section class="work-block detail-block">
+      <div class="work-block-header">
+        <h2>${escapeHtml(tr(i18n, 'export.workSectionTitle'))} ${index + 1}: ${escapeHtml(workTitle)}</h2>
+        <div class="work-block-meta">
+          ${statusBadge}
+          <span class="stage-pill">${escapeHtml(indexRow.stageLabel)}</span>
+        </div>
+      </div>
       <div class="work-divider"></div>
-      ${buildWorkDetailsSection(work, i18n)}
-      ${buildPmcSection(workPayload.approval, i18n)}
-      ${buildEstimationSection(workPayload.estimation, i18n)}
-      ${buildTenderSection(workPayload.tender, i18n)}
-      ${buildReTenderSection(workPayload.retender, i18n)}
-      ${buildContractorSection(workPayload.contractor, i18n)}
-      ${buildSanctionSection(workPayload.sanction, i18n)}
-      ${buildWorkOrderSection(workPayload.workOrder, i18n)}
-      ${buildWorkProgressSection(workPayload.workProgress, i18n)}
-      ${buildPaymentSection(workPayload.paymentSummary, workPayload.paymentInstallments, i18n)}
-      ${buildBillSection(workPayload.billSubmission, i18n)}
-      ${buildCompletionSection(workPayload.completion, i18n)}
+      ${buildIdentitySection(work, i18n)}
+      ${buildFinancialSummarySection(workPayload, i18n)}
+      ${buildTimelineSection(workPayload, i18n)}
+      ${buildWorkflowDetailsSection(workPayload, i18n)}
       ${imagesHtml(workPayload.imagePaths, imageCache, i18n)}
       ${attachmentsHtml(workPayload.documentRefs, i18n)}
+    </section>`;
+};
+
+const buildSummaryHtml = (report, i18n) => {
+  const { summary, financialYear, workCount } = report;
+  const budget = summary?.budgetSummary ?? {};
+
+  return `
+    <section class="summary-section">
+      <h1>${escapeHtml(tr(i18n, 'export.hybridReportTitle'))}</h1>
+      <p class="cover-meta">${escapeHtml(tr(i18n, 'export.financialYearLabel'))}: FY ${escapeHtml(financialYear)}</p>
+      <p class="cover-meta">${escapeHtml(tr(i18n, 'export.generatedOnLabel'))}: ${escapeHtml(formatGeneratedTimestamp())}</p>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-value">${escapeHtml(String(workCount))}</div>
+          <div class="kpi-label">${escapeHtml(tr(i18n, 'stats.totalWorks'))}</div>
+        </div>
+        <div class="kpi-card kpi-completed">
+          <div class="kpi-value">${escapeHtml(String(summary.completed))}</div>
+          <div class="kpi-label">${escapeHtml(tr(i18n, 'stats.completed'))}</div>
+        </div>
+        <div class="kpi-card kpi-progress">
+          <div class="kpi-value">${escapeHtml(String(summary.inProgress))}</div>
+          <div class="kpi-label">${escapeHtml(tr(i18n, 'stats.inProgress'))}</div>
+        </div>
+        <div class="kpi-card kpi-pending">
+          <div class="kpi-value">${escapeHtml(String(summary.pending))}</div>
+          <div class="kpi-label">${escapeHtml(tr(i18n, 'stats.pending'))}</div>
+        </div>
+      </div>
+
+      <div class="budget-summary">
+        <h3>${escapeHtml(tr(i18n, 'export.budgetOverview'))}</h3>
+        <table class="field-table">
+          ${fieldRowsHtml([
+            [tr(i18n, 'budget.totalBudget'), displayMoney(budget.totalBudget, i18n)],
+            [tr(i18n, 'budget.totalUsed'), displayMoney(budget.budgetUsed, i18n)],
+            [tr(i18n, 'export.budgetRemaining'), displayMoney(budget.remaining, i18n)],
+            [tr(i18n, 'export.budgetUtilisation'), `${budget.percent ?? 0}%`],
+          ])}
+        </table>
+        <p class="budget-compact">${escapeHtml(formatRupeesCompact(budget.budgetUsed ?? 0))} / ${escapeHtml(formatRupeesCompact(budget.totalBudget ?? 0))}</p>
+      </div>
+    </section>`;
+};
+
+const buildIndexTableHtml = (indexRows, i18n) => {
+  if (!indexRows?.length) return '';
+
+  const header = `
+    <tr>
+      <th class="col-num">#</th>
+      <th class="col-name">${escapeHtml(tr(i18n, 'export.index.workName'))}</th>
+      <th>${escapeHtml(tr(i18n, 'export.index.ward'))}</th>
+      <th>${escapeHtml(tr(i18n, 'export.index.department'))}</th>
+      <th class="col-money">${escapeHtml(tr(i18n, 'export.index.budget'))}</th>
+      <th class="col-money">${escapeHtml(tr(i18n, 'export.index.paid'))}</th>
+      <th class="col-status">${escapeHtml(tr(i18n, 'export.index.status'))}</th>
+      <th class="col-stage">${escapeHtml(tr(i18n, 'export.index.stage'))}</th>
+    </tr>`;
+
+  const body = indexRows
+    .map((row) => {
+      const nameCell = `${escapeHtml(row.workName)}${
+        row.workCode ? `<div class="index-sub">${escapeHtml(row.workCode)}</div>` : ''
+      }`;
+      return `<tr>
+        <td class="col-num">${row.index}</td>
+        <td class="col-name">${nameCell}</td>
+        <td>${escapeHtml(displayText(row.ward, i18n))}</td>
+        <td>${escapeHtml(displayText(row.department, i18n))}</td>
+        <td class="col-money">${escapeHtml(formatRupeesCompact(row.effectiveBudget))}</td>
+        <td class="col-money">${escapeHtml(formatRupeesCompact(row.amountPaid))}</td>
+        <td class="col-status">${statusBadgeHtml(row.statusKey, i18n)}</td>
+        <td class="col-stage">${escapeHtml(row.stageLabel)}</td>
+      </tr>`;
+    })
+    .join('');
+
+  return `
+    <section class="index-section">
+      <h2>${escapeHtml(tr(i18n, 'export.index.title'))}</h2>
+      <table class="index-table">
+        <thead>${header}</thead>
+        <tbody>${body}</tbody>
+      </table>
     </section>`;
 };
 
@@ -372,133 +514,270 @@ const buildCorrespondenceSection = (entries, i18n) => {
   return `
     <section class="correspondence-section">
       <h2>${escapeHtml(tr(i18n, 'export.correspondenceSection'))}</h2>
+      <p class="cover-meta">${escapeHtml(tr(i18n, 'export.correspondenceFyNote'))}</p>
       ${blocks}
     </section>`;
 };
 
+const REPORT_STYLES = `
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #111827;
+    margin: 28px 24px;
+    line-height: 1.45;
+    font-size: 12px;
+  }
+  h1 {
+    font-size: 22px;
+    margin: 0 0 10px;
+    color: #062E52;
+  }
+  h2 {
+    font-size: 16px;
+    margin: 24px 0 10px;
+    color: #062E52;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 13px;
+    margin: 14px 0 8px;
+    color: #1F2937;
+    border-bottom: 1px solid #E5E7EB;
+    padding-bottom: 4px;
+    page-break-after: avoid;
+  }
+  h4.subheading {
+    font-size: 12px;
+    margin: 10px 0 6px;
+    color: #374151;
+  }
+  .cover-meta {
+    font-size: 12px;
+    color: #4B5563;
+    margin: 0 0 4px;
+  }
+  .summary-section {
+    margin-bottom: 20px;
+    page-break-after: avoid;
+  }
+  .kpi-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 16px 0;
+  }
+  .kpi-card {
+    flex: 1 1 22%;
+    min-width: 110px;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    padding: 10px 8px;
+    text-align: center;
+    background: #F9FAFB;
+  }
+  .kpi-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #062E52;
+  }
+  .kpi-label {
+    font-size: 11px;
+    color: #6B7280;
+    margin-top: 4px;
+  }
+  .kpi-completed .kpi-value { color: #2F5E34; }
+  .kpi-progress .kpi-value { color: #FF5D00; }
+  .kpi-pending .kpi-value { color: #8B2513; }
+  .budget-summary {
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    background: #FFFFFF;
+  }
+  .budget-compact {
+    margin: 8px 0 0;
+    font-size: 11px;
+    color: #6B7280;
+  }
+  .index-section {
+    margin-bottom: 24px;
+    page-break-inside: avoid;
+  }
+  .index-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+  }
+  .index-table thead {
+    display: table-header-group;
+  }
+  .index-table th {
+    text-align: left;
+    background: #062E52;
+    color: #FFFFFF;
+    padding: 7px 5px;
+    font-weight: 600;
+    font-size: 9px;
+  }
+  .index-table td {
+    padding: 7px 5px;
+    vertical-align: top;
+    border-bottom: 1px solid #E5E7EB;
+    word-wrap: break-word;
+  }
+  .index-table tbody tr:nth-child(even) {
+    background: #F9FAFB;
+  }
+  .index-sub {
+    font-size: 9px;
+    color: #6B7280;
+    margin-top: 2px;
+  }
+  .col-num { width: 24px; }
+  .col-name { min-width: 90px; max-width: 120px; }
+  .col-money { white-space: nowrap; }
+  .col-status { width: 72px; }
+  .col-stage { font-size: 9px; }
+  .status-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .status-completed { background: #E8F5E9; color: #2F5E34; }
+  .status-progress { background: #FFF3E0; color: #FF5D00; }
+  .status-pending { background: #FBE9E7; color: #8B2513; }
+  .stage-pill {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #EEF2FF;
+    color: #062E52;
+    font-size: 10px;
+    font-weight: 500;
+  }
+  .work-block-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .work-block-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+  .work-divider {
+    border-top: 2px solid #062E52;
+    margin: 8px 0 12px;
+  }
+  .detail-block {
+    margin-bottom: 28px;
+    page-break-before: always;
+  }
+  .detail-block:first-of-type {
+    page-break-before: always;
+  }
+  .group-section, .step-section {
+    margin-bottom: 12px;
+    page-break-inside: avoid;
+  }
+  .field-table, .history-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .field-table td, .history-table td, .history-table th {
+    padding: 5px 0;
+    vertical-align: top;
+    border-bottom: 1px solid #E5E7EB;
+    word-wrap: break-word;
+  }
+  .field-table td:first-child {
+    width: 40%;
+    color: #6B7280;
+    font-weight: 600;
+    padding-right: 10px;
+  }
+  .field-table td:last-child {
+    color: #111827;
+    font-weight: 500;
+  }
+  .history-table th {
+    text-align: left;
+    font-size: 11px;
+    color: #6B7280;
+    font-weight: 600;
+  }
+  .thumb-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .thumb-wrap {
+    width: 140px;
+    text-align: center;
+    page-break-inside: avoid;
+  }
+  .thumb {
+    width: 140px;
+    height: 105px;
+    object-fit: cover;
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+  }
+  .thumb-caption {
+    font-size: 9px;
+    color: #6B7280;
+    margin-top: 4px;
+    word-break: break-all;
+  }
+  .correspondence-section {
+    margin-top: 28px;
+    page-break-before: always;
+  }
+  .correspondence-item {
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #E5E7EB;
+  }
+`;
+
 export const buildDetailedReportHtml = (report, i18n, imageCache) => {
-  const workSections = report.works
-    .map((workPayload, index) => buildWorkBlockHtml(workPayload, index, imageCache, i18n))
+  const detailSections = report.works
+    .map((workPayload, index) =>
+      buildWorkDetailHtml(
+        workPayload,
+        index,
+        report.indexRows[index],
+        imageCache,
+        i18n,
+      ),
+    )
     .join('');
 
   return `<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
-    <style>
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        color: #111827;
-        margin: 32px;
-        line-height: 1.45;
-        font-size: 13px;
-      }
-      h1 {
-        font-size: 22px;
-        margin: 0 0 12px;
-        color: #062E52;
-      }
-      h2 {
-        font-size: 17px;
-        margin: 28px 0 8px;
-        color: #062E52;
-        page-break-before: always;
-      }
-      h2:first-of-type { page-break-before: auto; }
-      h3 {
-        font-size: 14px;
-        margin: 16px 0 8px;
-        color: #1F2937;
-        border-bottom: 1px solid #E5E7EB;
-        padding-bottom: 4px;
-      }
-      h4.subheading {
-        font-size: 13px;
-        margin: 12px 0 6px;
-        color: #374151;
-      }
-      .cover-meta {
-        font-size: 13px;
-        color: #4B5563;
-        margin-bottom: 6px;
-      }
-      .work-divider {
-        border-top: 2px solid #062E52;
-        margin-bottom: 12px;
-      }
-      .work-block {
-        margin-bottom: 32px;
-        page-break-inside: avoid;
-      }
-      .step-section {
-        margin-bottom: 14px;
-      }
-      .field-table, .history-table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      .field-table td, .history-table td, .history-table th {
-        padding: 6px 0;
-        vertical-align: top;
-        border-bottom: 1px solid #E5E7EB;
-      }
-      .field-table td:first-child {
-        width: 42%;
-        color: #6B7280;
-        font-weight: 600;
-        padding-right: 12px;
-      }
-      .field-table td:last-child {
-        color: #111827;
-        font-weight: 500;
-      }
-      .history-table th {
-        text-align: left;
-        font-size: 12px;
-        color: #6B7280;
-        font-weight: 600;
-      }
-      .thumb-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 8px;
-      }
-      .thumb-wrap {
-        width: 140px;
-        text-align: center;
-      }
-      .thumb {
-        width: 140px;
-        height: 105px;
-        object-fit: cover;
-        border: 1px solid #D1D5DB;
-        border-radius: 4px;
-      }
-      .thumb-caption {
-        font-size: 10px;
-        color: #6B7280;
-        margin-top: 4px;
-        word-break: break-all;
-      }
-      .correspondence-section {
-        margin-top: 36px;
-        page-break-before: always;
-      }
-      .correspondence-item {
-        margin-bottom: 16px;
-        padding-bottom: 8px;
-        border-bottom: 1px dashed #E5E7EB;
-      }
-    </style>
+    <style>${REPORT_STYLES}</style>
   </head>
   <body>
-    <h1>${escapeHtml(tr(i18n, 'export.detailedReportTitle'))}</h1>
-    <div class="cover-meta">${escapeHtml(tr(i18n, 'export.financialYearLabel'))}: FY ${escapeHtml(report.financialYear)}</div>
-    <div class="cover-meta">${escapeHtml(tr(i18n, 'export.generatedOnLabel'))}: ${escapeHtml(formatGeneratedDate())}</div>
-    <div class="cover-meta">${escapeHtml(tr(i18n, 'export.totalWorkCount'))}: ${escapeHtml(String(report.workCount))}</div>
-    ${workSections}
+    ${buildSummaryHtml(report, i18n)}
+    ${buildIndexTableHtml(report.indexRows, i18n)}
+    <section class="detail-intro">
+      <h2>${escapeHtml(tr(i18n, 'export.detailAppendixTitle'))}</h2>
+    </section>
+    ${detailSections}
     ${buildCorrespondenceSection(report.generalCorrespondence, i18n)}
   </body>
 </html>`;
 };
+
+export default buildDetailedReportHtml;

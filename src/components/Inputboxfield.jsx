@@ -67,6 +67,7 @@ const InputBoxField = forwardRef(({
   helpTooltipId,
   multiline = false,
   numberOfLines = 1,
+  maxLength,
   onPress,
   style,
   inputStyle,
@@ -87,6 +88,7 @@ const InputBoxField = forwardRef(({
       : null;
 
   const resolvedKeyboard = keyboardType ?? KEYBOARD_MAP[type] ?? 'default';
+  const resolvedMaxLength = maxLength ?? (type === 'phone' ? 10 : undefined);
 
   const handleChangeText = (text) => {
     if (!onChangeText) return;
@@ -98,6 +100,7 @@ const InputBoxField = forwardRef(({
   };
 
   const controlStyle = [
+    formFieldStyles.controlShell,
     formFieldStyles.control,
     error ? formFieldStyles.controlError : null,
     isDisabled && formFieldStyles.controlDisabled,
@@ -127,6 +130,7 @@ const InputBoxField = forwardRef(({
       placeholderTextColor={theme.Colors?.inputPlaceholder ?? '#AAAAAA'}
       onChangeText={handleChangeText}
       keyboardType={resolvedKeyboard}
+      maxLength={resolvedMaxLength}
       secureTextEntry={secureTextEntry}
       editable={!isTouchable && !isDisabled}
       pointerEvents={isTouchable ? 'none' : 'auto'}

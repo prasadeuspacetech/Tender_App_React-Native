@@ -71,25 +71,26 @@ const FormToggleField = ({
         accessibilityState={{ checked: value, disabled }}
         accessibilityLabel={statusText}
         style={({ pressed }) => [
-          formFieldStyles.control,
+          formFieldStyles.controlShell,
           formFieldStyles.toggleControl,
           disabled && formFieldStyles.controlDisabled,
           pressed && !disabled && { opacity: 0.92 },
           rowStyle,
         ]}
       >
-        <Text
-          style={[
-            formFieldStyles.controlText,
-            formFieldStyles.toggleLabel,
-            { color: FORM_FIELD_PLACEHOLDER_COLOR, fontWeight: '400' },
-          ]}
-        >
-          {statusText}
-          {!showHeaderLabel && required ? (
-            <Text style={formFieldStyles.required}> *</Text>
-          ) : null}
-        </Text>
+        <View style={formFieldStyles.toggleLabelWrap}>
+          <Text
+            style={[
+              formFieldStyles.toggleLabel,
+              { color: FORM_FIELD_PLACEHOLDER_COLOR, fontWeight: '400' },
+            ]}
+          >
+            {statusText}
+            {!showHeaderLabel && required ? (
+              <Text style={formFieldStyles.required}> *</Text>
+            ) : null}
+          </Text>
+        </View>
 
         <View style={formFieldStyles.toggleSwitchSlot} pointerEvents="box-none">
           <LargeToggleSwitch

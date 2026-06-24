@@ -35,10 +35,17 @@
     "pdf": "Export PDF",
     "excel": "Export Excel",
     "pdfReportTitle": "Financial Year Report",
+    "hybridReportTitle": "PMC Tender Tracker — Financial Year Report",
     "detailedReportTitle": "Detailed Financial Year Work Report",
     "financialYearLabel": "Financial Year",
     "generatedOnLabel": "Generated On",
     "totalWorkCount": "Total Work Count",
+    "budgetOverview": "Budget Overview",
+    "budgetRemaining": "Remaining Budget",
+    "budgetUtilisation": "Budget Utilisation",
+    "allStepsComplete": "All workflow steps complete",
+    "detailAppendixTitle": "Work Details",
+    "correspondenceFyNote": "Correspondence filtered to selected financial year by date.",
     "workSectionTitle": "Work",
     "correspondenceSection": "General Correspondence",
     "attachmentsSection": "Attachments",
@@ -74,8 +81,25 @@
       "estimationCost": "Estimation Cost",
       "sanctionAmount": "Sanction Amount",
       "finalTenderAmount": "Final Tender Amount",
+      "effectiveBudget": "Effective Budget",
       "totalAmountPaid": "Total Amount Paid",
       "pendingAmount": "Pending Amount"
+    },
+    "groups": {
+      "identity": "Work Identity",
+      "financial": "Financial Summary",
+      "timeline": "Key Dates",
+      "workflow": "Workflow Details"
+    },
+    "index": {
+      "title": "Works Index",
+      "workName": "Work Name",
+      "ward": "Ward",
+      "department": "Dept",
+      "budget": "Budget",
+      "paid": "Paid",
+      "status": "Status",
+      "stage": "Current Stage"
     }
   },
   "share": {

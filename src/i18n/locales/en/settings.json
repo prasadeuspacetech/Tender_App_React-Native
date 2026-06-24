@@ -32,11 +32,78 @@
   },
   "backup": {
     "title": "Backup Data",
-    "subtitle": "Export all works as JSON"
+    "subtitle": "Export works, documents, and budgets",
+    "exportingTitle": "Creating backup",
+    "exportingMessage": "Please wait while your data is exported.",
+    "successTitle": "Backup created",
+    "successMessage": "Your backup file is ready to share.",
+    "successSavedLocally": "Backup saved on this device. You can find it in app storage or share it from a file manager.",
+    "successWithWarnings": "Backup created with warnings ({{count}} missing files).",
+    "errorTitle": "Backup failed",
+    "errorMessage": "Could not create backup. Please try again.",
+    "shareTitle": "Share Tender backup",
+    "emptyTitle": "Nothing to back up",
+    "emptyMessage": "There is no tender data saved on this device yet.",
+    "sizeWarningTitle": "Large backup",
+    "sizeWarningMessage": "This backup is about {{size}}. Some apps (for example WhatsApp) may not accept large files. Continue anyway?",
+    "continue": "Continue",
+    "phases": {
+      "reading": "Reading database…",
+      "scanning": "Checking documents…",
+      "staging": "Preparing files…",
+      "zipping": "Creating archive…",
+      "sharing": "Opening share…",
+      "done": "Finishing…"
+    },
+    "errors": {
+      "UNKNOWN": "Could not create backup. Please try again.",
+      "INSUFFICIENT_STORAGE": "Not enough free storage on this device. Free up space and try again.",
+      "PICKER_FAILED": "Could not open the file picker.",
+      "ARCHIVE_UNREADABLE": "The backup file could not be read."
+    }
   },
   "restore": {
     "title": "Restore Data",
-    "subtitle": "Import from backup file"
+    "subtitle": "Import from backup file",
+    "importingTitle": "Restoring backup",
+    "importingMessage": "Please wait while your data is replaced.",
+    "confirmTitle": "Replace all data?",
+    "confirmMessage": "This will replace ALL works, documents, and budgets on this device with the backup ({{works}} works, exported {{date}}). This cannot be undone.",
+    "confirmMessageDetailed": "This will replace ALL data on this device.\n\n• {{works}} works\n• {{files}} documents\n• About {{size}}\n• Exported {{date}}\n\nThis cannot be undone.",
+    "confirmButton": "Replace data",
+    "cancel": "Cancel",
+    "invalidTitle": "Invalid backup",
+    "invalidMessage": "This file is not a valid Tender backup.",
+    "successTitle": "Restore complete",
+    "successMessage": "Your data has been restored from the backup.",
+    "errorTitle": "Restore failed",
+    "errorMessage": "Could not restore backup. Your previous data was kept.",
+    "phases": {
+      "inspecting": "Reading backup file…",
+      "validating": "Validating backup…",
+      "restoring": "Replacing data…",
+      "done": "Finishing…"
+    },
+    "errors": {
+      "UNKNOWN": "Could not restore backup. Your previous data was kept.",
+      "INSUFFICIENT_STORAGE": "Not enough free storage to restore this backup. Free up space and try again.",
+      "PICKER_FAILED": "Could not open the file picker.",
+      "ARCHIVE_UNREADABLE": "The backup file could not be read.",
+      "MANIFEST_MISSING": "This file is missing backup metadata.",
+      "MANIFEST_INVALID_JSON": "Backup metadata is corrupted.",
+      "DATABASE_MISSING": "This backup is missing its database.",
+      "DATABASE_INVALID_JSON": "Backup database data is corrupted.",
+      "DATABASE_CHECKSUM_MISMATCH": "Backup database checksum does not match.",
+      "FILES_FOLDER_MISSING": "This backup is missing its document files.",
+      "UNSUPPORTED_FORMAT_VERSION": "This backup was created with an unsupported format.",
+      "SCHEMA_VERSION_MISSING": "Backup schema version is missing.",
+      "SCHEMA_TOO_NEW": "This backup needs a newer version of the app.",
+      "SCHEMA_TOO_OLD": "This backup is too old for this version of the app.",
+      "EXPORTED_AT_MISSING": "Backup export date is missing.",
+      "TABLE_COUNTS_MISSING": "Backup table summary is missing.",
+      "UNSUPPORTED_CHECKSUM_ALGORITHM": "Backup uses an unsupported checksum method.",
+      "INVALID_ARCHIVE": "This file is not a valid Tender backup."
+    }
   },
   "subscription": {
     "title": "Subscription Status",

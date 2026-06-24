@@ -2,7 +2,7 @@
 // Step 2 of 10: PMC Approval
 
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, View } from 'react-native';
 
@@ -20,9 +20,9 @@ import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
 
 import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
 import {
-  getApprovalByWorkId,
-  mapApprovalRowToForm,
-  upsertApprovalDetails,
+    getApprovalByWorkId,
+    mapApprovalRowToForm,
+    upsertApprovalDetails,
 } from '../../../db/repositories/approvalsRepository';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
@@ -34,9 +34,9 @@ import { formatDateForStorage } from '../../../utils/dateFormat';
 
 import FormToggleField from '../../../components/FormToggleField';
 import {
-  getStepProgressDescription,
-  getStepScreenTitle,
-  getStepTitle,
+    getStepProgressDescription,
+    getStepScreenTitle,
+    getStepTitle,
 } from '../../../i18n/workflowLabels';
 
 const SCREEN_TYPE = 'pmcApproval';
@@ -152,20 +152,20 @@ const PmcApprovalScreen = ({ navigation }) => {
         keyboardAware
         onBackPress={() => navigation.goBack()}
       >
-        <WorkflowProgress
-          currentStep={2}
-          totalSteps={TOTAL_WORKFLOW_STEPS}
-          showPercentage
-          style={styles.progress}
-        />
-        <ProgressSlot
-          step={2}
-          title={getStepTitle(SCREEN_TYPE, t)}
-          description={getStepProgressDescription(SCREEN_TYPE, t)}
-          screenType="pmcApproval"
-        />
-
         <HelpTooltipScope>
+          <WorkflowProgress
+            currentStep={2}
+            totalSteps={TOTAL_WORKFLOW_STEPS}
+            showPercentage
+            style={styles.progress}
+          />
+          <ProgressSlot
+            step={2}
+            title={getStepTitle(SCREEN_TYPE, t)}
+            description={getStepProgressDescription(SCREEN_TYPE, t)}
+            screenType="pmcApproval"
+          />
+
           <View style={styles.form}>
             <Inputboxfield
               label={t('steps.pmcApproval.fields.letterNumber.label')}
@@ -239,15 +239,15 @@ const PmcApprovalScreen = ({ navigation }) => {
               ]}
             />
           </View>
-        </HelpTooltipScope>
 
-        <PrimaryButton
-          title={t('common.saveAndContinue')}
-          loading={isSaving}
-          fullWidth
-          style={styles.cta}
-          onPress={handleSave}
-        />
+          <PrimaryButton
+            title={t('common.saveAndContinue')}
+            loading={isSaving}
+            fullWidth
+            style={styles.cta}
+            onPress={handleSave}
+          />
+        </HelpTooltipScope>
       </ScreenLayout>
   );
 };

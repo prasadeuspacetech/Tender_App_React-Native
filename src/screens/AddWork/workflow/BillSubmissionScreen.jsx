@@ -7,7 +7,7 @@
 // itself is the "next installment" being entered; auto-save keeps it in
 // Zustand draft only — no SQLite write until Save & Continue.
 
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
@@ -35,16 +35,16 @@ import useWorkStore from '../../../store/useWorkStore';
 import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
 import { getEstimationByWorkId } from '../../../db/repositories/estimationsRepository';
 import {
-  appendPaymentInstallment,
-  getPaymentInstallmentsForWork,
-  getPaymentSummaryForWork,
+    appendPaymentInstallment,
+    getPaymentInstallmentsForWork,
+    getPaymentSummaryForWork,
 } from '../../../db/repositories/paymentsRepository';
 import { getSanctionByWorkId } from '../../../db/repositories/sanctionsRepository';
 import { getWorkById } from '../../../db/repositories/worksRepository';
 import {
-  getStepProgressDescription,
-  getStepScreenTitle,
-  getStepTitle,
+    getStepProgressDescription,
+    getStepScreenTitle,
+    getStepTitle,
 } from '../../../i18n/workflowLabels';
 import theme from '../../../theme';
 
@@ -293,20 +293,20 @@ const BillSubmissionScreen = ({ navigation }) => {
       keyboardAware
       onBackPress={() => navigation.goBack()}
     >
-      <WorkflowProgress
-        currentStep={10}
-        totalSteps={TOTAL_WORKFLOW_STEPS}
-        showPercentage
-        style={styles.progress}
-      />
-      <ProgressSlot
-        step={10}
-        title={getStepTitle(SCREEN_TYPE, t)}
-        description={getStepProgressDescription(SCREEN_TYPE, t)}
-        screenType="paymentStatus"
-      />
-
       <HelpTooltipScope>
+        <WorkflowProgress
+          currentStep={10}
+          totalSteps={TOTAL_WORKFLOW_STEPS}
+          showPercentage
+          style={styles.progress}
+        />
+        <ProgressSlot
+          step={10}
+          title={getStepTitle(SCREEN_TYPE, t)}
+          description={getStepProgressDescription(SCREEN_TYPE, t)}
+          screenType="paymentStatus"
+        />
+
         <View style={styles.workContextRow}>
           <SummaryCard
             label={t('payment.budgetCode')}
@@ -393,15 +393,15 @@ const BillSubmissionScreen = ({ navigation }) => {
         )}
 
         <PaymentHistoryCard installments={installments} />
-      </HelpTooltipScope>
 
-      <PrimaryButton
-        title={t('common.saveAndContinue')}
-        loading={isSaving}
-        fullWidth
-        style={styles.cta}
-        onPress={handleSave}
-      />
+        <PrimaryButton
+          title={t('common.saveAndContinue')}
+          loading={isSaving}
+          fullWidth
+          style={styles.cta}
+          onPress={handleSave}
+        />
+      </HelpTooltipScope>
     </ScreenLayout>
   );
 };

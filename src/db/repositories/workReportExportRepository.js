@@ -1,7 +1,10 @@
 // Read-only aggregator for detailed FY Work Report PDF export.
 
+import { getEffectiveBudgetForRow } from './reportsRepository';
+import { filterRecordsByFinancialYear } from '../../utils/financialYearDate';
 import { getFileNameFromPath } from '../../utils/fileName';
 import { isImageFilePath, localFileExists } from '../../utils/localFileUtils';
+import { getWorkflowStepTitle } from '../../utils/reportWorkflowLabels';
 import { getApprovalByWorkId } from './approvalsRepository';
 import { getBillSubmissionByWorkId } from './billSubmissionRepository';
 import { getCompletionClosureByWorkId } from './completionClosureRepository';
@@ -12,13 +15,22 @@ import {
   getPaymentInstallmentsForWork,
   getPaymentSummaryForWork,
 } from './paymentsRepository';
-import { filterWorksByFinancialYear } from './reportsRepository';
+import {
+  filterWorksByFinancialYear,
+  getReportsBudgetSummary,
+} from './reportsRepository';
 import { getReTenderByWorkId } from './retendersRepository';
 import { getSanctionByWorkId } from './sanctionsRepository';
 import { getTenderByWorkId } from './tendersRepository';
 import { getWorkById } from './worksRepository';
 import { getWorkOrderByWorkId } from './workOrdersRepository';
 import { getWorkProgressByWorkId, parseSitePhotosJson } from './workProgressRepository';
+
+const workCompletedToChipStatus = (workCompleted) => {
+  if (workCompleted === 'Completed') return 'completed';
+  if (workCompleted === 'In Progress') return 'progress';
+  return 'pending';
+};
 
 const pushDocumentRef = (refs, type, path) => {
   if (!path || typeof path !== 'string' || !String(path).trim()) return;
@@ -91,6 +103,42 @@ const collectDocumentRefs = ({
   return refs;
 };
 
+const toBudgetRow = (payload) => ({
+  work_budget: payload.work?.budget,
+  estimated_cost: payload.estimation?.estimated_cost,
+  tender_amount: payload.tender?.tender_amount,
+  final_tender_amount: payload.contractor?.final_tender_amount,
+  percentage_above_below: payload.contractor?.percentage_above_below,
+  percentage_variation: payload.contractor?.percentage_variation,
+  enable_retender: payload.retender?.enable_retender ? 1 : 0,
+  new_tender_amount: payload.retender?.new_tender_amount,
+});
+
+export const buildWorkIndexRow = (payload, index, listRow, i18n) => {
+  const { work, paymentSummary, sanction } = payload;
+  const effectiveBudget = getEffectiveBudgetForRow(toBudgetRow(payload));
+  const statusKey = workCompletedToChipStatus(listRow?.work_completed ?? 'Pending');
+
+  return {
+    index: index + 1,
+    workId: work.id,
+    workName: work.work_name ?? '',
+    workCode: work.work_code ?? '',
+    ward: work.ward ?? '',
+    department: work.department ?? '',
+    effectiveBudget,
+    amountPaid: paymentSummary?.amountPaid ?? 0,
+    pending: paymentSummary?.pending ?? 0,
+    sanctionAmount: sanction?.sanction_amount ?? null,
+    workflowStep: work.workflow_step ?? 1,
+    stageLabel: getWorkflowStepTitle(i18n, work.workflow_step, {
+      allCompleteKey: 'export.allStepsComplete',
+    }),
+    statusKey,
+    workCompleted: listRow?.work_completed ?? 'Pending',
+  };
+};
+
 export const getWorkExportPayload = (workId, workRow = null) => {
   const work = workRow ?? getWorkById(workId);
   if (!work) return null;
@@ -144,19 +192,53 @@ export const getWorkExportPayload = (workId, workRow = null) => {
     completion,
     documentRefs,
     imagePaths,
+    effectiveBudget: getEffectiveBudgetForRow(toBudgetRow({
+      work,
+      estimation,
+      tender,
+      retender,
+      contractor,
+    })),
   };
 };
 
-export const getFinancialYearDetailedReport = (financialYear, works) => {
+export const getFinancialYearDetailedReport = (financialYear, works, i18n) => {
   const fyWorks = filterWorksByFinancialYear(works, financialYear);
+  const workPayloads = fyWorks
+    .map((w) => getWorkExportPayload(w.id, w))
+    .filter(Boolean);
+
+  let completed = 0;
+  let inProgress = 0;
+  let pending = 0;
+
+  fyWorks.forEach((work) => {
+    const status = workCompletedToChipStatus(work.work_completed);
+    if (status === 'completed') completed += 1;
+    else if (status === 'progress') inProgress += 1;
+    else pending += 1;
+  });
+
+  const budgetSummary = getReportsBudgetSummary(financialYear, { useTotalAmountPaid: true });
+  const indexRows = workPayloads.map((payload, index) =>
+    buildWorkIndexRow(payload, index, fyWorks[index], i18n),
+  );
 
   return {
     financialYear,
     generatedAt: new Date().toISOString(),
     workCount: fyWorks.length,
-    works: fyWorks
-      .map((w) => getWorkExportPayload(w.id, w))
-      .filter(Boolean),
-    generalCorrespondence: getAllGeneralCorrespondence(),
+    summary: {
+      completed,
+      inProgress,
+      pending,
+      budgetSummary,
+    },
+    indexRows,
+    works: workPayloads,
+    generalCorrespondence: filterRecordsByFinancialYear(
+      getAllGeneralCorrespondence(),
+      financialYear,
+    ),
   };
 };

@@ -36,7 +36,7 @@ export const exportFinancialYearReportPdf = async ({
   works,
   labels = {},
 }) => {
-  const report = getFinancialYearDetailedReport(financialYear, works);
+  const report = getFinancialYearDetailedReport(financialYear, works, i18n);
   if (!report.workCount) {
     return { noData: true };
   }

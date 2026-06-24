@@ -1,11 +1,9 @@
 /**
- * Modal overlay shell for FieldHelpTooltip — same panel styling as AnchoredPopover.
+ * Non-blocking anchored help popover — no Modal, no backdrop, no close button.
  */
 import React from 'react';
 import {
-  Modal,
   Platform,
-  Pressable,
   StyleSheet,
   View,
 } from 'react-native';
@@ -19,25 +17,21 @@ import {
 const HelpTooltipOverlay = ({
   visible = false,
   layout = null,
-  onClose,
+  scopeLayout = null,
   children,
 }) => {
   if (!visible || !layout) return null;
 
   return (
-    <Modal
-      visible
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-      onRequestClose={onClose}
+    <View
+      pointerEvents="box-none"
+      style={[
+        styles.layer,
+        scopeLayout
+          ? { width: scopeLayout.width, minHeight: scopeLayout.height }
+          : StyleSheet.absoluteFillObject,
+      ]}
     >
-      <Pressable
-        style={styles.backdrop}
-        onPress={onClose}
-        accessible={false}
-      />
-
       <View
         style={[
           styles.panel,
@@ -48,20 +42,26 @@ const HelpTooltipOverlay = ({
             maxHeight: layout.maxHeight,
           },
         ]}
-        pointerEvents="box-none"
+        pointerEvents="auto"
+        onStartShouldSetResponder={() => true}
       >
-        <View style={styles.panelInner} pointerEvents="auto">
-          {children}
-        </View>
+        {children}
       </View>
-    </Modal>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.22)',
+  layer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    ...Platform.select({
+      android: { elevation: 1000 },
+      default: {},
+    }),
   },
   panel: {
     position: 'absolute',
@@ -77,12 +77,9 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.14,
         shadowRadius: 12,
       },
-      android: { elevation: 10 },
+      android: { elevation: 12 },
       default: {},
     }),
-  },
-  panelInner: {
-    width: '100%',
   },
 });
 
