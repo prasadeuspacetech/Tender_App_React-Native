@@ -1,10 +1,11 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import React, { useCallback, useState } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import {
   Dropdown as ElementDropdown,
   MultiSelect,
 } from 'react-native-element-dropdown';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import FormFieldLabel from './help/FormFieldLabel';
 import theme from '../theme';
@@ -24,6 +25,10 @@ import {
   dismissKeyboardAfterClose,
   dismissKeyboardBeforeOverlay,
 } from '../utils/keyboardDismiss';
+import {
+  getTabBarObstructionHeight,
+  resolveDropdownPlacement,
+} from '../utils/dropdownPlacement';
 
 const CHEVRON_COLOR = theme.Colors?.textSecondary ?? '#888888';
 const ACTIVE_ITEM_BG = theme.Colors?.primaryFaint ?? '#EDF5FC';
@@ -85,15 +90,51 @@ const FormDropdown = ({
   style,
   fieldStyle,
   maxHeight = DROPDOWN_MAX_HEIGHT,
+  bottomObstruction,
 }) => {
   const items = safeData(data);
   const hasError = Boolean(error);
+  const insets = useSafeAreaInsets();
+  const fieldRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [computedPlacement, setComputedPlacement] = useState('bottom');
+
+  const resolvedBottomObstruction =
+    bottomObstruction ?? getTabBarObstructionHeight(insets);
+
+  const updatePlacement = useCallback(() => {
+    if (dropdownPosition !== 'auto') return;
+
+    fieldRef.current?.measureInWindow((_, pageY, __, height) => {
+      const placement = resolveDropdownPlacement({
+        fieldY: pageY,
+        fieldHeight: height,
+        windowHeight: Dimensions.get('window').height,
+        menuMaxHeight: maxHeight,
+        optionCount: items.length,
+        searchable,
+        bottomObstruction: resolvedBottomObstruction,
+        topInset: insets.top,
+      });
+      setComputedPlacement(placement);
+    });
+  }, [
+    dropdownPosition,
+    maxHeight,
+    items.length,
+    searchable,
+    resolvedBottomObstruction,
+    insets.top,
+  ]);
+
+  const resolvedDropdownPosition =
+    dropdownPosition === 'auto' ? computedPlacement : dropdownPosition;
 
   const handleFocus = useCallback(() => {
+    updatePlacement();
     setIsOpen(true);
     dismissKeyboardBeforeOverlay();
-  }, []);
+  }, [updatePlacement]);
 
   const handleBlur = useCallback(() => {
     setIsOpen(false);
@@ -131,7 +172,12 @@ const FormDropdown = ({
       hasError && styles.dropdownError,
       disabled && styles.dropdownDisabled,
     ],
-    containerStyle: styles.menuContainer,
+    containerStyle: [
+      styles.menuContainer,
+      resolvedDropdownPosition === 'top'
+        ? styles.menuContainerAbove
+        : styles.menuContainerBelow,
+    ],
     itemContainerStyle: styles.itemContainer,
     selectedTextStyle: styles.selectedText,
     placeholderStyle: styles.placeholderText,
@@ -139,7 +185,7 @@ const FormDropdown = ({
     data: items,
     labelField,
     valueField,
-    dropdownPosition,
+    dropdownPosition: resolvedDropdownPosition,
     maxHeight,
     zIndex: isOpen ? 3000 : 1,
     iconStyle: styles.hiddenIcon,
@@ -207,7 +253,9 @@ const FormDropdown = ({
           helpTooltipId={helpTooltipId}
         />
       ) : null}
-      {fieldControl}
+      <View ref={fieldRef} collapsable={false} onLayout={updatePlacement}>
+        {fieldControl}
+      </View>
       {error ? <Text style={formFieldStyles.errorText}>{error}</Text> : null}
     </View>
   );
@@ -241,7 +289,6 @@ const styles = StyleSheet.create({
     borderColor: FORM_FIELD_BORDER_COLOR,
     borderRadius: FORM_FIELD_BORDER_RADIUS,
     backgroundColor: '#FFFFFF',
-    marginTop: 4,
     paddingVertical: 4,
     ...Platform.select({
       ios: {
@@ -253,6 +300,12 @@ const styles = StyleSheet.create({
       android: { elevation: 8 },
       default: {},
     }),
+  },
+  menuContainerBelow: {
+    marginTop: 4,
+  },
+  menuContainerAbove: {
+    marginBottom: 4,
   },
   itemContainer: {
     borderRadius: 8,

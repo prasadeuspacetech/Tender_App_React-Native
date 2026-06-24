@@ -2,7 +2,7 @@
   "expo": {
     "name": "Tender_Mvp",
     "slug": "Tender_Mvp",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tendermvp",
@@ -10,9 +10,10 @@
     "ios": {
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.euspace.Tender",
-      "buildNumber": "2"
+      "buildNumber": "3"
     },
     "android": {
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
