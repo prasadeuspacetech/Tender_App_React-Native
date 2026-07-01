@@ -3,7 +3,7 @@
  * Import in Inputboxfield, NativeDateField, FormDropdown, FormToggleField, UploadDocument, etc.
  */
 
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import theme from './index';
 
 export const FORM_FIELD_HEIGHT = 52;
@@ -20,11 +20,23 @@ export const FORM_FIELD_FONT_SIZE = 15;
 export const FORM_FIELD_TEXT_LINE_HEIGHT = 22;
 export const FORM_FIELD_LABEL_FONT_SIZE = 14;
 export const FORM_FIELD_LABEL_FONT_WEIGHT = '500';
+/** Prevents Devanagari ascenders from clipping on iOS/Android */
+export const FORM_FIELD_LABEL_LINE_HEIGHT = 20;
+export const SECTION_LABEL_FONT_SIZE = 15;
+export const SECTION_LABEL_LINE_HEIGHT = FORM_FIELD_TEXT_LINE_HEIGHT;
 export const FORM_FIELD_BG = '#FFFFFF';
 export const FORM_FIELD_PLACEHOLDER_COLOR =
   theme.Colors?.inputPlaceholder ?? '#AAAAAA';
 export const FORM_FIELD_TEXT_COLOR = theme.Colors?.textPrimary ?? '#1A1A1A';
 export const FORM_FIELD_ICON_GAP = theme.Spacing?.xs ?? 8;
+
+const labelTextPlatform = Platform.select({
+  android: {
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+  },
+  default: {},
+});
 
 export const formFieldStyles = StyleSheet.create({
   container: {
@@ -39,6 +51,19 @@ export const formFieldStyles = StyleSheet.create({
     color: FORM_FIELD_TEXT_COLOR,
     marginBottom: FORM_FIELD_LABEL_MARGIN_BOTTOM,
     letterSpacing: 0.1,
+    lineHeight: FORM_FIELD_LABEL_LINE_HEIGHT,
+    ...labelTextPlatform,
+  },
+
+  /** Standalone section headers (site photos, upload groups) — 15px labels */
+  sectionLabel: {
+    fontSize: SECTION_LABEL_FONT_SIZE,
+    fontWeight: '400',
+    fontFamily: theme.FontFamily?.regular ?? undefined,
+    color: FORM_FIELD_TEXT_COLOR,
+    lineHeight: SECTION_LABEL_LINE_HEIGHT,
+    letterSpacing: 0.1,
+    ...labelTextPlatform,
   },
 
   required: {

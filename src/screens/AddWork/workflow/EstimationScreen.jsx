@@ -160,7 +160,9 @@ const EstimationScreen = ({ navigation }) => {
         />
         <ProgressSlot
           step={3}
-          title={getStepTitle(SCREEN_TYPE, t)}
+          title={t('steps.estimation.progressTitle', {
+            defaultValue: getStepTitle(SCREEN_TYPE, t),
+          })}
           description={getStepProgressDescription(SCREEN_TYPE, t)}
           screenType="estimation"
         />

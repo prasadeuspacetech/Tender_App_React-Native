@@ -96,6 +96,31 @@ const writeZipArchive = (zipBytes, fileName) => {
  */
 
 /**
+ * Present the iOS/Android share sheet for an already-created archive.
+ *
+ * IMPORTANT (iOS): this must be called only after any React Native <Modal>
+ * (e.g. the backup progress modal) has been dismissed. iOS cannot present the
+ * system share sheet on top of an already-presented RN modal, which leaves the
+ * UI stuck on the loading state with no share sheet.
+ *
+ * @param {string} filePath
+ * @param {{ shareDialogTitle?: string }} [options]
+ * @returns {Promise<boolean>} whether the share sheet was presented
+ */
+export const shareBackupArchive = async (filePath, { shareDialogTitle } = {}) => {
+  if (!filePath) return false;
+  if (!(await Sharing.isAvailableAsync())) return false;
+
+  await Sharing.shareAsync(filePath, {
+    mimeType: 'application/zip',
+    dialogTitle: shareDialogTitle ?? 'Share Tender backup',
+    UTI: 'public.zip-archive',
+  });
+
+  return true;
+};
+
+/**
  * Estimate export size before creating the archive.
  */
 export const getBackupExportPreview = async () => {
@@ -125,12 +150,17 @@ export const getBackupExportPreview = async () => {
 };
 
 /**
- * Export all business data to a .tenderbak.zip archive and open the share sheet.
- * @param {{ onProgress?: (phase: BackupExportPhase) => void, shareDialogTitle?: string, estimatedArchiveBytes?: number }} [options]
+ * Build the .tenderbak.zip archive on disk WITHOUT presenting the share sheet.
+ *
+ * Sharing is intentionally decoupled so the caller can dismiss any loading
+ * modal before invoking {@link shareBackupArchive} (required for iOS — see that
+ * function's docs).
+ *
+ * @param {{ onProgress?: (phase: BackupExportPhase) => void, estimatedArchiveBytes?: number }} [options]
+ * @returns {Promise<{ filePath: string, warnings: string[], missingFileCount: number, tableCounts: Record<string, number>, archiveBytes: number }>}
  */
-export const exportAndShareBackup = async ({
+export const createBackupArchive = async ({
   onProgress,
-  shareDialogTitle,
   estimatedArchiveBytes,
 } = {}) => {
   let stagingDir = null;
@@ -175,23 +205,8 @@ export const exportAndShareBackup = async ({
     const zipBytes = zipDirectoryToBytes(stagingDir);
     const filePath = writeZipArchive(zipBytes, buildBackupFileName());
 
-    let shared = false;
-    onProgress?.('sharing');
-
-    if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(filePath, {
-        mimeType: 'application/zip',
-        dialogTitle: shareDialogTitle ?? 'Share Tender backup',
-        UTI: 'public.zip-archive',
-      });
-      shared = true;
-    }
-
-    onProgress?.('done');
-
     return {
       filePath,
-      shared,
       warnings,
       missingFileCount: missingPaths.length,
       tableCounts,
@@ -200,4 +215,29 @@ export const exportAndShareBackup = async ({
   } finally {
     cleanupDirectory(stagingDir);
   }
+};
+
+/**
+ * Export all business data to a .tenderbak.zip archive and open the share sheet.
+ *
+ * Convenience wrapper that creates the archive then immediately shares it.
+ * Prefer calling {@link createBackupArchive} + {@link shareBackupArchive}
+ * separately when a loading modal is on screen, so the modal can be dismissed
+ * before the iOS share sheet is presented.
+ *
+ * @param {{ onProgress?: (phase: BackupExportPhase) => void, shareDialogTitle?: string, estimatedArchiveBytes?: number }} [options]
+ */
+export const exportAndShareBackup = async ({
+  onProgress,
+  shareDialogTitle,
+  estimatedArchiveBytes,
+} = {}) => {
+  const archive = await createBackupArchive({ onProgress, estimatedArchiveBytes });
+
+  onProgress?.('sharing');
+  const shared = await shareBackupArchive(archive.filePath, { shareDialogTitle });
+
+  onProgress?.('done');
+
+  return { ...archive, shared };
 };

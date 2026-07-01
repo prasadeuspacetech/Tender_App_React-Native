@@ -4,7 +4,6 @@ import * as Sharing from 'expo-sharing';
 
 import { getFinancialYearDetailedReport } from '../db/repositories/workReportExportRepository';
 import i18n from '../i18n';
-import { buildImageDataUriCache } from '../utils/reportImageEmbed';
 import { buildDetailedReportHtml } from './reportsPdfHtmlBuilder';
 
 const savePdfCopy = (sourceUri, financialYear) => {
@@ -41,8 +40,7 @@ export const exportFinancialYearReportPdf = async ({
     return { noData: true };
   }
 
-  const imageCache = await buildImageDataUriCache(report);
-  const html = buildDetailedReportHtml(report, i18n, imageCache);
+  const html = buildDetailedReportHtml(report, i18n);
   const { uri } = await Print.printToFileAsync({ html });
   const filePath = savePdfCopy(uri, financialYear);
 

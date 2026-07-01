@@ -36,8 +36,8 @@
     "replace": "बदला"
   },
   "dropdowns": {
-    "above": "वर",
-    "below": "खाली",
+    "above": "जास्त",
+    "below": "कमी",
     "pending": "प्रलंबित",
     "approved": "मंजूर",
     "rejected": "नाकारले",
@@ -110,7 +110,7 @@
         "budget": { "label": "अंदाजपत्रक (₹)", "placeholder": "₹15,00,000" },
         "financialYear": { "label": "आर्थिक वर्ष", "placeholder": "आर्थिक वर्ष निवडा" },
         "ward": { "label": "प्रभाग", "placeholder": "प्रभाग प्रविष्ट करा" },
-        "department": { "label": "विभाग", "placeholder": "विभाग प्रविष्ट करा" },
+        "department": { "label": "PMC विभाग", "placeholder": "विभाग प्रविष्ट करा" },
         "subDepartment": { "label": "उपविभाग", "placeholder": "उपविभाग प्रविष्ट करा" },
         "officer": { "label": "अधिकारी", "placeholder": "अधिकारीचे नाव प्रविष्ट करा" },
         "officerMobile": { "label": "अधिकाऱ्याचा मोबाईल क्रमांक", "placeholder": "अधिकाऱ्याचा मोबाईल क्रमांक प्रविष्ट करा" }
@@ -143,6 +143,7 @@
     },
     "estimation": {
       "title": "अंदाज",
+      "progressTitle": "पूर्ण गणन पत्रक अंदाज",
       "screenTitle": "अंदाज",
       "description": "अंदाज स्थिती निश्चित करा",
       "progressDescription": "अंदाज स्थिती निश्चित करा",
@@ -170,15 +171,17 @@
       "sectionTenderStatus": "निविदा स्थिती",
       "fields": {
         "tenderName": { "label": "निविदा कामाचे नाव", "placeholder": "निविदेचे नाव प्रविष्ट करा" },
-        "tenderNumber": { "label": "निविदा क्रमांक", "placeholder": "उदा TND-2025-001" },
+        "tenderNumber": { "label": "अधिकृत निविदा क्रमांक", "placeholder": "उदा TND-2025-001" },
         "advertisementDate": { "label": "जाहिरात दिनांक", "placeholder": "दि/महि/वर्ष" },
         "tenderAmount": { "label": "निविदा रक्कम (₹)", "placeholder": "₹0.00" }
       },
       "toggles": {
         "aPacketOn": "अ पाकीट उघडे",
-        "aPacketOff": "अ पाकीट उघडे नाही",
+        "aPacketOff": "अ पाकीट निविदा उघडले?",
         "bPacketOn": "ब पाकीट उघडे",
-        "bPacketOff": "ब पाकीट उघडे नाही"
+        "bPacketOff": "ब पाकीट निविदा उघडले?",
+        "aPacketLabel": "अ पाकीट निविदा उघडले?",
+        "bPacketLabel": "ब पाकीट निविदा उघडले?"
       },
       "uploads": {
         "newspaperTitle": "वर्तमानपत्र जाहिरात",
@@ -186,19 +189,20 @@
       }
     },
     "reTender": {
-      "title": "पुन्हा निविदा (ऐच्छिक)",
-      "screenTitle": "पुन्हा निविदा (ऐच्छिक)",
-      "description": "मूळ निविदा अयशस्वी झाल्यास पुन्हा निविदा",
-      "progressDescription": "मूळ निविदा अयशस्वी झाल्यास पुन्हा निविदा",
+      "title": "पुनर्निविदा (ऐच्छिक)",
+      "progressTitle": "पुनर्निविदा प्रक्रिया",
+      "screenTitle": "पुनर्निविदा (ऐच्छिक)",
+      "description": "मूळ निविदा अयशस्वी झाल्यास पुनर्निविदा",
+      "progressDescription": "मूळ निविदा अयशस्वी झाल्यास पुनर्निविदा",
       "fields": {
         "previousRef": { "label": "मागील निविदा संदर्भ", "placeholder": "उदा TND-2025-001" },
         "newDate": { "label": "नवीन निविदा दिनांक", "placeholder": "दि/महि/वर्ष" },
         "newAmount": { "label": "नवीन निविदा रक्कम (₹)", "placeholder": "₹0.00" },
-        "reason": { "label": "पुन्हा निविदेचे कारण", "placeholder": "ही निविदा पुन्हा का जारी केली?" }
+        "reason": { "label": "पुनर्निविदेचे कारण", "placeholder": "ही निविदा पुन्हा का जारी केली?" }
       },
       "toggles": {
-        "on": "पुन्हा निविदा सक्षम",
-        "off": "पुन्हा निविदा सक्षम नाही"
+        "on": "पुनर्निविदा सक्षम",
+        "off": "पुनर्निविदा सक्षम नाही"
       }
     },
     "contractorAssignment": {
@@ -209,7 +213,7 @@
       "fields": {
         "contractorName": { "label": "ठेकेदाराचे नाव", "placeholder": "पूर्ण नाव प्रविष्ट करा" },
         "contactMobile": { "label": "संपर्क व्यक्ती मोबाईल नंबर", "placeholder": "+91 8833557722" },
-        "percentRow": "% अंदाजापेक्षा वर / खाली",
+        "percentRow": "% अंदाजपेक्षा जास्त / कमी",
         "percentPlaceholder": "0.00",
         "finalTenderAmount": { "label": "अंतिम निविदा रक्कम (₹)", "placeholder": "₹0.00" }
       },
@@ -225,9 +229,9 @@
       "progressDescription": "काम आदेशासाठी मंजुरी मिळवा",
       "fields": {
         "docketNumber": { "label": "डॉकेट क्रमांक", "placeholder": "DKT 005-2035" },
-        "sanctionDate": { "label": "मंजुरी दिनांक", "placeholder": "दि/महि/वर्ष" },
-        "sanctionAmount": { "label": "मंजुरी रक्कम (₹)", "placeholder": "₹0.00" },
-        "sanctionAuthority": { "label": "मंजुरी प्राधिकरण", "placeholder": "मंजुरी प्राधिकरण प्रविष्ट करा" }
+        "sanctionDate": { "label": "निविदा मंजुरी दिनांक", "placeholder": "दि/महि/वर्ष" },
+        "sanctionAmount": { "label": "निविदा मंजुरी रक्कम (₹)", "placeholder": "₹0.00" },
+        "sanctionAuthority": { "label": "मंजुरी देणारी कमिटी/अधिकारी", "placeholder": "मंजुरी प्राधिकरण प्रविष्ट करा" }
       },
       "uploads": {
         "sanctionLetterTitle": "मंजुरी पत्र",
@@ -242,7 +246,7 @@
       "fields": {
         "orderNumber": { "label": "काम आदेश क्रमांक", "placeholder": "DKT 005-2035" },
         "startDate": { "label": "काम आदेश दिनांक", "placeholder": "दि/महि/वर्ष" },
-        "expectedCompletion": { "label": "अपेक्षित पूर्णता", "placeholder": "दि/महि/वर्ष" },
+        "expectedCompletion": { "label": "अपेक्षित दिनांक", "placeholder": "दि/महि/वर्ष" },
         "notes": { "label": "टिपणी (ऐच्छिक)", "placeholder": "टिपणी जोडा (ऐच्छिक)" }
       },
       "uploads": {

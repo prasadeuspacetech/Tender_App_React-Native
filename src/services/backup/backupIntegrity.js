@@ -135,14 +135,27 @@ export const getFileSizeBytes = (absolutePath) => {
   }
 };
 
-/** @returns {Promise<import('./backupManifest').BackupManifestFileEntry>} */
-export const buildFileIntegrityEntry = async (absolutePath) => {
+/**
+ * Build a manifest entry for one referenced file.
+ *
+ * Per-file checksums are OFF by default: they are written to the manifest but
+ * never verified on import (only the database checksum is). Computing them
+ * means reading every file fully into memory and running a pure-JS SHA-256,
+ * which on iOS — with its tighter per-app memory budget — can stall the export
+ * or get the app jetsam-killed. Existence + size are cheap stat calls and are
+ * all that the backup flow actually needs.
+ *
+ * @param {string} absolutePath
+ * @param {{ computeChecksum?: boolean }} [options]
+ * @returns {Promise<import('./backupManifest').BackupManifestFileEntry>}
+ */
+export const buildFileIntegrityEntry = async (absolutePath, { computeChecksum = false } = {}) => {
   const relativePath = toRelativeBackupPath(absolutePath);
   const exists = localFileExists(absolutePath);
   const sizeBytes = exists ? getFileSizeBytes(absolutePath) : 0;
 
   let checksum = null;
-  if (exists) {
+  if (exists && computeChecksum) {
     try {
       const bytes = await new File(absolutePath).bytes();
       checksum = await sha256Hex(bytes);
@@ -159,18 +172,22 @@ export const buildFileIntegrityEntry = async (absolutePath) => {
   };
 };
 
-export const buildFileIntegrityEntries = async (absolutePaths) => {
+export const buildFileIntegrityEntries = async (absolutePaths, options = {}) => {
   const uniquePaths = [...new Set((absolutePaths ?? []).filter(Boolean))];
-  return Promise.all(uniquePaths.map((path) => buildFileIntegrityEntry(path)));
+  return Promise.all(uniquePaths.map((path) => buildFileIntegrityEntry(path, options)));
 };
 
 /**
  * Scan a database snapshot for referenced files and report missing entries.
+ * @param {object} databaseSnapshot
+ * @param {{ computeChecksums?: boolean }} [options]
  * @returns {Promise<{ entries: import('./backupManifest').BackupManifestFileEntry[], missingPaths: string[], warnings: string[] }>}
  */
-export const scanDatabaseFileIntegrity = async (databaseSnapshot) => {
+export const scanDatabaseFileIntegrity = async (databaseSnapshot, { computeChecksums = false } = {}) => {
   const absolutePaths = collectReferencedAbsolutePaths(databaseSnapshot);
-  const entries = await buildFileIntegrityEntries(absolutePaths);
+  const entries = await buildFileIntegrityEntries(absolutePaths, {
+    computeChecksum: computeChecksums,
+  });
   const missingPaths = entries.filter((entry) => !entry.exists).map((entry) => entry.relativePath);
   const warnings = missingPaths.map(
     (relativePath) => `Referenced file missing on device: ${relativePath}`,

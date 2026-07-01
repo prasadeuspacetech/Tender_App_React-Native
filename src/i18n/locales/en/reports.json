@@ -91,6 +91,21 @@
       "timeline": "Key Dates",
       "workflow": "Workflow Details"
     },
+    "pdfLabels": {
+      "workName": "Work Name",
+      "budgetAmount": "Available Budget / Provision (₹)",
+      "estimationComplete": "Pre-estimation sheet complete",
+      "estimationCompleteYes": "Pre-estimation sheet complete",
+      "estimationCompleteNo": "Pre-estimation sheet not complete",
+      "yes": "Yes",
+      "no": "No",
+      "retenderRequired": "Re-tender required",
+      "tenderAmountComparison": "Compared to tender amount",
+      "aPacketOpen": "A Packet Open",
+      "bPacketOpen": "B Packet Open",
+      "above": "Higher",
+      "below": "Lower"
+    },
     "index": {
       "title": "Works Index",
       "workName": "Work Name",

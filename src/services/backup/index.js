@@ -24,6 +24,7 @@ export {
   getAppDocumentsDirectory,
   isManagedDocumentPath,
   isNonEmptyPath,
+  resolveManagedDocumentPath,
   rewriteDatabasePathsForBackup,
   rewriteDatabasePathsForRestore,
   toAbsoluteDevicePath,
@@ -54,15 +55,19 @@ export {
 
 export {
   buildBackupFileName,
+  createBackupArchive,
   exportAndShareBackup,
   getBackupExportPreview,
+  shareBackupArchive,
 } from './backupExportService';
 
 export {
   importBackupFromStaging,
   importInspectedBackupArchive,
+  inspectBackupArchiveFile,
   inspectStagedBackup,
   pickAndInspectBackupArchive,
+  pickBackupArchiveFile,
 } from './backupImportService';
 
 export { zipDirectoryToBytes, unzipBytesToDirectory, unzipFileToDirectory } from './backupZipUtils';

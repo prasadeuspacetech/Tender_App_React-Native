@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import FormFieldLabel from '../help/FormFieldLabel';
 import { MAX_SITE_NOTES_LENGTH } from '../../db/repositories/workProgressRepository';
+import { formFieldStyles } from '../../theme/formFieldStyles';
 
 /**
  * Site notes field — controlled component with live character counter.
@@ -61,17 +62,13 @@ const SiteNotes = ({
 
 const styles = StyleSheet.create({
   section: {
-    marginTop: -15,
     marginBottom: 10,
   },
   labelRow: {
     marginBottom: 10,
   },
   label: {
-    fontSize: 15,
-    fontWeight: '400',
-    color: '#000000',
-    lineHeight: 18,
+    ...formFieldStyles.sectionLabel,
     marginBottom: 0,
   },
   inputWrap: {

@@ -178,7 +178,9 @@
         "aPacketOn": "A Packet Open",
         "aPacketOff": "A Packet Not Open",
         "bPacketOn": "B Packet Open",
-        "bPacketOff": "B Packet Not Open"
+        "bPacketOff": "B Packet Not Open",
+        "aPacketLabel": "Was A Packet tender opened?",
+        "bPacketLabel": "Was B Packet tender opened?"
       },
       "uploads": {
         "newspaperTitle": "Newspaper Advertisement",

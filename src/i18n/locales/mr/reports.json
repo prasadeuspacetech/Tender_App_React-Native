@@ -40,7 +40,7 @@
     "financialYearLabel": "आर्थिक वर्ष",
     "generatedOnLabel": "तयार केले",
     "totalWorkCount": "एकूण काम संख्या",
-    "budgetOverview": "बजेट विहंगावलोकन",
+    "budgetOverview": "बजेट आढावा",
     "budgetRemaining": "शिल्लक बजेट",
     "budgetUtilisation": "बजेट वापर",
     "allStepsComplete": "सर्व कार्यप्रवाह पायऱ्या पूर्ण",
@@ -57,7 +57,7 @@
       "bPacket": "B पॅकेट"
     },
     "contractor": {
-      "variation": "चढ-उतार (%)"
+      "variation": "कमी / जास्त (%)"
     },
     "payment": {
       "date": "देयक दिनांक",
@@ -91,8 +91,23 @@
       "timeline": "महत्त्वाचे दिनांक",
       "workflow": "कार्यप्रवाह तपशील"
     },
+    "pdfLabels": {
+      "workName": "तरतूद नाव",
+      "budgetAmount": "उपलब्ध निधी / तरतूद रुपये",
+      "estimationComplete": "पूर्वगणना पत्रक पूर्ण झाला",
+      "estimationCompleteYes": "पूर्वगणना पत्रक पूर्ण झाला",
+      "estimationCompleteNo": "पूर्वगणना पत्रक पूर्ण झाला नाही",
+      "yes": "होय",
+      "no": "नाही",
+      "retenderRequired": "पुनर्निविदा आवश्यक",
+      "tenderAmountComparison": "निविदा रकमेपेक्षा",
+      "aPacketOpen": "A पॅकेट उघडले",
+      "bPacketOpen": "B पॅकेट उघडले",
+      "above": "जास्त",
+      "below": "कमी"
+    },
     "index": {
-      "title": "काम निर्देशिका",
+      "title": "काम यादी",
       "workName": "कामाचे नाव",
       "ward": "प्रभाग",
       "department": "विभाग",

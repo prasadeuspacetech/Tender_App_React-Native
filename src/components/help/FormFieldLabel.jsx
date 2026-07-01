@@ -52,7 +52,7 @@ const FormFieldLabel = ({
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flexWrap: 'wrap',
     marginBottom: FORM_FIELD_LABEL_MARGIN_BOTTOM,
   },

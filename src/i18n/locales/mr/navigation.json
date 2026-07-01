@@ -12,7 +12,8 @@
     "backup": "बॅकअप",
     "restore": "पुनर्संचयित",
     "subscription": "सदस्यता",
-    "help": "मदत"
+    "help": "मदत",
+    "logout": "लॉग आउट"
   },
   "accessibility": {
     "openMenu": "मेनू उघडा",

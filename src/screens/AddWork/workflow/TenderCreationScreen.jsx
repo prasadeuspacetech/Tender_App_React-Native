@@ -216,22 +216,22 @@ const TenderCreationScreen = ({ navigation }) => {
           <Text style={styles.sectionLabel}>{t('steps.tenderCreation.sectionTenderStatus')}</Text>
 
         <FormToggleField
-          rowLabelOn={t('steps.tenderCreation.toggles.aPacketOn')}
-          rowLabelOff={t('steps.tenderCreation.toggles.aPacketOff')}
+          rowLabelOn={t('steps.tenderCreation.toggles.aPacketLabel')}
+          rowLabelOff={t('steps.tenderCreation.toggles.aPacketLabel')}
           value={form.a_packet_open}
-          segmentLeftLabel={t('toggles.close')}
-          segmentRightLabel={t('toggles.open')}
+          segmentLeftLabel={t('toggles.no')}
+          segmentRightLabel={t('toggles.yes')}
           onToggle={() =>
             updateField('a_packet_open', !form.a_packet_open, { immediate: true })
           }
         />
 
         <FormToggleField
-          rowLabelOn={t('steps.tenderCreation.toggles.bPacketOn')}
-          rowLabelOff={t('steps.tenderCreation.toggles.bPacketOff')}
+          rowLabelOn={t('steps.tenderCreation.toggles.bPacketLabel')}
+          rowLabelOff={t('steps.tenderCreation.toggles.bPacketLabel')}
           value={form.b_packet_open}
-          segmentLeftLabel={t('toggles.close')}
-          segmentRightLabel={t('toggles.open')}
+          segmentLeftLabel={t('toggles.no')}
+          segmentRightLabel={t('toggles.yes')}
           onToggle={() =>
             updateField('b_packet_open', !form.b_packet_open, { immediate: true })
           }

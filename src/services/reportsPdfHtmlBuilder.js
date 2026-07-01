@@ -42,6 +42,26 @@ const displayDate = (value, i18n) => displayText(formatDateForStorage(value) || 
 const displayBool = (value, i18n, onKey, offKey) =>
   tw(i18n, value ? onKey : offKey);
 
+const displayBoolPdf = (value, i18n, onKey, offKey) =>
+  tr(i18n, coercePdfBool(value) ? onKey : offKey);
+
+const displayEstimateDirection = (value, i18n) => {
+  if (value == null || value === '') return tCommon(i18n);
+  const key = String(value).trim().toLowerCase();
+  if (key === 'above' || key === 'वर') return tr(i18n, 'export.pdfLabels.above');
+  if (key === 'below' || key === 'खाली') return tr(i18n, 'export.pdfLabels.below');
+  return String(value);
+};
+
+const coercePdfBool = (value) => {
+  if (value === true || value === 1) return true;
+  if (value === false || value === 0 || value == null) return false;
+  const normalized = String(value).trim().toLowerCase();
+  if (normalized === '1' || normalized === 'true' || normalized === 'yes') return true;
+  if (normalized === '0' || normalized === 'false' || normalized === 'no') return false;
+  return Boolean(value);
+};
+
 const fieldRowsHtml = (rows) =>
   rows
     .map(
@@ -130,7 +150,7 @@ const attachmentsHtml = (documentRefs, i18n) => {
 const buildIdentitySection = (work, i18n) =>
   groupSectionHtml(tr(i18n, 'export.groups.identity'), [
     [tw(i18n, 'steps.workDetails.fields.budgetCode.label'), displayText(work.work_code, i18n)],
-    [tw(i18n, 'steps.workDetails.fields.workName.label'), displayText(work.work_name, i18n)],
+    [tr(i18n, 'export.pdfLabels.workName'), displayText(work.work_name, i18n)],
     [tw(i18n, 'steps.workDetails.fields.ward.label'), displayText(work.ward, i18n)],
     [tw(i18n, 'steps.workDetails.fields.department.label'), displayText(work.department, i18n)],
     [tw(i18n, 'steps.workDetails.fields.subDepartment.label'), displayText(work.sub_department, i18n)],
@@ -143,7 +163,7 @@ const buildFinancialSummarySection = (payload, i18n) => {
     payload;
 
   const rows = [
-    [tw(i18n, 'steps.workDetails.fields.budget.label'), displayMoney(work.budget, i18n)],
+    [tr(i18n, 'export.pdfLabels.budgetAmount'), displayMoney(work.budget, i18n)],
     [tr(i18n, 'export.fields.estimationCost'), displayMoney(estimation?.estimated_cost, i18n)],
     [tw(i18n, 'steps.tenderCreation.fields.tenderAmount.label'), displayMoney(tender?.tender_amount, i18n)],
   ];
@@ -211,12 +231,12 @@ const buildEstimationSection = (estimation, i18n) => {
   if (!estimation) return '';
   return sectionHtml(tw(i18n, 'steps.estimation.title'), [
     [
-      tw(i18n, 'steps.estimation.toggles.label'),
-      displayBool(
+      tr(i18n, 'export.pdfLabels.estimationComplete'),
+      displayBoolPdf(
         estimation.estimate_done,
         i18n,
-        'steps.estimation.toggles.on',
-        'steps.estimation.toggles.off',
+        'export.pdfLabels.estimationCompleteYes',
+        'export.pdfLabels.estimationCompleteNo',
       ),
     ],
     [tw(i18n, 'steps.estimation.fields.natureOfWorks.label'), displayText(estimation.notes, i18n)],
@@ -229,12 +249,12 @@ const buildTenderSection = (tender, i18n) => {
     [tw(i18n, 'steps.tenderCreation.fields.tenderName.label'), displayText(tender.tender_name, i18n)],
     [tw(i18n, 'steps.tenderCreation.fields.tenderNumber.label'), displayText(tender.tender_number, i18n)],
     [
-      tr(i18n, 'export.tender.aPacket'),
-      displayBool(tender.a_packet_open, i18n, 'steps.tenderCreation.toggles.aPacketOn', 'steps.tenderCreation.toggles.aPacketOff'),
+      tr(i18n, 'export.pdfLabels.aPacketOpen'),
+      displayBoolPdf(tender.a_packet_open, i18n, 'export.pdfLabels.yes', 'export.pdfLabels.no'),
     ],
     [
-      tr(i18n, 'export.tender.bPacket'),
-      displayBool(tender.b_packet_open, i18n, 'steps.tenderCreation.toggles.bPacketOn', 'steps.tenderCreation.toggles.bPacketOff'),
+      tr(i18n, 'export.pdfLabels.bPacketOpen'),
+      displayBoolPdf(tender.b_packet_open, i18n, 'export.pdfLabels.yes', 'export.pdfLabels.no'),
     ],
     [tw(i18n, 'steps.tenderCreation.sectionTenderStatus'), displayText(tender.status, i18n)],
   ]);
@@ -244,8 +264,8 @@ const buildReTenderSection = (retender, i18n) => {
   if (!retender) return '';
   return sectionHtml(tw(i18n, 'steps.reTender.title'), [
     [
-      tw(i18n, 'steps.reTender.toggles.on'),
-      displayBool(retender.enable_retender, i18n, 'steps.reTender.toggles.on', 'steps.reTender.toggles.off'),
+      tr(i18n, 'export.pdfLabels.retenderRequired'),
+      displayBoolPdf(retender.enable_retender, i18n, 'export.pdfLabels.yes', 'export.pdfLabels.no'),
     ],
     [tw(i18n, 'steps.reTender.fields.previousRef.label'), displayText(retender.previous_tender_reference, i18n)],
     [tw(i18n, 'steps.reTender.fields.reason.label'), displayText(retender.retender_reason, i18n)],
@@ -257,10 +277,15 @@ const buildContractorSection = (contractor, i18n) => {
   return sectionHtml(tw(i18n, 'steps.contractorAssignment.title'), [
     [tw(i18n, 'steps.contractorAssignment.fields.contractorName.label'), displayText(contractor.contractor_name, i18n)],
     [tw(i18n, 'steps.contractorAssignment.fields.contactMobile.label'), displayText(contractor.contractor_contact, i18n)],
-    [tw(i18n, 'steps.contractorAssignment.fields.percentRow'), displayText(contractor.percentage_above_below, i18n)],
+    [
+      tr(i18n, 'export.pdfLabels.tenderAmountComparison'),
+      displayEstimateDirection(contractor.percentage_above_below, i18n),
+    ],
     [
       tr(i18n, 'export.contractor.variation'),
-      contractor.percentage_variation != null ? String(contractor.percentage_variation) : tCommon(i18n),
+      contractor.percentage_variation != null
+        ? String(contractor.percentage_variation)
+        : tCommon(i18n),
     ],
   ]);
 };
@@ -398,8 +423,6 @@ const buildWorkDetailHtml = (workPayload, index, indexRow, imageCache, i18n) => 
       ${buildFinancialSummarySection(workPayload, i18n)}
       ${buildTimelineSection(workPayload, i18n)}
       ${buildWorkflowDetailsSection(workPayload, i18n)}
-      ${imagesHtml(workPayload.imagePaths, imageCache, i18n)}
-      ${attachmentsHtml(workPayload.documentRefs, i18n)}
     </section>`;
 };
 

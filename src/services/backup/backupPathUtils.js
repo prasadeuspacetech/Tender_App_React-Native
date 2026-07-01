@@ -33,6 +33,29 @@ export const extractAppDocumentsRelativePath = (absolutePath) => {
 export const isManagedDocumentPath = (absolutePath) =>
   Boolean(extractAppDocumentsRelativePath(absolutePath));
 
+/**
+ * Re-anchor a stored managed-document absolute path to the CURRENT app
+ * container.
+ *
+ * iOS regenerates the Data container UUID on reinstall/update, so absolute file
+ * URIs persisted earlier
+ * (…/Application/<old-UUID>/Documents/app_documents/…) no longer resolve even
+ * though the files survive the update. We keep everything after
+ * /app_documents/ and rebuild it under the current document directory.
+ *
+ * Returns the original value unchanged when the path is not a managed
+ * document path.
+ */
+export const resolveManagedDocumentPath = (absolutePath) => {
+  const relativeToAppDocs = extractAppDocumentsRelativePath(absolutePath);
+  if (!relativeToAppDocs) return absolutePath;
+
+  const segments = relativeToAppDocs.split('/').filter(Boolean);
+  if (!segments.length) return absolutePath;
+
+  return new File(getAppDocumentsDirectory(), ...segments).uri;
+};
+
 /** e.g. files/work_12/estimation.pdf */
 export const toRelativeBackupPath = (absolutePath) => {
   const relativeToAppDocs = extractAppDocumentsRelativePath(absolutePath);
@@ -101,7 +124,10 @@ export const collectReferencedAbsolutePaths = (databaseSnapshot) => {
   Object.entries(databaseSnapshot ?? {}).forEach(([tableName, rows]) => {
     if (!Array.isArray(rows)) return;
     rows.forEach((row) => {
-      extractPathsFromRow(tableName, row).forEach((path) => paths.add(path));
+      extractPathsFromRow(tableName, row).forEach((path) => {
+        // Re-anchor to the current container so files survive iOS reinstalls.
+        paths.add(resolveManagedDocumentPath(path));
+      });
     });
   });
 

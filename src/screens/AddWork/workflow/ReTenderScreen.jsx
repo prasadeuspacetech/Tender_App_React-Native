@@ -188,7 +188,9 @@ const ReTenderScreen = ({ navigation }) => {
 
         <ProgressSlot
           step={5}
-          title={getStepTitle(SCREEN_TYPE, t)}
+          title={t('steps.reTender.progressTitle', {
+            defaultValue: getStepTitle(SCREEN_TYPE, t),
+          })}
           description={getStepProgressDescription(SCREEN_TYPE, t)}
           screenType="reTender"
         />

@@ -1,24 +1,25 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  Pressable,
-  Animated,
-  StyleSheet,
-  Dimensions,
-  Platform,
+    Animated,
+    Dimensions,
+    Modal,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { FigmaMenuIcon, FIGMA_HEADER_ICON_SIZE } from './icons/HeaderIcons';
 import {
-  initialWindowMetrics,
-  SafeAreaProvider,
-  useSafeAreaInsets,
+    initialWindowMetrics,
+    SafeAreaProvider,
+    useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import theme from '../theme';
+import { FIGMA_HEADER_ICON_SIZE, FigmaMenuIcon } from './icons/HeaderIcons';
+import { performLogout } from '../utils/logout';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const DRAWER_WIDTH = Math.min(260, SCREEN_WIDTH * 0.72);
@@ -38,6 +39,7 @@ const MENU_ITEMS = [
   { key: 'restore', labelKey: 'drawer.restore', handlerKey: 'onRestorePress' },
   { key: 'subscription', labelKey: 'drawer.subscription', handlerKey: 'onSubscriptionPress' },
   { key: 'help', labelKey: 'drawer.help', handlerKey: 'onHelpPress' },
+  { key: 'logout', labelKey: 'drawer.logout', action: 'logout' },
 ];
 
 // Renders inside Modal's SafeAreaProvider so insets are available on first open.
@@ -67,6 +69,12 @@ const DrawerPanel = ({
   );
 
   const handleItemPress = (item) => {
+    if (item.action === 'logout') {
+      performLogout();
+      onClose?.();
+      return;
+    }
+
     if (item.route) {
       navigation.navigate(item.route);
       onClose?.();

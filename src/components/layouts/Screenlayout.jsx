@@ -1,19 +1,18 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  KeyboardAvoidingView,
-  TouchableOpacity,
-  Platform,
-  StatusBar,
-  StyleSheet,
-} from 'react-native';
 import { useTranslation } from 'react-i18next';
+import {
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BackButton from '../../components/Backbutton';
 import NotificationButton from '../../components/Notificationbutton';
-import { FigmaMenuIcon, FIGMA_HEADER_ICON_SIZE } from '../../components/icons/HeaderIcons';
+import { FIGMA_HEADER_ICON_SIZE, FigmaMenuIcon } from '../../components/icons/HeaderIcons';
 import theme from '../../theme';
 
 // ─── Component ────────────────────────────────────────────────────────────────

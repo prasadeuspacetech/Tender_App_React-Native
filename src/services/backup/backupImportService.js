@@ -81,11 +81,18 @@ const buildInvalidInspection = (errorCodes, errors, manifest = null) => ({
 });
 
 /**
- * @returns {Promise<{ canceled: true } | { canceled: false, fileUri: string, inspection: object, stagingDir: Directory }>}
+ * Present the system document picker only — NO progress modal should be on
+ * screen when this runs.
+ *
+ * IMPORTANT (iOS): the document picker is a view controller that must be
+ * presented from the top-most controller. If a React Native <Modal> (e.g. the
+ * backup progress modal) is already visible, iOS cannot present the picker and
+ * the promise hangs, leaving the UI stuck on "Reading backup file…". Call this
+ * before showing any loading modal.
+ *
+ * @returns {Promise<{ canceled: true } | { canceled: false, fileUri: string }>}
  */
-export const pickAndInspectBackupArchive = async ({ language = 'en', onProgress } = {}) => {
-  onProgress?.('inspecting');
-
+export const pickBackupArchiveFile = async () => {
   let result;
 
   try {
@@ -101,18 +108,40 @@ export const pickAndInspectBackupArchive = async ({ language = 'en', onProgress 
     return { canceled: true };
   }
 
-  const fileUri = result.assets[0].uri;
+  return { canceled: false, fileUri: result.assets[0].uri };
+};
+
+/**
+ * Extract + validate an already-picked archive. Safe to run while the progress
+ * modal is visible (no system UI is presented here).
+ *
+ * @returns {{ fileUri: string, stagingDir: Directory, inspection: object }}
+ */
+export const inspectBackupArchiveFile = (fileUri, { language = 'en', onProgress } = {}) => {
   onProgress?.('validating');
 
   const { stagingDir, archiveSizeBytes } = extractArchiveToStaging(fileUri);
   const inspection = inspectStagedBackup(stagingDir, language, archiveSizeBytes);
 
-  return {
-    canceled: false,
-    fileUri,
-    stagingDir,
-    inspection,
-  };
+  return { fileUri, stagingDir, inspection };
+};
+
+/**
+ * Convenience wrapper: pick + extract + inspect in one call.
+ *
+ * Prefer calling {@link pickBackupArchiveFile} and {@link inspectBackupArchiveFile}
+ * separately when a loading modal is involved, so the picker is presented before
+ * the modal appears (required for iOS).
+ *
+ * @returns {Promise<{ canceled: true } | { canceled: false, fileUri: string, inspection: object, stagingDir: Directory }>}
+ */
+export const pickAndInspectBackupArchive = async ({ language = 'en', onProgress } = {}) => {
+  onProgress?.('inspecting');
+
+  const pick = await pickBackupArchiveFile();
+  if (pick.canceled) return { canceled: true };
+
+  return { canceled: false, ...inspectBackupArchiveFile(pick.fileUri, { language, onProgress }) };
 };
 
 /**
@@ -231,14 +260,27 @@ const rollbackImport = (databaseSnapshot, documentsSnapshotDir) => {
 
 /**
  * Replace all business data from a validated staged backup folder.
+ *
+ * @param {Directory} stagingDir
+ * @param {{ onProgress?: (phase: BackupImportPhase) => void, inspection?: object }} [options]
+ *   Pass the `inspection` already produced by {@link inspectBackupArchiveFile}
+ *   to skip a second manifest parse + full database.json SHA-256 re-hash. This
+ *   matters on iOS, where re-hashing a large payload adds avoidable CPU/memory
+ *   pressure. Falls back to inspecting when not provided.
  */
-export const importBackupFromStaging = async (stagingDir, { onProgress } = {}) => {
+export const importBackupFromStaging = async (
+  stagingDir,
+  { onProgress, inspection: providedInspection } = {},
+) => {
   onProgress?.('validating');
 
-  const inspection = inspectStagedBackup(stagingDir);
+  const inspection =
+    providedInspection && providedInspection.valid
+      ? providedInspection
+      : inspectStagedBackup(stagingDir);
   if (!inspection.valid) {
-    const code = inspection.errorCodes[0] ?? BACKUP_ERROR_CODES.INVALID_ARCHIVE;
-    throw new BackupError(code, inspection.errors[0] ?? 'Invalid backup archive.');
+    const code = inspection.errorCodes?.[0] ?? BACKUP_ERROR_CODES.INVALID_ARCHIVE;
+    throw new BackupError(code, inspection.errors?.[0] ?? 'Invalid backup archive.');
   }
 
   const requiredBytes = Math.max(

@@ -1,6 +1,5 @@
-import React from 'react';
-import { ActivityIndicator, Modal, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { ActivityIndicator, Modal, StyleSheet, Text, View } from 'react-native';
 
 import theme from '../../theme';
 

@@ -184,6 +184,18 @@ const WorkDetailsScreen = ({ navigation }) => {
         />
 
         <View style={styles.form}>
+          <FormDropdown
+            label={t('steps.workDetails.fields.financialYear.label')}
+            placeholder={t('steps.workDetails.fields.financialYear.placeholder')}
+            helpKey="workflow.workDetails.financialYear"
+            helpTooltipId="workDetails-financialYear"
+            data={financialYearOptions}
+            value={form.financial_year || null}
+            onChange={(item) =>
+              updateField('financial_year', item.value, { immediate: true })
+            }
+          />
+
           <Inputboxfield
             label={t('steps.workDetails.fields.budgetCode.label')}
             placeholder={t('steps.workDetails.fields.budgetCode.placeholder')}
@@ -213,18 +225,6 @@ const WorkDetailsScreen = ({ navigation }) => {
             type="number"
             keyboardType="numeric"
             onChangeText={(v) => updateField('budget', v)}
-          />
-
-          <FormDropdown
-            label={t('steps.workDetails.fields.financialYear.label')}
-            placeholder={t('steps.workDetails.fields.financialYear.placeholder')}
-            helpKey="workflow.workDetails.financialYear"
-            helpTooltipId="workDetails-financialYear"
-            data={financialYearOptions}
-            value={form.financial_year || null}
-            onChange={(item) =>
-              updateField('financial_year', item.value, { immediate: true })
-            }
           />
 
           <Inputboxfield

@@ -12,7 +12,8 @@
     "backup": "Backup",
     "restore": "Restore",
     "subscription": "Subscription",
-    "help": "Help"
+    "help": "Help",
+    "logout": "Log Out"
   },
   "accessibility": {
     "openMenu": "Open menu",

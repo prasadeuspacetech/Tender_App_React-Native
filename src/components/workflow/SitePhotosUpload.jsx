@@ -18,6 +18,7 @@ import {
   deleteSitePhotoFile,
   pickAndStoreSitePhoto,
 } from '../../services/sitePhotosUploadService';
+import { formFieldStyles } from '../../theme/formFieldStyles';
 
 const PRIMARY = '#062E52';
 const PHOTO_SIZE = 103;
@@ -197,15 +198,13 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: 12,
   },
   label: {
-    fontSize: 15,
-    fontWeight: '400',
-    color: '#000000',
-    lineHeight: 18,
+    ...formFieldStyles.sectionLabel,
+    flexShrink: 1,
   },
   countBadge: {
     backgroundColor: PRIMARY,
