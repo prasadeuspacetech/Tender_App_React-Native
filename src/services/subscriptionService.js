@@ -8,7 +8,7 @@ import { db, ref, query, orderByChild, equalTo, get } from './firebase';
 /** Fixed subscription key length (admin panel). */
 export const SUBSCRIPTION_KEY_LENGTH = 16;
 
-/** User-facing mobile input length (10 digits; stored in RTDB as 91XXXXXXXXXX). */
+/** User-facing mobile input length (10 digits; stored in RTDB as plain 10-digit). */
 export const MOBILE_NUMBER_LENGTH = 10;
 
 /** Stable error codes for i18n mapping in Activation UI (Phase 2). */
@@ -43,7 +43,10 @@ export const sanitizeSubscriptionKeyInput = (value) =>
 
 /**
  * Normalize mobile for RTDB query.
- * Accepts 10-digit local number or 12-digit 91-prefixed number.
+ * The Admin Panel stores the plain 10-digit mobile number (no country code),
+ * so the query value is always the 10-digit local number. A 12-digit
+ * 91-prefixed input is still accepted from the UI for convenience, but it is
+ * reduced to its 10-digit local form before querying.
  * @param {string} mobile
  * @returns {{ valid: boolean, queryValue?: string, localTen?: string }}
  */
@@ -54,15 +57,16 @@ export const normalizeMobileForQuery = (mobile) => {
     return {
       valid: true,
       localTen: digits,
-      queryValue: `91${digits}`,
+      queryValue: digits,
     };
   }
 
   if (digits.length === 12 && digits.startsWith('91')) {
+    const localTen = digits.slice(2);
     return {
       valid: true,
-      localTen: digits.slice(2),
-      queryValue: digits,
+      localTen,
+      queryValue: localTen,
     };
   }
 
@@ -120,7 +124,7 @@ export const validateActivationInput = (mobile, subscriptionKey) => {
 
 /**
  * Look up a user by mobile in RTDB (`users`, indexed on `mobile`).
- * @param {string} mobileQueryValue — e.g. "919876543210"
+ * @param {string} mobileQueryValue — plain 10-digit, e.g. "9876543210"
  * @returns {Promise<{ userId: string, user: object } | null>}
  */
 export const findUserByMobile = async (mobileQueryValue) => {

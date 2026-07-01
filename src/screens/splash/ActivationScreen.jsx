@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
+  InputAccessoryView,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -20,6 +21,7 @@ import {
   SUBSCRIPTION_KEY_LENGTH,
 } from '../../services/subscriptionService';
 import useAuthStore from '../../store/useAuthStore';
+import { isActivationNetworkAvailable } from '../../utils/activationNetwork';
 import {
   Colors,
   FontFamily,
@@ -41,6 +43,7 @@ const AVATAR_SIZE = s(74);
 
 const ARC_LG = Layout.screenWidth * 1.55;
 const ARC_MD = Layout.screenWidth * 1.25;
+const IOS_INPUT_ACCESSORY_ID = 'activation-empty-accessory';
 
 const activationErrorKeys = {
   [ACTIVATION_ERROR_CODES.INVALID_MOBILE]: {
@@ -71,6 +74,17 @@ const ActivationScreen = ({ navigation }) => {
   const [mobileNumber, setMobileNumber] = useState('');
   const [subscriptionKey, setSubscriptionKey] = useState('');
   const [loading, setLoading] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
+  useEffect(() => {
+    if (!toastMessage) return undefined;
+    const timer = setTimeout(() => setToastMessage(''), 3500);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
+
+  const showNoInternetToast = () => {
+    setToastMessage(t('noInternetMessage'));
+  };
 
   const showActivationError = (code) => {
     const keys = activationErrorKeys[code] ?? activationErrorKeys[ACTIVATION_ERROR_CODES.NETWORK_ERROR];
@@ -79,6 +93,12 @@ const ActivationScreen = ({ navigation }) => {
 
   const handleActivate = async () => {
     if (loading) return;
+
+    const online = await isActivationNetworkAvailable();
+    if (!online) {
+      showNoInternetToast();
+      return;
+    }
 
     setLoading(true);
     try {
@@ -117,9 +137,11 @@ const ActivationScreen = ({ navigation }) => {
                 onChangeText={(text) => setMobileNumber(sanitizeMobileInput(text))}
                 keyboardType="phone-pad"
                 maxLength={10}
-                returnKeyType="next"
                 editable={!loading}
                 placeholderTextColor={Colors.textPlaceholder}
+                inputAccessoryViewID={
+                  Platform.OS === 'ios' ? IOS_INPUT_ACCESSORY_ID : undefined
+                }
               />
             </View>
 
@@ -137,6 +159,9 @@ const ActivationScreen = ({ navigation }) => {
                 onSubmitEditing={handleActivate}
                 editable={!loading}
                 placeholderTextColor={Colors.textPlaceholder}
+                inputAccessoryViewID={
+                  Platform.OS === 'ios' ? IOS_INPUT_ACCESSORY_ID : undefined
+                }
               />
             </View>
 
@@ -155,6 +180,18 @@ const ActivationScreen = ({ navigation }) => {
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      {toastMessage ? (
+        <View style={styles.toast} pointerEvents="none">
+          <Text style={styles.toastText}>{toastMessage}</Text>
+        </View>
+      ) : null}
+
+      {Platform.OS === 'ios' ? (
+        <InputAccessoryView nativeID={IOS_INPUT_ACCESSORY_ID}>
+          <View style={styles.hiddenInputAccessory} />
+        </InputAccessoryView>
+      ) : null}
     </View>
   );
 };
@@ -261,6 +298,26 @@ const styles = StyleSheet.create({
     fontSize: Typography.buttonText.fontSize,
     letterSpacing: Typography.buttonText.letterSpacing,
     color: Colors.primary,
+  },
+  toast: {
+    position: 'absolute',
+    left: Spacing.lg,
+    right: Spacing.lg,
+    bottom: Spacing.xxl,
+    backgroundColor: 'rgba(0, 0, 0, 0.88)',
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  toastText: {
+    fontFamily: FontFamily.regular,
+    fontSize: Typography.bodySm.fontSize,
+    color: Colors.textInverse,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  hiddenInputAccessory: {
+    height: 0,
   },
 });
 
